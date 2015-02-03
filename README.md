@@ -3,7 +3,7 @@ Deluge
 
 Deluge - http://deluge-torrent.org/
 
-Latest stable Deluge release for Arch Linux.
+Latest stable Deluge release for Arch Linux, including OpenVPN to tunnel traffic securely.
 
 **Pull image**
 

@@ -1,4 +1,6 @@
 #!/bin/bash
+
+# exit if non zero exit code from commands below
 set -e
 
 # create the tun device

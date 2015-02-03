@@ -1,4 +1,4 @@
-FROM binhex/arch-base:2015010500
+FROM binhex/arch-base:2015020300
 MAINTAINER binhex
 
 # additional files
@@ -22,7 +22,6 @@ RUN pacman -Sy --noconfirm && \
 	yes|pacman -Scc && \	
 	rm -rf /usr/share/locale/* && \
 	rm -rf /usr/share/man/* && \
-	rm -rf /root/* && \
 	rm -rf /tmp/*
 
 # docker settings
@@ -43,6 +42,9 @@ EXPOSE 58846
 # expose port for incoming torrent data (tcp and udp)
 EXPOSE 58946
 EXPOSE 58946/udp
+
+# set environment variables for user nobody
+ENV HOME /home/nobody
 
 # run supervisor
 ################
