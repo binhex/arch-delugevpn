@@ -7,16 +7,18 @@ MAINTAINER binhex
 # add supervisor conf file for app
 ADD delugevpn.conf /etc/supervisor/conf.d/delugevpn.conf
 
+# add bash script to create tun adapter and setup ip route
+ADD start.sh /root/start.sh
+
 # install app
 #############
 
 # install install app using pacman, set perms, cleanup
 RUN pacman -Sy --noconfirm && \
 	pacman -S openvpn unzip unrar librsvg pygtk python2-service-identity python2-mako python2-notify deluge --noconfirm && \
+	chmod +x /root/start.sh && \
 	chown -R nobody:users /usr/bin/deluged /usr/bin/deluge-web /root && \
 	chmod -R 775 /usr/bin/deluged /usr/bin/deluge-web /root && \	
-	mkdir -p /dev/net && \
-	mknod /dev/net/tun c 10 200 && \
 	yes|pacman -Scc && \	
 	rm -rf /usr/share/locale/* && \
 	rm -rf /usr/share/man/* && \
