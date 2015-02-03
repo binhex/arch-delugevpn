@@ -17,8 +17,8 @@ ADD start.sh /root/start.sh
 RUN pacman -Sy --noconfirm && \
 	pacman -S openvpn unzip unrar librsvg pygtk python2-service-identity python2-mako python2-notify deluge --noconfirm && \
 	chmod +x /root/start.sh && \
-	chown -R nobody:users /usr/bin/deluged /usr/bin/deluge-web /root && \
-	chmod -R 775 /usr/bin/deluged /usr/bin/deluge-web /root && \	
+	chown -R nobody:users /usr/bin/deluged /usr/bin/deluge-web && \
+	chmod -R 775 /usr/bin/deluged /usr/bin/deluge-web && \	
 	yes|pacman -Scc && \	
 	rm -rf /usr/share/locale/* && \
 	rm -rf /usr/share/man/* && \
