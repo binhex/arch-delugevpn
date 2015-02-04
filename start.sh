@@ -19,3 +19,6 @@ fi
 echo "[info] current route"
 ip route
 echo "--------------------"
+
+# create openvpn tunnel
+/usr/bin/openvpn --cd /config --config /config/openvpn.conf
