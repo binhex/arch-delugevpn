@@ -18,7 +18,7 @@ ADD deluge.sh /home/nobody/deluge.sh
 
 # install install app using pacman, set perms, cleanup
 RUN pacman -Sy --noconfirm && \
-	pacman -S openvpn unzip unrar librsvg pygtk python2-service-identity python2-mako python2-notify deluge --noconfirm && \
+	pacman -S net-tools openvpn unzip unrar librsvg pygtk python2-service-identity python2-mako python2-notify deluge --noconfirm && \
 	chmod +x /root/start.sh && \
 	chmod +x /home/nobody/deluge.sh && \
 	chown -R nobody:users /usr/bin/deluged /usr/bin/deluge-web && \
