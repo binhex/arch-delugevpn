@@ -27,6 +27,9 @@ done
 
 echo "[info] tunnel local ip is $LOCAL_IP"
 
+# set terminal env variable
+export TERM=xterm
+
 # run deluge daemon
 /usr/bin/deluged -d -c /config -L info -l /config/deluged.log
 
