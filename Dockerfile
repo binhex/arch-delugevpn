@@ -50,6 +50,9 @@ EXPOSE 58946/udp
 # set environment variables for user nobody
 ENV HOME /home/nobody
 
+# set environment variable for terminal
+ENV TERM dumb
+
 # run supervisor
 ################
 
