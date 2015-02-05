@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# create function to check ip for tunnal is valid
+# create function to check ip for tunnel is valid
 check_valid_ip() {
 
     IP_ADDRESS="$1"
@@ -14,7 +14,7 @@ check_valid_ip() {
     return 0
 }
 
-# loop and wait until tun local ip is valid
+# loop and wait until adapter tun0 local ip is valid
 LOCAL_IP=""
 while ! check_valid_ip "$LOCAL_IP"
 do
@@ -25,7 +25,7 @@ done
 echo "[info] tunnel local ip is $LOCAL_IP"
 
 # set listen interface for deluge to local ip for tunnel
-sed -i -e 's/\"listen_interface\"\:.*/\"listen_interface\"\: \"1.1.1.1\",/g' /config/core.conf
+sed -i -e 's/\"listen_interface\"\:.*/\"listen_interface\"\: \"$LOCAL_IP\",/g' /config/core.conf
 
 # enable bind incoming port to specific port (disable random)
 sed -i -e 's/\"random_port\"\:.*/\"random_port\"\: false,/g' /config/core.conf

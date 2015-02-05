@@ -20,5 +20,29 @@ echo "[info] current route"
 ip route
 echo "--------------------"
 
+######
+# create blocking rules
+
+# accept output to tunnel adapter
+iptables -A OUTPUT -o tun0 -j ACCEPT
+
+# accept output to vpn gateway
+#iptables -A OUTPUT -d <your_vpn_gateway_ip> -j ACCEPT
+
+# accept output to vpn gateway
+iptables -A OUTPUT -p tcp -o eth0 --dport 1194 -j ACCEPT
+
+# accept output to local loopback
+iptables -A OUTPUT -o lo -j ACCEPT
+
+# accept output dns lookup
+iptables -A OUTPUT -p udp -o eth0 --dport 53 -j ACCEPT
+
+# accept output to deluge webui port 8112
+iptables -A OUTPUT -p tcp -o eth0 --dport 8112 -j ACCEPT
+
+# reject non matching output traffic
+iptables -A OUTPUT -j REJECT
+
 # run openvpn to create tunnel
 /usr/bin/openvpn --cd /config --config /config/openvpn.conf
