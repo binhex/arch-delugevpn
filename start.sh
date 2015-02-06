@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# exit if non zero exit code from commands below
-set -e
-
 # create the tun device
 [ -d /dev/net ] || mkdir -p /dev/net
 [ -c /dev/net/tun ] || mknod /dev/net/tun c 10 200
@@ -32,14 +29,14 @@ iptables -A OUTPUT -o tun0 -j ACCEPT
 # accept output to vpn gateway
 iptables -A OUTPUT -p tcp -o eth0 --dport 1194 -j ACCEPT
 
+# accept output to deluge webui port 8112
+iptables -A OUTPUT -p tcp -o eth0 --dport 8112 -j ACCEPT
+
 # accept output to local loopback
 iptables -A OUTPUT -o lo -j ACCEPT
 
 # accept output dns lookup
 iptables -A OUTPUT -p udp -o eth0 --dport 53 -j ACCEPT
-
-# accept output to deluge webui port 8112
-iptables -A OUTPUT -p tcp -o eth0 --dport 8112 -j ACCEPT
 
 # reject non matching output traffic
 iptables -A OUTPUT -j REJECT

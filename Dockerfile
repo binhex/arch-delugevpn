@@ -10,8 +10,11 @@ ADD delugevpn.conf /etc/supervisor/conf.d/delugevpn.conf
 # add bash script to create tun adapter, setup ip route and create vpn tunnel
 ADD start.sh /root/start.sh
 
-# add bash script to run deluge daemon and deluge webui
-ADD deluge.sh /home/nobody/deluge.sh
+# add bash script to run deluge daemon
+ADD apps/deluge.sh /home/nobody/deluge.sh
+
+# add bash script to run deluge webui
+ADD apps/webui.sh /home/nobody/webui.sh
 
 # install app
 #############
@@ -19,10 +22,9 @@ ADD deluge.sh /home/nobody/deluge.sh
 # install install app using pacman, set perms, cleanup
 RUN pacman -Sy --noconfirm && \
 	pacman -S net-tools openvpn unzip unrar librsvg pygtk python2-service-identity python2-mako python2-notify deluge --noconfirm && \
-	chmod +x /root/start.sh && \
-	chmod +x /home/nobody/deluge.sh && \
+	chmod +x /root/start.sh /home/nobody/deluge.sh /home/nobody/webui.sh && \
 	chown -R nobody:users /usr/bin/deluged /usr/bin/deluge-web && \
-	chmod -R 775 /usr/bin/deluged /usr/bin/deluge-web && \	
+	chmod -R 775 /usr/bin/deluged /usr/bin/deluge-web && \
 	yes|pacman -Scc && \	
 	rm -rf /usr/share/locale/* && \
 	rm -rf /usr/share/man/* && \

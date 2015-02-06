@@ -37,6 +37,3 @@ sed -i -e 's/\"random_port\"\:.*/\"random_port\"\: false,/g' /config/core.conf
 
 # run deluge daemon
 /usr/bin/deluged -d -c /config -L info -l /config/deluged.log
-
-# run deluge webui
-/usr/bin/deluge-web -c /config
