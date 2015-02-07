@@ -35,6 +35,9 @@ iptables -A OUTPUT -o lo -j ACCEPT
 # accept output dns lookup
 iptables -A OUTPUT -p udp -o eth0 --dport 53 -j ACCEPT
 
+# accept output icmp (ping)
+iptables -A OUTPUT -p icmp -j ACCEPT
+
 # run openvpn to create tunnel
 /usr/bin/openvpn --cd /config --config /config/openvpn.conf
 

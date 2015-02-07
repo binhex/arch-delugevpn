@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# create function to check ip for tunnel is valid
+# create function to check tunnel local ip is valid
 check_valid_ip() {
 
     IP_ADDRESS="$1"
@@ -15,25 +15,17 @@ check_valid_ip() {
 }
 
 # loop and wait until adapter tun0 local ip is valid
-LOCAL_IP=""
-while ! check_valid_ip "$LOCAL_IP"
+tun_local_ip=""
+while ! check_valid_ip "$tun_local_ip"
 do
 	sleep 0.1
-	LOCAL_IP=`ifconfig tun0 | grep 'inet' | grep -P -o -m 1 '(?<=inet\s)[^\s]+'`
+	tun_local_ip=`ifconfig tun0 | grep 'inet' | grep -P -o -m 1 '(?<=inet\s)[^\s]+'`
 done
 
-echo "[info] tunnel local ip is $LOCAL_IP"
+echo "[info] tunnel local ip is $tun_local_ip"
 
-# set listen interface for deluge to local ip for tunnel
-eval "sed -i -e s/\"listen_interface\"\:.*/\"listen_interface\"\: \"$LOCAL_IP\",/g /config/core.conf"
-
-# enable bind incoming port to specific port (disable random)
-sed -i -e 's/\"random_port\"\:.*/\"random_port\"\: false,/g' /config/core.conf
-
-# set incoming port to specific value
-# /usr/bin/deluge-console -c /config "config --set listen_ports ($PORT,$PORT)"
-
-# echo "[info] incoming listening port is $PORT"
+# save values as env variables
+export TUN_LOCAL_IP=$tun_local_ip
 
 # run deluge daemon
 /usr/bin/deluged -d -c /config -L info -l /config/deluged.log
