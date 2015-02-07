@@ -25,6 +25,7 @@ echo "--------------------"
 
 # accept output to vpn gateway
 iptables -A OUTPUT -p tcp -o eth0 --dport 1194 -j ACCEPT
+iptables -A OUTPUT -p udp -o eth0 --dport 1194 -j ACCEPT
 
 # accept output to deluge webui port 8112
 iptables -A OUTPUT -p tcp -o eth0 --dport 8112 -j ACCEPT
