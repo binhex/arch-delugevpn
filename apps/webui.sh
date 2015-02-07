@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # wait for deluge daemon process to start
-until pids=$(pidof deluged)
+until pids=$(pgrep -f deluged)
 do   
     sleep 0.1
 done
