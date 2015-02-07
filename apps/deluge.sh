@@ -25,7 +25,7 @@ done
 echo "[info] tunnel local ip is $LOCAL_IP"
 
 # set listen interface for deluge to local ip for tunnel
-sed -i -e 's/\"listen_interface\"\:.*/\"listen_interface\"\: \"$LOCAL_IP\",/g' /config/core.conf
+eval "sed -i -e s/\"listen_interface\"\:.*/\"listen_interface\"\: \"$LOCAL_IP\",/g /config/core.conf"
 
 # enable bind incoming port to specific port (disable random)
 sed -i -e 's/\"random_port\"\:.*/\"random_port\"\: false,/g' /config/core.conf
