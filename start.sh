@@ -20,30 +20,30 @@ echo "--------------------"
 ######
 # create blocking rules
 
-# accept output to vpn gateway
-#iptables -A OUTPUT -d <your_vpn_gateway_ip> -j ACCEPT
+# accept output to tunnel adapter
+iptables -A OUTPUT -o tun0 -j ACCEPT
 
 # accept output to vpn gateway
-iptables -A OUTPUT -p tcp -o eth0 --dport 1194 -j ACCEPT
 iptables -A OUTPUT -p udp -o eth0 --dport 1194 -j ACCEPT
 
 # accept output to deluge webui port 8112
 iptables -A OUTPUT -p tcp -o eth0 --dport 8112 -j ACCEPT
+iptables -A OUTPUT -p tcp -o eth0 --sport 8112 -j ACCEPT
+
+# accept output dns lookup
+iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
 
 # accept output to local loopback
 iptables -A OUTPUT -o lo -j ACCEPT
 
-# accept output dns lookup
-iptables -A OUTPUT -p udp -o eth0 --dport 53 -j ACCEPT
-
-# accept output icmp (ping)
-iptables -A OUTPUT -p icmp -j ACCEPT
-
-# accept output to tunnel adapter
-iptables -A OUTPUT -o tun0 -j ACCEPT
-
 # reject non matching output traffic
 iptables -A OUTPUT -j REJECT
+
+#######
+
+# add in google public nameservers (isp ns may block lookup when connected to vpn)
+echo '8.8.8.8' >> /etc/resolv.conf
+echo '8.8.4.4' >> /etc/resolv.conf
 
 # run openvpn to create tunnel
 /usr/bin/openvpn --cd /config --config /config/openvpn.conf

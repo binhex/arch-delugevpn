@@ -15,17 +15,17 @@ check_valid_ip() {
 }
 
 # loop and wait until adapter tun0 local ip is valid
-tun_local_ip=""
-while ! check_valid_ip "$tun_local_ip"
+LOCAL_IP=""
+while ! check_valid_ip "$LOCAL_IP"
 do
 	sleep 0.1
-	tun_local_ip=`ifconfig tun0 | grep 'inet' | grep -P -o -m 1 '(?<=inet\s)[^\s]+'`
+	LOCAL_IP=`ifconfig tun0 | grep 'inet' | grep -P -o -m 1 '(?<=inet\s)[^\s]+'`
 done
 
-echo "[info] tunnel local ip is $tun_local_ip"
+echo "[info] tunnel local ip is $LOCAL_IP"
 
 # save values as env variables
-export TUN_LOCAL_IP=$tun_local_ip
+export LOCAL_IP=$LOCAL_IP
 
 # run deluge daemon
 /usr/bin/deluged -d -c /config -L info -l /config/deluged.log

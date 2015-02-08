@@ -6,16 +6,29 @@ do
     sleep 0.1
 done
 
-# set listen interface for deluge to tunnel local ip
-# /usr/bin/deluge-console -c /config "config --set listen_interface $TUN_LOCAL_IP"
+# get values from environment variables set via docker run
+#USERNAME=
+#PASSWORD=
+#CLIENTID=
 
-# enable bind incoming port to specific port (disable random)
-/usr/bin/deluge-console -c /config "config --set random_port False"
+# lookup the dynamic incoming PORT (response in json format)
+#INCOMING_PORT=`curl -s -d "user=$USERNAME&pass=$PASSWORD&client_id=$CLIENTID&local_ip=$LOCAL_IP" https://www.privateinternetaccess.com/vpninfo/port_forward_assignment | head -1 | grep -Po "[0-9]*"`
 
-# set incoming port to specific value
-# /usr/bin/deluge-console -c /config "config --set listen_ports ($PORT,$PORT)"
+echo "INCOMING_PORT=${INCOMING_PORT}"
+if [[ $INCOMING_PORT =~ ^-?[0-9]+$ ]] 
+then
+  echo [deluge-config-settings] Local IP=$LOCAL_IP, Incoming Port=$INCOMING_PORT, Client ID=$CLIENTID
+  
+  # enable bind incoming port to specific port (disable random)
+  /usr/bin/deluge-console -c /config "config --set random_port False"
 
-# echo "[info] incoming listening port is $PORT"
+  # set incoming port
+  deluge-console -c /app/deluge "config --set listen_ports ($INCOMING_PORT,$INCOMING_PORT)"
+  
+else
+  echo ERROR: Incoming Port $INCOMING_PORT is not an integer.
+  exit 1
+fi
 
 # run deluge webui
 /usr/bin/deluge-web -c /config

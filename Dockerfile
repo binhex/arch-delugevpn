@@ -53,7 +53,7 @@ EXPOSE 58946/udp
 ENV HOME /home/nobody
 
 # set environment variable for terminal
-ENV TERM dumb
+ENV TERM xterm
 
 # run supervisor
 ################
