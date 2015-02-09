@@ -24,8 +24,5 @@ done
 
 echo "[info] tunnel local ip is $LOCAL_IP"
 
-# save values as env variables
-export LOCAL_IP=$LOCAL_IP
-
 # run deluge daemon
 /usr/bin/deluged -d -c /config -L info -l /config/deluged.log
