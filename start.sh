@@ -17,19 +17,23 @@ if [ ! -f /root/runonce ]; then
 	touch /root/runonce
 fi
 
-# write pia username and password to file
+# write pia username to file
 if [ -z "${PIA_USER}" ]; then
 	echo "[crit] PIA username not specified" && exit 1
 else
 	echo "${PIA_USER}" > /config/openvpn/credentials.conf	
 fi
 
-# write pia password and password to file
+# append pia password to file
 if [ -z "${PIA_PASS}" ]; then
 	echo "[crit] PIA password not specified" && exit 1
 else
-	echo "${PIA_PASS}" > /config/openvpn/credentials.conf
+	echo "${PIA_PASS}" >> /config/openvpn/credentials.conf
 fi
+
+# set permissions to user nobody
+chown -R nobody:users /config/openvpn
+chmod -R 775 /config/openvpn
 
 # create the tunnel device
 [ -d /dev/net ] || mkdir -p /dev/net
