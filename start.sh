@@ -25,6 +25,8 @@ if [ ! -f /root/runonce ]; then
 	
 	touch /root/runonce
 	
+fi
+
 # create pia client id (randomly generated)
 CLIENT_ID=`head -n 100 /dev/urandom | md5sum | tr -d " -"`
 echo "[info] PIA client set to $CLIENT_ID"
