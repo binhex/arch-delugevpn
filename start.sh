@@ -72,8 +72,8 @@ iptables -A OUTPUT -o lo -j ACCEPT
 iptables -A OUTPUT -j REJECT
 
 # add in google public nameservers (isp ns may block lookup when connected to vpn)
-echo '8.8.8.8' >> /etc/resolv.conf
-echo '8.8.4.4' >> /etc/resolv.conf
+echo 'nameserver 8.8.8.8' >> /etc/resolv.conf
+echo 'nameserver 8.8.4.4' >> /etc/resolv.conf
 
 # run openvpn to create tunnel
 /usr/bin/openvpn --cd /config/openvpn --config /config/openvpn/openvpn.conf --redirect-gateway
