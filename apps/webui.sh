@@ -6,13 +6,8 @@ do
     sleep 0.1
 done
 
-# get values from environment variables set via docker run
-#USERNAME=
-#PASSWORD=
-#CLIENTID=
-
-# lookup the dynamic incoming PORT (response in json format)
-#INCOMING_PORT=`curl -s -d "user=$USERNAME&pass=$PASSWORD&client_id=$CLIENTID&local_ip=$LOCAL_IP" https://www.privateinternetaccess.com/vpninfo/port_forward_assignment | head -1 | grep -Po "[0-9]*"`
+# lookup the dynamic incoming port (response in json format)
+INCOMING_PORT=`curl -s -d "user=$USERNAME&pass=$PASSWORD&client_id=$CLIENT_ID&local_ip=$LOCAL_IP" https://www.privateinternetaccess.com/vpninfo/port_forward_assignment | head -1 | grep -Po "[0-9]*"`
 
 echo "INCOMING_PORT=${INCOMING_PORT}"
 if [[ $INCOMING_PORT =~ ^-?[0-9]+$ ]] 

@@ -16,6 +16,15 @@ ADD apps/deluge.sh /home/nobody/deluge.sh
 # add bash script to run deluge webui
 ADD apps/webui.sh /home/nobody/webui.sh
 
+# add pia certificates
+ADD config/ca.crt /root/ca.crt
+
+# add pia certificates
+ADD config/crl.pem /root/crl.pem
+
+# add pia config file (netherlands)
+ADD config/openvpn.conf /root/openvpn.conf
+
 # install app
 #############
 
