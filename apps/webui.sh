@@ -12,7 +12,6 @@ PASSWORD=$(sed -n '2p' /config/openvpn/credentials.conf)
 
 # create pia client id (randomly generated)
 CLIENT_ID=`head -n 100 /dev/urandom | md5sum | tr -d " -"`
-echo "[info] PIA client set to $CLIENT_ID"
 
 # get local ip from tunnel adapter
 LOCAL_IP=`ifconfig tun0 | grep 'inet' | grep -P -o -m 1 '(?<=inet\s)[^\s]+'`
@@ -32,8 +31,7 @@ if [[ $INCOMING_PORT =~ ^-?[0-9]+$ ]]; then
 	# set incoming port
 	/usr/bin/deluge-console -c /config "config --set listen_ports ($INCOMING_PORT,$INCOMING_PORT)"
 else
-	echo ERROR: Incoming Port $INCOMING_PORT is not an integer.
-	exit 1
+	echo "[warn]: Incoming Port $INCOMING_PORT is not an integer, downloads will be slow"
 fi
 
 # run deluge webui
