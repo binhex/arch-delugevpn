@@ -14,7 +14,7 @@ PASSWORD=$(sed -n '2p' /config/openvpn/credentials.conf)
 CLIENT_ID=`head -n 100 /dev/urandom | md5sum | tr -d " -"`
 
 # get local ip from tunnel adapter
-LOCAL_IP=`ifconfig tun0 | grep 'inet' | grep -P -o -m 1 '(?<=inet\s)[^\s]+' 2>/dev/null`
+LOCAL_IP=`ifconfig tun0 2>/dev/null | grep 'inet' | grep -P -o -m 1 '(?<=inet\s)[^\s]+'`
 
 echo "[info] PIA settings: Username=$USERNAME, Password=$PASSWORD, Client ID=$CLIENT_ID, Local IP=$LOCAL_IP"
 
