@@ -39,7 +39,7 @@ chmod -R 775 /config/openvpn
 [ -d /dev/net ] || mkdir -p /dev/net
 [ -c /dev/net/tun ] || mknod /dev/net/tun c 10 200
 
-# setup route for deluge webui
+# get gateway ip for eth0
 DEFAULT_GATEWAY=$(ip route show default | awk '/default/ {print $3}')
 
 # setup route for deluge webui, using set-mark to mark traffic for port 8112
@@ -47,7 +47,7 @@ echo "8112    webui" >> /etc/iproute2/rt_tables
 ip rule add fwmark 1 table webui
 ip route add default via $DEFAULT_GATEWAY table webui
 
-# use mangle to set source/destination with mark 1
+# use mangle to set source/destination with mark 1 (port 8112)
 iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
 iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
 
@@ -78,7 +78,7 @@ echo "[info] iptable rules"
 iptables -S
 echo "--------------------"
 
-# add in google public nameservers (isp ns may block lookup when connected to vpn)
+# add in google public nameservers (isp may block lookup when connected to vpn)
 echo 'nameserver 8.8.8.8' >> /etc/resolv.conf
 echo 'nameserver 8.8.4.4' >> /etc/resolv.conf
 

@@ -16,6 +16,9 @@ ADD apps/deluge.sh /home/nobody/deluge.sh
 # add bash script to run deluge webui
 ADD apps/webui.sh /home/nobody/webui.sh
 
+# add bash script to identify pia incoming port
+ADD apps/port.sh /home/nobody/port.sh
+
 # add pia certificates
 ADD config/ca.crt /root/ca.crt
 ADD config/crl.pem /root/crl.pem
@@ -29,7 +32,7 @@ ADD config/openvpn.conf /root/openvpn.conf
 # install install app using pacman, set perms, cleanup
 RUN pacman -Sy --noconfirm && \
 	pacman -S net-tools openvpn unzip unrar librsvg pygtk python2-service-identity python2-mako python2-notify deluge --noconfirm && \
-	chmod +x /root/start.sh /home/nobody/deluge.sh /home/nobody/webui.sh && \
+	chmod +x /root/start.sh /home/nobody/deluge.sh /home/nobody/webui.sh /home/nobody/port.sh && \
 	chown -R nobody:users /usr/bin/deluged /usr/bin/deluge-web && \
 	chmod -R 775 /usr/bin/deluged /usr/bin/deluge-web && \
 	yes|pacman -Scc && \	
