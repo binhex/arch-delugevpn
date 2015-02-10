@@ -18,8 +18,6 @@ ADD apps/webui.sh /home/nobody/webui.sh
 
 # add pia certificates
 ADD config/ca.crt /root/ca.crt
-
-# add pia certificates
 ADD config/crl.pem /root/crl.pem
 
 # add pia config file (netherlands)
@@ -53,10 +51,6 @@ EXPOSE 8112
 
 # expose port for deluge daemon
 EXPOSE 58846
-
-# expose port for incoming torrent data (tcp and udp)
-EXPOSE 58946
-EXPOSE 58946/udp
 
 # set environment variables for user nobody
 ENV HOME /home/nobody

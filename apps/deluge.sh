@@ -19,7 +19,7 @@ LOCAL_IP=""
 while ! check_valid_ip "$LOCAL_IP"
 do
 	sleep 0.1
-	LOCAL_IP=`ifconfig tun0 | grep 'inet' | grep -P -o -m 1 '(?<=inet\s)[^\s]+'`
+	LOCAL_IP=`ifconfig tun0 | grep 'inet' | grep -P -o -m 1 '(?<=inet\s)[^\s]+' 2>/dev/null`
 done
 
 echo "[info] tunnel local ip is $LOCAL_IP"

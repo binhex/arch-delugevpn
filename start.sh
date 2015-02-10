@@ -42,13 +42,16 @@ chmod -R 775 /config/openvpn
 # setup route for deluge webui
 DEFAULT_GATEWAY=$(ip route show default | awk '/default/ {print $3}')
 
-if [ -z "${HOST_SUBNET}" ]; then
-	echo "[crit] HOST_SUBNET not specified, deluge web interface will not work" && exit 1
-else
-	ip route add $HOST_SUBNET via $DEFAULT_GATEWAY
-fi
+# setup route for deluge webui, using set-mark to mark traffic for port 8112
+echo "8112    webui" >> /etc/iproute2/rt_tables
+ip rule add fwmark 1 table webui
+ip route add default via $DEFAULT_GATEWAY table webui
 
-echo "[info] current route"
+# use mangle to set source/destination with mark 1
+iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
+iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
+
+echo "[info] ip routes"
 ip route
 echo "--------------------"
 
@@ -70,6 +73,10 @@ iptables -A OUTPUT -o lo -j ACCEPT
 
 # reject non matching output traffic
 iptables -A OUTPUT -j REJECT
+
+echo "[info] iptable rules"
+iptables -S
+echo "--------------------"
 
 # add in google public nameservers (isp ns may block lookup when connected to vpn)
 echo 'nameserver 8.8.8.8' >> /etc/resolv.conf
