@@ -42,7 +42,7 @@ chmod -R 775 /config/openvpn
 # get gateway ip for eth0
 DEFAULT_GATEWAY=$(ip route show default | awk '/default/ {print $3}')
 
-# setup route for deluge webui, using set-mark to mark traffic for port 8112
+# setup route for deluge webui using set-mark to route traffic for port 8112 to eth0
 echo "8112    webui" >> /etc/iproute2/rt_tables
 ip rule add fwmark 1 table webui
 ip route add default via $DEFAULT_GATEWAY table webui
@@ -54,6 +54,28 @@ iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
 echo "[info] ip routes"
 ip route
 echo "--------------------"
+
+# set policy to drop for input
+iptables -P INPUT DROP
+
+# accept input to tunnel adapter
+iptables -A INPUT -i tun0 -j ACCEPT
+
+# accept input to vpn gateway
+iptables -A INPUT -p udp -i eth0 --sport 1194 -j ACCEPT
+
+# accept input to deluge webui port 8112
+iptables -A INPUT -p tcp -i eth0 --dport 8112 -j ACCEPT
+iptables -A INPUT -p tcp -i eth0 --sport 8112 -j ACCEPT
+
+# accept input dns lookup
+iptables -A INPUT -p udp --sport 53 -j ACCEPT
+
+# accept input to local loopback
+iptables -A INPUT -i lo -j ACCEPT
+
+# set policy to drop for output
+iptables -P OUTPUT DROP
 
 # accept output to tunnel adapter
 iptables -A OUTPUT -o tun0 -j ACCEPT
@@ -71,16 +93,17 @@ iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
 # accept output to local loopback
 iptables -A OUTPUT -o lo -j ACCEPT
 
-# reject non matching output traffic
-iptables -A OUTPUT -j REJECT
-
-echo "[info] iptable rules"
+echo "[info] iptable rules defined"
 iptables -S
 echo "--------------------"
 
 # add in google public nameservers (isp may block lookup when connected to vpn)
-echo 'nameserver 8.8.8.8' >> /etc/resolv.conf
+echo 'nameserver 8.8.8.8' > /etc/resolv.conf
 echo 'nameserver 8.8.4.4' >> /etc/resolv.conf
+
+echo "[info] nameservers defined"
+cat /etc/resolv.conf
+echo "--------------------"
 
 # run openvpn to create tunnel
 /usr/bin/openvpn --cd /config/openvpn --config /config/openvpn/openvpn.conf --redirect-gateway
