@@ -49,11 +49,8 @@ VOLUME /config
 # map /data to host defined data path (used to store data from app)
 VOLUME /data
 
-# expose port for http
+# expose port for deluge webui
 EXPOSE 8112
-
-# expose port for deluge daemon
-EXPOSE 58846
 
 # set environment variables for user nobody
 ENV HOME /home/nobody
