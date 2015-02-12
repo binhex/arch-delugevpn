@@ -2,7 +2,7 @@
 
 # run once, to create config files for openvpn
 if [ ! -f /root/runonce ]; then
-	echo "[info] Performing first time setup"
+	echo "[info] Performing first time setup..."
 	
 	# create directory
 	mkdir -p /config/openvpn
@@ -51,7 +51,7 @@ ip route add default via $DEFAULT_GATEWAY table webui
 iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
 iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
 
-echo "[info] ip routes"
+echo "[info] ip route"
 ip route
 echo "--------------------"
 
@@ -93,7 +93,7 @@ iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
 # accept output to local loopback
 iptables -A OUTPUT -o lo -j ACCEPT
 
-echo "[info] iptable rules defined"
+echo "[info] iptables"
 iptables -S
 echo "--------------------"
 

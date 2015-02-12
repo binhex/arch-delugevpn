@@ -22,4 +22,4 @@ do
 	LOCAL_IP=`ifconfig tun0 2>/dev/null | grep 'inet' | grep -P -o -m 1 '(?<=inet\s)[^\s]+'`
 done
 
-echo "[info] tunnel local ip is $LOCAL_IP"
+echo "[info] OpenVPN local ip is $LOCAL_IP"
