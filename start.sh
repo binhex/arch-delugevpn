@@ -105,5 +105,5 @@ echo "[info] nameservers defined"
 cat /etc/resolv.conf
 echo "--------------------"
 
-# run openvpn to create tunnel
-/usr/bin/openvpn --cd /config/openvpn --config /config/openvpn/openvpn.conf --redirect-gateway
+# start openvpn tunnel
+source ./openvpn.sh

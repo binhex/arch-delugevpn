@@ -10,14 +10,20 @@ ADD delugevpn.conf /etc/supervisor/conf.d/delugevpn.conf
 # add bash script to create tun adapter, setup ip route and create vpn tunnel
 ADD start.sh /root/start.sh
 
+# add bash script to run openvpn
+ADD apps/openvpn.sh /root/openvpn.sh
+
+# add bash script to check tunnel ip is valid
+ADD apps/checkip.sh /home/nobody/checkip.sh
+
 # add bash script to run deluge daemon
 ADD apps/deluge.sh /home/nobody/deluge.sh
 
+# add bash script to identify pia incoming port
+ADD apps/setport.sh /home/nobody/setport.sh
+
 # add bash script to run deluge webui
 ADD apps/webui.sh /home/nobody/webui.sh
-
-# add bash script to identify pia incoming port
-ADD apps/port.sh /home/nobody/port.sh
 
 # add pia certificates
 ADD config/ca.crt /root/ca.crt
@@ -32,7 +38,7 @@ ADD config/openvpn.conf /root/openvpn.conf
 # install install app using pacman, set perms, cleanup
 RUN pacman -Sy --noconfirm && \
 	pacman -S net-tools openvpn unzip unrar librsvg pygtk python2-service-identity python2-mako python2-notify deluge --noconfirm && \
-	chmod +x /root/start.sh /home/nobody/deluge.sh /home/nobody/webui.sh /home/nobody/port.sh && \
+	chmod +x /root/start.sh /root/openvpn.sh /home/nobody/checkip.sh /home/nobody/deluge.sh /home/nobody/setport.sh /home/nobody/webui.sh && \
 	chown -R nobody:users /usr/bin/deluged /usr/bin/deluge-web && \
 	chmod -R 775 /usr/bin/deluged /usr/bin/deluge-web && \
 	yes|pacman -Scc && \	
