@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # wait for deluge daemon process to start
-until [ $(pgrep -f deluged) ]; do
+until [[ $(pgrep -f deluged) ]]; do
     sleep 0.1	
 done
 
@@ -16,7 +16,7 @@ do
 	CLIENT_ID=`head -n 100 /dev/urandom | md5sum | tr -d " -"`
 
 	# run script to check ip is valid for tun0
-	source ./checkip.sh
+	source /home/nobody/checkip.sh
 
 	echo "[info] PIA settings: Username=$USERNAME, Password=$PASSWORD, Client ID=$CLIENT_ID, Local IP=$LOCAL_IP"
 

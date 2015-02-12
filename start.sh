@@ -106,4 +106,4 @@ cat /etc/resolv.conf
 echo "--------------------"
 
 # start openvpn tunnel
-source ./openvpn.sh
+source /root/openvpn.sh
