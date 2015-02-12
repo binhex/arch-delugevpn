@@ -13,8 +13,7 @@ do
 	
 	# query deluge for current ip for tunnel
 	LISTEN_INTERFACE=`/usr/bin/deluge-console -c /config "config listen_interface" | grep -P -o -m 1 '[\d\.]+'`
-	 
-	 
+	 	 
 	echo "[info] Deluge listening interface is $LISTEN_INTERFACE"
 		
 	# if current listen interface ip is different to tunnel local ip then force re-detect of incoming port
@@ -45,11 +44,11 @@ do
 			# set incoming port
 			/usr/bin/deluge-console -c /config "config --set listen_ports ($INCOMING_PORT,$INCOMING_PORT)"
 		else
-			echo "[warn]: PIA incoming port $INCOMING_PORT is not an integer, downloads will be slow"
+			echo "[warn] PIA incoming port $INCOMING_PORT is not an integer, downloads will be slow"
 		fi
 		
 	else
-		echo "[info]: Deluge listening interface IP $LISTEN_INTERFACE and OpenVPN IP $LOCAL_IP match, skipping re-configuration of incoming port"
+		echo "[info] Deluge listening interface IP $LISTEN_INTERFACE and OpenVPN IP $LOCAL_IP match, skipping re-configuration of incoming port"
 	fi
 	
 	sleep 30m

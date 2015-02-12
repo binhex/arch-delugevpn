@@ -71,6 +71,9 @@ iptables -A INPUT -p tcp -i eth0 --sport 8112 -j ACCEPT
 # accept input dns lookup
 iptables -A INPUT -p udp --sport 53 -j ACCEPT
 
+# accept input icmp (ping)
+iptables -A INPUT -p icmp --icmp-type echo-reply -j ACCEPT
+
 # accept input to local loopback
 iptables -A INPUT -i lo -j ACCEPT
 
@@ -89,6 +92,9 @@ iptables -A OUTPUT -p tcp -o eth0 --sport 8112 -j ACCEPT
 
 # accept output dns lookup
 iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
+
+# accept output icmp (ping) 
+iptables -A OUTPUT -p icmp --icmp-type echo-request -j ACCEPT
 
 # accept output to local loopback
 iptables -A OUTPUT -o lo -j ACCEPT
