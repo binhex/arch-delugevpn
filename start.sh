@@ -8,15 +8,45 @@ if [ ! -f /root/runonce ]; then
 	mkdir -p /config/openvpn
 	
 	# copy openvpn certs to /config
-	cp /root/ca.crt /config/openvpn/ca.crt
-	cp /root/crl.pem /config/openvpn/crl.pem
-	
-	# copy openvpn config file to /config
-	cp /root/openvpn.conf /config/openvpn/openvpn.conf
-		
+	cp /home/nobody/openvpn/ca.crt /config/openvpn/ca.crt
+	cp /home/nobody/openvpn/crl.pem /config/openvpn/crl.pem
+			
 	touch /root/runonce
 fi
 
+# get country from env and copy matching pia remote gateway file to /config/openvpn/openvpn.conf
+if [ -z "${PIA_REMOTE}" ]; then
+	echo "[warn] PIA remote gateway not specified, defaulting to Netherlands"
+	cp -f "/home/nobody/openvpn/Netherlands.ovpn" "/config/openvpn/openvpn.conf"
+else
+	echo "[info] PIA remote gateway defined as $PIA_REMOTE"
+	if [ ! -f "/home/nobody/openvpn/$PIA_REMOTE.ovpn" ]; then
+		echo "[warn] PIA remote gateway not found, defaulting to Netherlands"	
+		cp -f "/home/nobody/openvpn/Netherlands.ovpn" "/config/openvpn/openvpn.conf"
+	else
+		cp -f "/home/nobody/openvpn/$PIA_REMOTE.ovpn" "/config/openvpn/openvpn.conf"
+	fi
+fi
+
+# customise openvpn.conf to ping tunnel every 10 mins
+if ! $(grep -Fxq "ping 600" /config/openvpn/openvpn.conf); then
+	echo "ping 600" >> /config/openvpn/openvpn.conf
+fi
+
+# customise openvpn.conf to restart tunnel after 20 mins if no reply from ping
+if ! $(grep -Fxq "ping-restart 1200" /config/openvpn/openvpn.conf); then
+	echo "ping-restart 1200" >> /config/openvpn/openvpn.conf
+fi
+
+# customise openvpn.conf to allow automatic login using credentials.conf file
+if ! $(grep -Fxq "auth-user-pass credentials.conf" /config/openvpn/openvpn.conf); then
+	sed -i -e 's/auth-user-pass/auth-user-pass credentials.conf/g' /config/openvpn/openvpn.conf
+fi
+
+# read port number and protocol from openvpn.conf (used to define iptables rule)
+PIA_PORT=$(cat /config/openvpn/openvpn.conf | grep -P -o -m 1 '^remote.*' | grep -P -o -m 1 '[\d]+$')
+PIA_PROTOCOL=$(cat /config/openvpn/openvpn.conf | grep -P -o -m 1 '(?<=proto\s).*')
+	
 # write pia username to file
 if [ -z "${PIA_USER}" ]; then
 	echo "[crit] PIA username not specified" && exit 1
@@ -62,7 +92,7 @@ iptables -P INPUT DROP
 iptables -A INPUT -i tun0 -j ACCEPT
 
 # accept input to vpn gateway
-iptables -A INPUT -p udp -i eth0 --sport 1194 -j ACCEPT
+iptables -A INPUT -p $PIA_PROTOCOL -i eth0 --sport $PIA_PORT -j ACCEPT
 
 # accept input to deluge webui port 8112
 iptables -A INPUT -p tcp -i eth0 --dport 8112 -j ACCEPT
@@ -84,7 +114,7 @@ iptables -P OUTPUT DROP
 iptables -A OUTPUT -o tun0 -j ACCEPT
 
 # accept output to vpn gateway
-iptables -A OUTPUT -p udp -o eth0 --dport 1194 -j ACCEPT
+iptables -A OUTPUT -p $PIA_PROTOCOL -o eth0 --dport $PIA_PORT -j ACCEPT
 
 # accept output to deluge webui port 8112
 iptables -A OUTPUT -p tcp -o eth0 --dport 8112 -j ACCEPT
@@ -107,7 +137,7 @@ echo "--------------------"
 echo 'nameserver 8.8.8.8' > /etc/resolv.conf
 echo 'nameserver 8.8.4.4' >> /etc/resolv.conf
 
-echo "[info] nameservers defined"
+echo "[info] nameservers"
 cat /etc/resolv.conf
 echo "--------------------"
 

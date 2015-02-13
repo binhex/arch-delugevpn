@@ -5,7 +5,7 @@ until [[ $(pgrep -f deluged) ]]; do
     sleep 0.1	
 done
 
-# loop over incoming port, checking every 30 minutes
+# loop over incoming port, checking every 10 minutes
 while true
 do
 	# run script to check ip is valid for tun0
@@ -19,6 +19,8 @@ do
 	# if current listen interface ip is different to tunnel local ip then force re-detect of incoming port
 	if [[ "$LISTEN_INTERFACE" != "$LOCAL_IP" ]]; then
 
+		echo "[info] Deluge listening interface IP $LISTEN_INTERFACE and OpenVPN local IP $LOCAL_IP different, configuring Deluge..."
+		
 		# get username and password from credentials file
 		USERNAME=$(sed -n '1p' /config/openvpn/credentials.conf)
 		PASSWORD=$(sed -n '2p' /config/openvpn/credentials.conf)
@@ -46,10 +48,7 @@ do
 		else
 			echo "[warn] PIA incoming port $INCOMING_PORT is not an integer, downloads will be slow"
 		fi
-		
-	else
-		echo "[info] Deluge listening interface IP $LISTEN_INTERFACE and OpenVPN IP $LOCAL_IP match, skipping re-configuration of incoming port"
 	fi
 	
-	sleep 30m
+	sleep 10m
 done
