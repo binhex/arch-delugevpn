@@ -46,7 +46,7 @@ do
 			# set incoming port
 			/usr/bin/deluge-console -c /config "config --set listen_ports ($INCOMING_PORT,$INCOMING_PORT)"
 		else
-			echo "[warn] PIA incoming port $INCOMING_PORT is not an integer, downloads will be slow"
+			echo "[warn] PIA incoming port is not an integer, downloads will be slow"
 		fi
 	fi
 	

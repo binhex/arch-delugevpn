@@ -1,18 +1,11 @@
 #!/bin/bash
 
-# run once, to create config files for openvpn
-if [ ! -f /root/runonce ]; then
-	echo "[info] Performing first time setup..."
-	
-	# create directory
-	mkdir -p /config/openvpn
-	
-	# copy openvpn certs to /config
-	cp /home/nobody/openvpn/ca.crt /config/openvpn/ca.crt
-	cp /home/nobody/openvpn/crl.pem /config/openvpn/crl.pem
-			
-	touch /root/runonce
-fi
+# create directory
+mkdir -p /config/openvpn
+
+# copy openvpn certs to /config
+cp -f /home/nobody/openvpn/ca.crt /config/openvpn/ca.crt
+cp -f /home/nobody/openvpn/crl.pem /config/openvpn/crl.pem
 
 # get country from env and copy matching pia remote gateway file to /config/openvpn/openvpn.conf
 if [ -z "${PIA_REMOTE}" ]; then
@@ -30,12 +23,12 @@ fi
 
 # customise openvpn.conf to ping tunnel every 10 mins
 if ! $(grep -Fxq "ping 600" /config/openvpn/openvpn.conf); then
-	echo "ping 600" >> /config/openvpn/openvpn.conf
+	sed -i '/crl-verify crl.pem/a ping 600' /config/openvpn/openvpn.conf
 fi
 
 # customise openvpn.conf to restart tunnel after 20 mins if no reply from ping
 if ! $(grep -Fxq "ping-restart 1200" /config/openvpn/openvpn.conf); then
-	echo "ping-restart 1200" >> /config/openvpn/openvpn.conf
+	sed -i '/ping 600/a ping-restart 1200' /config/openvpn/openvpn.conf
 fi
 
 # customise openvpn.conf to allow automatic login using credentials.conf file
