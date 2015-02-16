@@ -3,6 +3,7 @@
 # run script to check ip is valid for tun0
 source /home/nobody/checkip.sh
 
+# if privoxy enabled then run
 if [ -z "${ENABLE_PRIVOXY}" ]; then
 	echo "[warn] Privoxy not specified, defaulting to disabled"
 else
@@ -12,4 +13,6 @@ else
 		mkdir -p /config/privoxy
 		/usr/bin/privoxy --no-daemon /config/privoxy
 	else
-		echo "[info] Privoxy set to disabled"
+		echo "[info] Privoxy set to disabled"		
+	fi
+fi
