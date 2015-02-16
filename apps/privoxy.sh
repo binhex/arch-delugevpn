@@ -12,13 +12,13 @@ else
 		echo "[info] Starting Privoxy..."		
 		mkdir -p /config/privoxy
 		if [ ! -f "/config/privoxy/config" ]; then
-			cp -f /etc/privoxy/config /config/privoxy/config
+			cp -R /etc/privoxy/ /config/privoxy/
 		fi
 		LAN_IP=$(hostname -i)
-		sed -i -e 's/confdir \/etc\/privoxy/confdir \/config\/privoxy/g' /config/privoxy/config
-		sed -i -e 's/logdir \/var\/log\/privoxy/logdir \/config\/privoxy/g' /config/privoxy/config
-		sed -i -e 's/listen-address  127.0.0.1:8118/listen-address  $LAN_IP:8118/g' /config/privoxy/config
-		/usr/bin/privoxy --no-daemon /config/privoxy
+		sed -i -e "s/confdir \/etc\/privoxy/confdir \/config\/privoxy/g" /config/privoxy/config
+		sed -i -e "s/logdir \/var\/log\/privoxy/logdir \/config\/privoxy/g" /config/privoxy/config
+		sed -i -e "s/listen-address.*/listen-address  $LAN_IP:8118/g" /config/privoxy/config
+		/usr/bin/privoxy --no-daemon /config/privoxy/config
 	else
 		echo "[info] Privoxy set to disabled"		
 	fi
