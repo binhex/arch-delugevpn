@@ -40,8 +40,8 @@ RUN pacman -Sy --noconfirm && \
 	unzip /home/nobody/openvpn.zip -d /home/nobody/openvpn && \
 	rm /home/nobody/openvpn.zip && \
 	chmod +x /root/start.sh /root/openvpn.sh /home/nobody/checkip.sh /home/nobody/deluge.sh /home/nobody/setport.sh /home/nobody/webui.sh /home/nobody/privoxy.sh && \
-	chown -R nobody:users /home/nobody /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy && \
-	chmod -R 775 /home/nobody /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy && \
+	chown -R nobody:users /home/nobody /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy/config && \
+	chmod -R 775 /home/nobody /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy/config && \
 	yes|pacman -Scc && \
 	rm -rf /usr/share/locale/* && \
 	rm -rf /usr/share/man/* && \
