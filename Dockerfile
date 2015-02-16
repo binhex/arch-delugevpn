@@ -25,6 +25,9 @@ ADD apps/setport.sh /home/nobody/setport.sh
 # add bash script to run deluge webui
 ADD apps/webui.sh /home/nobody/webui.sh
 
+# add bash script to run privoxy
+ADD apps/privoxy.sh /home/nobody/privoxy.sh
+
 # download pia openvpn config files
 ADD https://www.privateinternetaccess.com/openvpn/openvpn.zip /home/nobody/openvpn.zip
 
@@ -33,13 +36,13 @@ ADD https://www.privateinternetaccess.com/openvpn/openvpn.zip /home/nobody/openv
 
 # install install app using pacman, set perms, cleanup
 RUN pacman -Sy --noconfirm && \
-	pacman -S net-tools openvpn unzip unrar librsvg pygtk python2-service-identity python2-mako python2-notify deluge --noconfirm && \
+	pacman -S net-tools openvpn privoxy unzip unrar librsvg pygtk python2-service-identity python2-mako python2-notify deluge --noconfirm && \
 	unzip /home/nobody/openvpn.zip -d /home/nobody/openvpn && \
 	rm /home/nobody/openvpn.zip && \
-	chmod +x /root/start.sh /root/openvpn.sh /home/nobody/checkip.sh /home/nobody/deluge.sh /home/nobody/setport.sh /home/nobody/webui.sh && \
-	chown -R nobody:users /home/nobody /usr/bin/deluged /usr/bin/deluge-web && \
-	chmod -R 775 /home/nobody /usr/bin/deluged /usr/bin/deluge-web && \
-	yes|pacman -Scc && \	
+	chmod +x /root/start.sh /root/openvpn.sh /home/nobody/checkip.sh /home/nobody/deluge.sh /home/nobody/setport.sh /home/nobody/webui.sh /home/nobody/privoxy.sh && \
+	chown -R nobody:users /home/nobody /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy && \
+	chmod -R 775 /home/nobody /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy && \
+	yes|pacman -Scc && \
 	rm -rf /usr/share/locale/* && \
 	rm -rf /usr/share/man/* && \
 	rm -rf /tmp/*
@@ -55,6 +58,9 @@ VOLUME /data
 
 # expose port for deluge webui
 EXPOSE 8112
+
+# expose port for privoxy
+EXPOSE 8118
 
 # set environment variables for user nobody
 ENV HOME /home/nobody
