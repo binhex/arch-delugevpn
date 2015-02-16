@@ -70,18 +70,22 @@ echo "8112    webui" >> /etc/iproute2/rt_tables
 ip rule add fwmark 1 table webui
 ip route add default via $DEFAULT_GATEWAY table webui
 
-# setup route for privoxy using set-mark to route traffic for port 8118 to eth0
-echo "8118    privoxy" >> /etc/iproute2/rt_tables
-ip rule add fwmark 2 table privoxy
-ip route add default via $DEFAULT_GATEWAY table privoxy
-
+if [[ $ENABLE_PRIVOXY == "yes" ]]; then
+	# setup route for privoxy using set-mark to route traffic for port 8118 to eth0
+	echo "8118    privoxy" >> /etc/iproute2/rt_tables
+	ip rule add fwmark 2 table privoxy
+	ip route add default via $DEFAULT_GATEWAY table privoxy
+fi
+	
 # use mangle to set source/destination with mark 1 (port 8112)
 iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
 iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
 
-# use mangle to set source/destination with mark 1 (port 8118)
-iptables -t mangle -A OUTPUT -p tcp --dport 8118 -j MARK --set-mark 2
-iptables -t mangle -A OUTPUT -p tcp --sport 8118 -j MARK --set-mark 2
+if [[ $ENABLE_PRIVOXY == "yes" ]]; then
+	# use mangle to set source/destination with mark 1 (port 8118)
+	iptables -t mangle -A OUTPUT -p tcp --dport 8118 -j MARK --set-mark 2
+	iptables -t mangle -A OUTPUT -p tcp --sport 8118 -j MARK --set-mark 2
+fi
 
 echo "[info] ip route"
 ip route
@@ -100,9 +104,11 @@ iptables -A INPUT -p $PIA_PROTOCOL -i eth0 --sport $PIA_PORT -j ACCEPT
 iptables -A INPUT -p tcp -i eth0 --dport 8112 -j ACCEPT
 iptables -A INPUT -p tcp -i eth0 --sport 8112 -j ACCEPT
 
-# accept input to privoxy port 8118
-iptables -A INPUT -p tcp -i eth0 --dport 8118 -j ACCEPT
-iptables -A INPUT -p tcp -i eth0 --sport 8118 -j ACCEPT
+if [[ $ENABLE_PRIVOXY == "yes" ]]; then
+	# accept input to privoxy port 8118
+	iptables -A INPUT -p tcp -i eth0 --dport 8118 -j ACCEPT
+	iptables -A INPUT -p tcp -i eth0 --sport 8118 -j ACCEPT
+fi
 
 # accept input dns lookup
 iptables -A INPUT -p udp --sport 53 -j ACCEPT
@@ -126,9 +132,11 @@ iptables -A OUTPUT -p $PIA_PROTOCOL -o eth0 --dport $PIA_PORT -j ACCEPT
 iptables -A OUTPUT -p tcp -o eth0 --dport 8112 -j ACCEPT
 iptables -A OUTPUT -p tcp -o eth0 --sport 8112 -j ACCEPT
 
-# accept output to privoxy port 8118
-iptables -A OUTPUT -p tcp -o eth0 --dport 8118 -j ACCEPT
-iptables -A OUTPUT -p tcp -o eth0 --sport 8118 -j ACCEPT
+if [[ $ENABLE_PRIVOXY == "yes" ]]; then
+	# accept output to privoxy port 8118
+	iptables -A OUTPUT -p tcp -o eth0 --dport 8118 -j ACCEPT
+	iptables -A OUTPUT -p tcp -o eth0 --sport 8118 -j ACCEPT
+fi
 
 # accept output dns lookup
 iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
