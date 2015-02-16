@@ -82,7 +82,7 @@ iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
 iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
 
 if [[ $ENABLE_PRIVOXY == "yes" ]]; then
-	# use mangle to set source/destination with mark 1 (port 8118)
+	# use mangle to set source/destination with mark 2 (port 8118)
 	iptables -t mangle -A OUTPUT -p tcp --dport 8118 -j MARK --set-mark 2
 	iptables -t mangle -A OUTPUT -p tcp --sport 8118 -j MARK --set-mark 2
 fi

@@ -12,7 +12,7 @@ else
 		echo "[info] Starting Privoxy..."		
 		mkdir -p /config/privoxy
 		if [ ! -f "/config/privoxy/config" ]; then
-			cp -R /etc/privoxy/ /config/privoxy/
+			cp -R /etc/privoxy/ /config/
 		fi
 		LAN_IP=$(hostname -i)
 		sed -i -e "s/confdir \/etc\/privoxy/confdir \/config\/privoxy/g" /config/privoxy/config
