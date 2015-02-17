@@ -19,7 +19,7 @@ if [[ $VPN_PROV == "custom" ]]; then
 		echo "[info] Deluge listening interface is $LISTEN_INTERFACE"
 			
 		# if current listen interface ip is different to tunnel local ip then force re-detect of incoming port
-		if [[ "$LISTEN_INTERFACE" != "$LOCAL_IP" ]]; then
+		if [[ $LISTEN_INTERFACE != "$LOCAL_IP" ]]; then
 
 			echo "[info] Deluge listening interface IP $LISTEN_INTERFACE and OpenVPN local IP $LOCAL_IP different, configuring Deluge..."
 
@@ -48,7 +48,7 @@ elif [[ $VPN_PROV == "pia" || -z "${VPN_PROV}" ]]; then
 		echo "[info] Deluge listening interface is $LISTEN_INTERFACE"
 			
 		# if current listen interface ip is different to tunnel local ip then force re-detect of incoming port
-		if [[ "$LISTEN_INTERFACE" != "$LOCAL_IP" ]]; then
+		if [[ $LISTEN_INTERFACE != "$LOCAL_IP" ]]; then
 
 			echo "[info] Deluge listening interface IP $LISTEN_INTERFACE and OpenVPN local IP $LOCAL_IP different, configuring Deluge..."
 			
