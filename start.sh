@@ -2,22 +2,29 @@
 
 # create directory
 mkdir -p /config/openvpn
+	
+if [[ $VPN_PROV == "custom" ]]; then
+	echo "[info] VPN provider defined as custom, copying basic OpenVPN config"
+	if [ ! -f "/config/openvpn/openvpn.conf" ]; then
+		cp -f "/home/nobody/openvpn.conf" "/config/openvpn/openvpn.conf"
+		sed -i -e 's/remote.*/remote vpn.provider.com 1111/g' "/config/openvpn/openvpn.conf"
+	fi
+	
+elif [[ $VPN_PROV == "pia" || -z "${VPN_PROV}" ]]; then	
+	echo "[info] VPN provider defined as $VPN_PROV"	
+	# copy openvpn certs to /config
+	cp -f /home/nobody/ca.crt /config/openvpn/ca.crt
+	cp -f /home/nobody/crl.pem /config/openvpn/crl.pem
 
-# copy openvpn certs to /config
-cp -f /home/nobody/openvpn/ca.crt /config/openvpn/ca.crt
-cp -f /home/nobody/openvpn/crl.pem /config/openvpn/crl.pem
-
-# get country from env and copy matching pia remote gateway file to /config/openvpn/openvpn.conf
-if [ -z "${PIA_REMOTE}" ]; then
-	echo "[warn] PIA remote gateway not specified, defaulting to Netherlands"
-	cp -f "/home/nobody/openvpn/Netherlands.ovpn" "/config/openvpn/openvpn.conf"
-else
-	echo "[info] PIA remote gateway defined as $PIA_REMOTE"
-	if [ ! -f "/home/nobody/openvpn/$PIA_REMOTE.ovpn" ]; then
-		echo "[warn] PIA remote gateway not found, defaulting to Netherlands"	
-		cp -f "/home/nobody/openvpn/Netherlands.ovpn" "/config/openvpn/openvpn.conf"
-	else
-		cp -f "/home/nobody/openvpn/$PIA_REMOTE.ovpn" "/config/openvpn/openvpn.conf"
+	if [ ! -f "/config/openvpn/openvpn.conf" ]; then
+		cp -f "/home/nobody/openvpn.conf" "/config/openvpn/openvpn.conf"
+		if [ -z "${VPN_REMOTE}" || -z "${VPN_PORT}" ]; then
+			echo "[warn] VPN provider remote and/or port not defined, defaulting to Netherlands"
+			sed -i -e "s/remote.*/remote nl.privateinternetaccess.com 1194/g" "/config/openvpn/openvpn.conf"
+		else
+			echo "[info] VPN provider remote and port defined as $VPN_REMOTE $VPN_PORT"
+			sed -i -e "s/remote.*/remote $VPN_REMOTE $VPN_PORT/g" "/config/openvpn/openvpn.conf"
+		fi
 	fi
 fi
 
@@ -37,21 +44,21 @@ if ! $(grep -Fxq "auth-user-pass credentials.conf" /config/openvpn/openvpn.conf)
 fi
 
 # read port number and protocol from openvpn.conf (used to define iptables rule)
-PIA_PORT=$(cat /config/openvpn/openvpn.conf | grep -P -o -m 1 '^remote.*' | grep -P -o -m 1 '[\d]+$')
-PIA_PROTOCOL=$(cat /config/openvpn/openvpn.conf | grep -P -o -m 1 '(?<=proto\s).*')
+VPN_PORT=$(cat /config/openvpn/openvpn.conf | grep -P -o -m 1 '^remote.*' | grep -P -o -m 1 '[\d]+$')
+VPN_PROTOCOL=$(cat /config/openvpn/openvpn.conf | grep -P -o -m 1 '(?<=proto\s).*')
 	
-# write pia username to file
-if [ -z "${PIA_USER}" ]; then
-	echo "[crit] PIA username not specified" && exit 1
+# write vpn username to file
+if [ -z "${VPN_USER}" ]; then
+	echo "[crit] vpn username not specified" && exit 1
 else
-	echo "${PIA_USER}" > /config/openvpn/credentials.conf	
+	echo "${VPN_USER}" > /config/openvpn/credentials.conf	
 fi
 
-# append pia password to file
-if [ -z "${PIA_PASS}" ]; then
-	echo "[crit] PIA password not specified" && exit 1
+# append vpn password to file
+if [ -z "${VPN_PASS}" ]; then
+	echo "[crit] VPN password not specified" && exit 1
 else
-	echo "${PIA_PASS}" >> /config/openvpn/credentials.conf
+	echo "${VPN_PASS}" >> /config/openvpn/credentials.conf
 fi
 
 # set permissions to user nobody
@@ -98,7 +105,7 @@ iptables -P INPUT DROP
 iptables -A INPUT -i tun0 -j ACCEPT
 
 # accept input to vpn gateway
-iptables -A INPUT -p $PIA_PROTOCOL -i eth0 --sport $PIA_PORT -j ACCEPT
+iptables -A INPUT -p $VPN_PROTOCOL -i eth0 --sport $VPN_PORT -j ACCEPT
 
 # accept input to deluge webui port 8112
 iptables -A INPUT -p tcp -i eth0 --dport 8112 -j ACCEPT
@@ -126,7 +133,7 @@ iptables -P OUTPUT DROP
 iptables -A OUTPUT -o tun0 -j ACCEPT
 
 # accept output to vpn gateway
-iptables -A OUTPUT -p $PIA_PROTOCOL -o eth0 --dport $PIA_PORT -j ACCEPT
+iptables -A OUTPUT -p $VPN_PROTOCOL -o eth0 --dport $VPN_PORT -j ACCEPT
 
 # accept output to deluge webui port 8112
 iptables -A OUTPUT -p tcp -o eth0 --dport 8112 -j ACCEPT

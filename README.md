@@ -18,7 +18,7 @@ docker pull binhex/arch-delugevpn
 **Run container**
 
 ```
-docker run -d --cap-add=NET_ADMIN -p 8112:8112 -p 8118:8118 --name=<container name> -v <path for data files>:/data -v <path for config files>:/config -v /etc/localtime:/etc/localtime:ro -e PIA_USER=<pia username> -e PIA_PASS=<pia password> -e PIA_REMOTE=<pia remote gateway> -e ENABLE_PRIVOXY=<yes|no> binhex/arch-delugevpn
+docker run -d --cap-add=NET_ADMIN -p 8112:8112 -p 8118:8118 --name=<container name> -v <path for data files>:/data -v <path for config files>:/config -v /etc/localtime:/etc/localtime:ro -e VPN_USER=<vpn username> -e VPN_PASS=<vpn password> -e VPN_REMOTE=<vpn remote gateway> -e VPN_PORT=<vpn remote port> -e VPN_PROV=<pia|custom> -e ENABLE_PRIVOXY=<yes|no> binhex/arch-delugevpn
 ```
 
 Please replace all user variables in the above command defined by <> with the correct values.
@@ -39,7 +39,12 @@ Default password for the webui is "deluge"
 
 Default is no authentication required
 
+**Example command**
+
+```
+docker run -d --cap-add=NET_ADMIN -p 8112:8112 -p 8118:8118 --name=delugevpn -v /root/docker/data:/data -v /root/docker/config:/config -v /etc/localtime:/etc/localtime:ro -e VPN_USER=myusername -e VPN_PASS=mypassword -e VPN_REMOTE=nl.privateinternetaccess.com -e VPN_PORT=1194 -e VPN_PROV=pia -e ENABLE_PRIVOXY=yes binhex/arch-delugevpn
+```
+
 **IMPORTANT**
 
-This Docker relies on a VPN connection to PIA (PrivateInternetAccess), please sign-up and enter your credentials in the above run command. The environment variable PIA_REMOTE allows you to define the country you want the tunnel connected to, choices are:- UK London, UK Southampton, US California, US East, US Florida, US Midwest, US Seattle, US Texas, US West, Australia, CA North York, CA Toronto, France, Germany, Hong Kong, Israel, Japan, Netherlands, Romania, Sweden, Switzerland.
-
+This Docker relies on a VPN connection, please sign-up with a VPN provider.

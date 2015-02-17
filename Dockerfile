@@ -28,8 +28,12 @@ ADD apps/webui.sh /home/nobody/webui.sh
 # add bash script to run privoxy
 ADD apps/privoxy.sh /home/nobody/privoxy.sh
 
-# download pia openvpn config files
-ADD https://www.privateinternetaccess.com/openvpn/openvpn.zip /home/nobody/openvpn.zip
+# add pia certificates
+ADD config/ca.crt /home/nobody/ca.crt
+ADD config/crl.pem /home/nobody/crl.pem
+
+# add sample openvpn conf file (based on pia netherlands)
+ADD config/openvpn.conf /home/nobody/openvpn.conf
 
 # install app
 #############
@@ -37,8 +41,6 @@ ADD https://www.privateinternetaccess.com/openvpn/openvpn.zip /home/nobody/openv
 # install install app using pacman, set perms, cleanup
 RUN pacman -Sy --noconfirm && \
 	pacman -S net-tools openvpn privoxy unzip unrar librsvg pygtk python2-service-identity python2-mako python2-notify deluge --noconfirm && \
-	unzip /home/nobody/openvpn.zip -d /home/nobody/openvpn && \
-	rm /home/nobody/openvpn.zip && \
 	chmod +x /root/start.sh /root/openvpn.sh /home/nobody/checkip.sh /home/nobody/deluge.sh /home/nobody/setport.sh /home/nobody/webui.sh /home/nobody/privoxy.sh && \
 	chown -R nobody:users /home/nobody /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy && \
 	chmod -R 775 /home/nobody /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy && \
