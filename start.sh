@@ -5,7 +5,7 @@ mkdir -p /config/openvpn
 	
 if [[ $VPN_PROV == "custom" ]]; then
 	echo "[info] VPN provider defined as custom, copying basic OpenVPN config"
-	if [ ! -f "/config/openvpn/openvpn.conf" ]; then
+	if [[ ! -f "/config/openvpn/openvpn.conf" ]]; then
 		cp -f "/home/nobody/openvpn.conf" "/config/openvpn/openvpn.conf"
 		sed -i -e 's/remote.*/remote vpn.provider.com 1111/g' "/config/openvpn/openvpn.conf"
 	fi
@@ -16,9 +16,9 @@ elif [[ $VPN_PROV == "pia" || -z "${VPN_PROV}" ]]; then
 	cp -f /home/nobody/ca.crt /config/openvpn/ca.crt
 	cp -f /home/nobody/crl.pem /config/openvpn/crl.pem
 
-	if [ ! -f "/config/openvpn/openvpn.conf" ]; then
+	if [[ ! -f "/config/openvpn/openvpn.conf" ]]; then
 		cp -f "/home/nobody/openvpn.conf" "/config/openvpn/openvpn.conf"
-		if [ -z "${VPN_REMOTE}" || -z "${VPN_PORT}" ]; then
+		if [[ -z "${VPN_REMOTE}" || -z "${VPN_PORT}" ]]; then
 			echo "[warn] VPN provider remote and/or port not defined, defaulting to Netherlands"
 			sed -i -e "s/remote.*/remote nl.privateinternetaccess.com 1194/g" "/config/openvpn/openvpn.conf"
 		else
@@ -48,14 +48,14 @@ VPN_PORT=$(cat /config/openvpn/openvpn.conf | grep -P -o -m 1 '^remote.*' | grep
 VPN_PROTOCOL=$(cat /config/openvpn/openvpn.conf | grep -P -o -m 1 '(?<=proto\s).*')
 	
 # write vpn username to file
-if [ -z "${VPN_USER}" ]; then
+if [[ -z "${VPN_USER}" ]]; then
 	echo "[crit] VPN username not specified" && exit 1
 else
 	echo "${VPN_USER}" > /config/openvpn/credentials.conf	
 fi
 
 # append vpn password to file
-if [ -z "${VPN_PASS}" ]; then
+if [[ -z "${VPN_PASS}" ]]; then
 	echo "[crit] VPN password not specified" && exit 1
 else
 	echo "${VPN_PASS}" >> /config/openvpn/credentials.conf

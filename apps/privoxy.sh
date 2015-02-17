@@ -4,14 +4,14 @@
 source /home/nobody/checkip.sh
 
 # if privoxy enabled then run
-if [ -z "${ENABLE_PRIVOXY}" ]; then
+if [[ -z "${ENABLE_PRIVOXY}" ]]; then
 	echo "[warn] Privoxy not specified, defaulting to disabled"
 else
 	echo "[info] Privoxy defined as ENABLE_PRIVOXY=$ENABLE_PRIVOXY"
-	if [ $ENABLE_PRIVOXY == "yes" ]; then	
+	if [[ $ENABLE_PRIVOXY == "yes" ]]; then	
 		echo "[info] Starting Privoxy..."		
 		mkdir -p /config/privoxy
-		if [ ! -f "/config/privoxy/config" ]; then
+		if [[ ! -f "/config/privoxy/config" ]]; then
 			cp -R /etc/privoxy/ /config/
 		fi
 		LAN_IP=$(hostname -i)
