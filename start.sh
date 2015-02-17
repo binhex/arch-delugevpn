@@ -49,7 +49,7 @@ VPN_PROTOCOL=$(cat /config/openvpn/openvpn.conf | grep -P -o -m 1 '(?<=proto\s).
 	
 # write vpn username to file
 if [ -z "${VPN_USER}" ]; then
-	echo "[crit] vpn username not specified" && exit 1
+	echo "[crit] VPN username not specified" && exit 1
 else
 	echo "${VPN_USER}" > /config/openvpn/credentials.conf	
 fi

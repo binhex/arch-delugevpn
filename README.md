@@ -2,9 +2,7 @@ Deluge + OpenVPN + Privoxy
 ==========================
 
 Deluge - http://deluge-torrent.org/
-
 OpenVPN - https://openvpn.net/
-
 Privoxy - http://www.privoxy.org/
 
 Latest stable Deluge release for Arch Linux, including OpenVPN to tunnel torrent traffic securely (using iptables to block any traffic not bound for tunnel). This now also includes Privoxy to allow unfiltered http|https traffic via VPN.
