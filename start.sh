@@ -77,23 +77,23 @@ echo "8112    webui" >> /etc/iproute2/rt_tables
 ip rule add fwmark 1 table webui
 ip route add default via $DEFAULT_GATEWAY table webui
 
+# setup route for deluge daemon using set-mark to route traffic (lan only) for port 58846 to eth0
+if [[ -z "${HOST_SUBNET}" ]]; then
+	echo "[warn] Host subnet not defined, external access to Deluge daemon will be blocked"
+elif [[ $HOST_SUBNET != "" ]]; then
+	echo "[info] Host subnet defined as $HOST_SUBNET"
+	echo "58846    daemon" >> /etc/iproute2/rt_tables
+	ip rule add fwmark 2 table daemon
+	ip route add $HOST_SUBNET via $DEFAULT_GATEWAY table daemon
+fi
+
 if [[ $ENABLE_PRIVOXY == "yes" ]]; then
 	# setup route for privoxy using set-mark to route traffic for port 8118 to eth0
 	echo "8118    privoxy" >> /etc/iproute2/rt_tables
-	ip rule add fwmark 2 table privoxy
+	ip rule add fwmark 3 table privoxy
 	ip route add default via $DEFAULT_GATEWAY table privoxy
 fi
 	
-# use mangle to set source/destination with mark 1 (port 8112)
-iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
-iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
-
-if [[ $ENABLE_PRIVOXY == "yes" ]]; then
-	# use mangle to set source/destination with mark 2 (port 8118)
-	iptables -t mangle -A OUTPUT -p tcp --dport 8118 -j MARK --set-mark 2
-	iptables -t mangle -A OUTPUT -p tcp --sport 8118 -j MARK --set-mark 2
-fi
-
 echo "[info] ip route"
 ip route
 echo "--------------------"
@@ -110,6 +110,10 @@ iptables -A INPUT -p $VPN_PROTOCOL -i eth0 --sport $VPN_PORT -j ACCEPT
 # accept input to deluge webui port 8112
 iptables -A INPUT -p tcp -i eth0 --dport 8112 -j ACCEPT
 iptables -A INPUT -p tcp -i eth0 --sport 8112 -j ACCEPT
+
+# accept input to deluge daemon port 58846
+iptables -A INPUT -p tcp -i eth0 --dport 58846 -j ACCEPT
+iptables -A INPUT -p tcp -i eth0 --sport 58846 -j ACCEPT
 
 if [[ $ENABLE_PRIVOXY == "yes" ]]; then
 	# accept input to privoxy port 8118
@@ -135,14 +139,18 @@ iptables -A OUTPUT -o tun0 -j ACCEPT
 # accept output to vpn gateway
 iptables -A OUTPUT -p $VPN_PROTOCOL -o eth0 --dport $VPN_PORT -j ACCEPT
 
-# accept output to deluge webui port 8112
-iptables -A OUTPUT -p tcp -o eth0 --dport 8112 -j ACCEPT
-iptables -A OUTPUT -p tcp -o eth0 --sport 8112 -j ACCEPT
+# use mangle to set source/destination with mark 1 (port 8112)
+iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
+iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
+
+# use mangle to set source/destination with mark 2 (port 58846)
+iptables -t mangle -A OUTPUT -p tcp -d $HOST_SUBNET --dport 58846 -j MARK --set-mark 2
+iptables -t mangle -A OUTPUT -p tcp -d $HOST_SUBNET --sport 58846 -j MARK --set-mark 2
 
 if [[ $ENABLE_PRIVOXY == "yes" ]]; then
-	# accept output to privoxy port 8118
-	iptables -A OUTPUT -p tcp -o eth0 --dport 8118 -j ACCEPT
-	iptables -A OUTPUT -p tcp -o eth0 --sport 8118 -j ACCEPT
+	# use mangle to set source/destination with mark 3 (port 8118)
+	iptables -t mangle -A OUTPUT -p tcp --dport 8118 -j MARK --set-mark 3
+	iptables -t mangle -A OUTPUT -p tcp --sport 8118 -j MARK --set-mark 3
 fi
 
 # accept output dns lookup

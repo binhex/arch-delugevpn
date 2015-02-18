@@ -61,6 +61,9 @@ VOLUME /data
 # expose port for deluge webui
 EXPOSE 8112
 
+# expose port for deluge daemon (external access only)
+EXPOSE 58846
+
 # expose port for privoxy
 EXPOSE 8118
 
