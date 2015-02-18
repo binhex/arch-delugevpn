@@ -86,7 +86,7 @@ elif [[ $HOST_SUBNET =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2
 	ip rule add fwmark 2 table daemon
 	ip route add $HOST_SUBNET via $DEFAULT_GATEWAY table daemon
 else
-	echo "[warn] Host subnet not defined correctly, please check"
+	echo "[warn] Host subnet not defined correctly, please verify HOST_SUBNET value"
 fi
 
 if [[ $ENABLE_PRIVOXY == "yes" ]]; then
@@ -143,18 +143,22 @@ iptables -A OUTPUT -o tun0 -j ACCEPT
 # accept output to vpn gateway
 iptables -A OUTPUT -p $VPN_PROTOCOL -o eth0 --dport $VPN_PORT -j ACCEPT
 
-# use mangle to set source/destination with mark 1 (port 8112)
+# accept output to deluge webui port 8112 (used when tunnel down)
+iptables -A OUTPUT -p tcp -o eth0 --dport 8112 -j ACCEPT
+iptables -A OUTPUT -p tcp -o eth0 --sport 8112 -j ACCEPT
+
+# use mangle to set source/destination with mark 1 (used when tunnel up)
 iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
 iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
 
 if [[ $HOST_SUBNET =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2} ]]; then
-	# use mangle to set source/destination with mark 2 (port 58846)
+	# use mangle to set source/destination with mark 2 (used when tunnel up)
 	iptables -t mangle -A OUTPUT -p tcp -d $HOST_SUBNET --dport 58846 -j MARK --set-mark 2
 	iptables -t mangle -A OUTPUT -p tcp -d $HOST_SUBNET --sport 58846 -j MARK --set-mark 2
 fi
 	
-if [[ $ENABLE_PRIVOXY == "yes" ]]; then
-	# use mangle to set source/destination with mark 3 (port 8118)
+if [[ $ENABLE_PRIVOXY == "yes" ]]; then	
+	# use mangle to set source/destination with mark 3 (used when tunnel up)
 	iptables -t mangle -A OUTPUT -p tcp --dport 8118 -j MARK --set-mark 3
 	iptables -t mangle -A OUTPUT -p tcp --sport 8118 -j MARK --set-mark 3
 fi
