@@ -75,25 +75,25 @@ DEFAULT_GATEWAY=$(ip route show default | awk '/default/ {print $3}')
 # setup route for deluge webui using set-mark to route traffic for port 8112 to eth0
 echo "8112    webui" >> /etc/iproute2/rt_tables
 ip rule add fwmark 1 table webui
-ip route add $HOST_SUBNET via $DEFAULT_GATEWAY table webui
+ip route add default via $DEFAULT_GATEWAY table webui
 
-# setup route for deluge daemon using set-mark to route traffic (local lan only) for port 58846 to eth0
+# setup route for deluge daemon using set-mark to route traffic for port 58846 to eth0 (local subnet only)
 if [[ -z "${HOST_SUBNET}" ]]; then
-	echo "[crit] Host subnet not defined, please define HOST_SUBNET value" && exit 1
+	echo "[warn] Host subnet not defined, access to Deluge daemon and Privoxy will be blocked. Please define HOST_SUBNET value"
 elif [[ $HOST_SUBNET =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2} ]]; then
 	echo "[info] Host subnet defined as $HOST_SUBNET"
 	echo "58846    daemon" >> /etc/iproute2/rt_tables
 	ip rule add fwmark 2 table daemon
-	ip route add $HOST_SUBNET via $DEFAULT_GATEWAY table daemon
+	ip route add default via $DEFAULT_GATEWAY table daemon
 else
-	echo "[crit] Host subnet not defined correctly, please verify HOST_SUBNET value" && exit 1
+	echo "[warn] Host subnet not defined correctly, access to Deluge daemon and Privoxy will be blocked. Please verify HOST_SUBNET value"
 fi
 
 # setup route for privoxy using set-mark to route traffic for port 8118 to eth0
 if [[ $ENABLE_PRIVOXY == "yes" ]]; then
 	echo "8118    privoxy" >> /etc/iproute2/rt_tables
 	ip rule add fwmark 3 table privoxy
-	ip route add $HOST_SUBNET via $DEFAULT_GATEWAY table privoxy
+	ip route add default via $DEFAULT_GATEWAY table privoxy
 fi
 	
 echo "[info] ip route"
@@ -114,13 +114,17 @@ iptables -A INPUT -p tcp -i eth0 --dport 8112 -j ACCEPT
 iptables -A INPUT -p tcp -i eth0 --sport 8112 -j ACCEPT
 
 # accept input to deluge daemon port 58846
-iptables -A INPUT -p tcp -i eth0 --dport 58846 -j ACCEPT
-iptables -A INPUT -p tcp -i eth0 --sport 58846 -j ACCEPT
+if [[ $HOST_SUBNET =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2} ]]; then
+	iptables -A INPUT -p tcp -s $HOST_SUBNET --dport 58846 -j ACCEPT
+	iptables -A INPUT -p tcp -s $HOST_SUBNET --sport 58846 -j ACCEPT
+fi
 
 # accept input to privoxy port 8118
-if [[ $ENABLE_PRIVOXY == "yes" ]]; then
-	iptables -A INPUT -p tcp -i eth0 --dport 8118 -j ACCEPT
-	iptables -A INPUT -p tcp -i eth0 --sport 8118 -j ACCEPT
+if [[ $HOST_SUBNET =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2} ]]; then
+	if [[ $ENABLE_PRIVOXY == "yes" ]]; then
+		iptables -A INPUT -p tcp -s $HOST_SUBNET --dport 8118 -j ACCEPT
+		iptables -A INPUT -p tcp -s $HOST_SUBNET --sport 8118 -j ACCEPT
+	fi
 fi
 
 # accept input dns lookup
@@ -150,13 +154,17 @@ iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
 iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
 
 # accept output to deluge daemon port 58846 (used when tunnel up)
-iptables -t mangle -A OUTPUT -p tcp -d $HOST_SUBNET --dport 58846 -j MARK --set-mark 2
-iptables -t mangle -A OUTPUT -p tcp -d $HOST_SUBNET --sport 58846 -j MARK --set-mark 2
-	
+if [[ $HOST_SUBNET =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2} ]]; then
+	iptables -t mangle -A OUTPUT -p tcp -d $HOST_SUBNET --dport 58846 -j MARK --set-mark 2
+	iptables -t mangle -A OUTPUT -p tcp -d $HOST_SUBNET --sport 58846 -j MARK --set-mark 2
+fi
+
 # accept output to privoxy port 8118 (used when tunnel up)
-if [[ $ENABLE_PRIVOXY == "yes" ]]; then	
-	iptables -t mangle -A OUTPUT -p tcp --dport 8118 -j MARK --set-mark 3
-	iptables -t mangle -A OUTPUT -p tcp --sport 8118 -j MARK --set-mark 3
+if [[ $HOST_SUBNET =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2} ]]; then
+	if [[ $ENABLE_PRIVOXY == "yes" ]]; then	
+		iptables -t mangle -A OUTPUT -p tcp -d $HOST_SUBNET --dport 8118 -j MARK --set-mark 3
+		iptables -t mangle -A OUTPUT -p tcp -d $HOST_SUBNET --sport 8118 -j MARK --set-mark 3
+	fi
 fi
 
 # accept output dns lookup
