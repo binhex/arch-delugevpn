@@ -80,7 +80,7 @@ ip route add default via $DEFAULT_GATEWAY table webui
 # setup route for deluge daemon using set-mark to route traffic (lan only) for port 58846 to eth0
 if [[ -z "${HOST_SUBNET}" ]]; then
 	echo "[warn] Host subnet not defined, external access to Deluge daemon will be blocked"
-elif [[ $HOST_SUBNET =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\\[0-9]{1,2} ]]; then
+elif [[ $HOST_SUBNET =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2} ]]; then
 	echo "[info] Host subnet defined as $HOST_SUBNET"
 	echo "58846    daemon" >> /etc/iproute2/rt_tables
 	ip rule add fwmark 2 table daemon
@@ -113,7 +113,7 @@ iptables -A INPUT -p $VPN_PROTOCOL -i eth0 --sport $VPN_PORT -j ACCEPT
 iptables -A INPUT -p tcp -i eth0 --dport 8112 -j ACCEPT
 iptables -A INPUT -p tcp -i eth0 --sport 8112 -j ACCEPT
 
-if [[ $HOST_SUBNET =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\\[0-9]{1,2} ]]; then
+if [[ $HOST_SUBNET =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2} ]]; then
 	# accept input to deluge daemon port 58846
 	iptables -A INPUT -p tcp -i eth0 --dport 58846 -j ACCEPT
 	iptables -A INPUT -p tcp -i eth0 --sport 58846 -j ACCEPT
@@ -147,7 +147,7 @@ iptables -A OUTPUT -p $VPN_PROTOCOL -o eth0 --dport $VPN_PORT -j ACCEPT
 iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
 iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
 
-if [[ $HOST_SUBNET =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\\[0-9]{1,2} ]]; then
+if [[ $HOST_SUBNET =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2} ]]; then
 	# use mangle to set source/destination with mark 2 (port 58846)
 	iptables -t mangle -A OUTPUT -p tcp -d $HOST_SUBNET --dport 58846 -j MARK --set-mark 2
 	iptables -t mangle -A OUTPUT -p tcp -d $HOST_SUBNET --sport 58846 -j MARK --set-mark 2
