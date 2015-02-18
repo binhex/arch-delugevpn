@@ -40,7 +40,7 @@ Default is no authentication required
 **Example command**
 
 ```
-docker run -d --cap-add=NET_ADMIN -p 8112:8112 -p 8118:8118 --name=delugevpn -v /root/docker/data:/data -v /root/docker/config:/config -v /etc/localtime:/etc/localtime:ro -e HOST_SUBNET=<192.168.1.0/24> -e VPN_USER=myusername -e VPN_PASS=mypassword -e VPN_REMOTE=nl.privateinternetaccess.com -e VPN_PORT=1194 -e VPN_PROV=pia -e ENABLE_PRIVOXY=yes binhex/arch-delugevpn
+docker run -d --cap-add=NET_ADMIN -p 8112:8112 -p 8118:8118 --name=delugevpn -v /root/docker/data:/data -v /root/docker/config:/config -v /etc/localtime:/etc/localtime:ro -e HOST_SUBNET=192.168.1.0/24 -e VPN_USER=myusername -e VPN_PASS=mypassword -e VPN_REMOTE=nl.privateinternetaccess.com -e VPN_PORT=1194 -e VPN_PROV=pia -e ENABLE_PRIVOXY=yes binhex/arch-delugevpn
 ```
 
 **IMPORTANT**
