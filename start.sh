@@ -3,19 +3,25 @@
 # create directory
 mkdir -p /config/openvpn
 	
+# if custom vpn provider choosen then copy base config file
 if [[ $VPN_PROV == "custom" ]]; then
-	echo "[info] VPN provider defined as custom, copying basic OpenVPN config"
+	echo "[info] VPN provider defined as custom, copying basic OpenVPN config"	
 	if [[ ! -f "/config/openvpn/openvpn.conf" ]]; then
 		cp -f "/home/nobody/openvpn.conf" "/config/openvpn/openvpn.conf"
-		sed -i -e 's/remote.*/remote vpn.provider.com 1111/g' "/config/openvpn/openvpn.conf"
+		if [[ -z "${VPN_REMOTE}" || -z "${VPN_PORT}" ]]; then
+			echo "[crit] VPN provider remote and/or port not defined" && exit 1
+		else
+			echo "[info] VPN provider remote and port defined as $VPN_REMOTE $VPN_PORT"
+			sed -i -e "s/remote.*/remote $VPN_REMOTE $VPN_PORT/g" "/config/openvpn/openvpn.conf"
+		fi
 	fi
 	
+# if pia vpn provider choosen then copy base config file and pia certs
 elif [[ $VPN_PROV == "pia" || -z "${VPN_PROV}" ]]; then	
 	echo "[info] VPN provider defined as $VPN_PROV"	
-	# copy openvpn certs to /config
 	cp -f /home/nobody/ca.crt /config/openvpn/ca.crt
 	cp -f /home/nobody/crl.pem /config/openvpn/crl.pem
-
+	
 	if [[ ! -f "/config/openvpn/openvpn.conf" ]]; then
 		cp -f "/home/nobody/openvpn.conf" "/config/openvpn/openvpn.conf"
 		if [[ -z "${VPN_REMOTE}" || -z "${VPN_PORT}" ]]; then
@@ -77,22 +83,10 @@ echo "8112    webui" >> /etc/iproute2/rt_tables
 ip rule add fwmark 1 table webui
 ip route add default via $DEFAULT_GATEWAY table webui
 
-# setup route for deluge daemon using set-mark to route traffic for port 58846 to eth0 (local subnet only)
-if [[ -z "${HOST_SUBNET}" ]]; then
-	echo "[warn] Host subnet not defined, access to Deluge daemon and Privoxy will be blocked. Please define HOST_SUBNET value"
-elif [[ $HOST_SUBNET =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2} ]]; then
-	echo "[info] Host subnet defined as $HOST_SUBNET"
-	echo "58846    daemon" >> /etc/iproute2/rt_tables
-	ip rule add fwmark 2 table daemon
-	ip route add default via $DEFAULT_GATEWAY table daemon
-else
-	echo "[warn] Host subnet not defined correctly, access to Deluge daemon and Privoxy will be blocked. Please verify HOST_SUBNET value"
-fi
-
 # setup route for privoxy using set-mark to route traffic for port 8118 to eth0
 if [[ $ENABLE_PRIVOXY == "yes" ]]; then
 	echo "8118    privoxy" >> /etc/iproute2/rt_tables
-	ip rule add fwmark 3 table privoxy
+	ip rule add fwmark 2 table privoxy
 	ip route add default via $DEFAULT_GATEWAY table privoxy
 fi
 	
@@ -113,20 +107,10 @@ iptables -A INPUT -p $VPN_PROTOCOL -i eth0 --sport $VPN_PORT -j ACCEPT
 iptables -A INPUT -p tcp -i eth0 --dport 8112 -j ACCEPT
 iptables -A INPUT -p tcp -i eth0 --sport 8112 -j ACCEPT
 
-# accept input to deluge daemon port 58846
-if [[ $HOST_SUBNET =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2} ]]; then
-	iptables -A INPUT -p tcp -s $HOST_SUBNET --dport 58846 -j ACCEPT
-	iptables -A INPUT -p tcp -s $HOST_SUBNET --sport 58846 -j ACCEPT
-fi
-
 # accept input to privoxy port 8118
-if [[ $HOST_SUBNET =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2} ]]; then
-	if [[ $ENABLE_PRIVOXY == "yes" ]]; then
-		iptables -A INPUT -p tcp -s $HOST_SUBNET --dport 8118 -j ACCEPT
-		iptables -A INPUT -p tcp -s $HOST_SUBNET --sport 8118 -j ACCEPT
-	fi
-fi
-
+iptables -A INPUT -p tcp -i eth0 --dport 8118 -j ACCEPT
+iptables -A INPUT -p tcp -i eth0 --sport 8118 -j ACCEPT
+	
 # accept input dns lookup
 iptables -A INPUT -p udp --sport 53 -j ACCEPT
 
@@ -153,19 +137,9 @@ iptables -A OUTPUT -p tcp -o eth0 --sport 8112 -j ACCEPT
 iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
 iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
 
-# accept output to deluge daemon port 58846 (used when tunnel up)
-if [[ $HOST_SUBNET =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2} ]]; then
-	iptables -t mangle -A OUTPUT -p tcp -d $HOST_SUBNET --dport 58846 -j MARK --set-mark 2
-	iptables -t mangle -A OUTPUT -p tcp -d $HOST_SUBNET --sport 58846 -j MARK --set-mark 2
-fi
-
 # accept output to privoxy port 8118 (used when tunnel up)
-if [[ $HOST_SUBNET =~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2} ]]; then
-	if [[ $ENABLE_PRIVOXY == "yes" ]]; then	
-		iptables -t mangle -A OUTPUT -p tcp -d $HOST_SUBNET --dport 8118 -j MARK --set-mark 3
-		iptables -t mangle -A OUTPUT -p tcp -d $HOST_SUBNET --sport 8118 -j MARK --set-mark 3
-	fi
-fi
+iptables -t mangle -A OUTPUT -p tcp --dport 8118 -j MARK --set-mark 2
+iptables -t mangle -A OUTPUT -p tcp --sport 8118 -j MARK --set-mark 2
 
 # accept output dns lookup
 iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
