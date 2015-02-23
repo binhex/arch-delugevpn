@@ -7,6 +7,9 @@ if [[ -z "${VPN_PROV}" ]]; then
 	echo "[info] VPN provider not defined, please specify via env variable VPN_PROV"	
 fi
 
+# wildcard search for openvpn config files
+OPENVPN_CONFIG=$(find /config/openvpn -maxdepth 1 \( -name "*.ovpn" -o -name "*.conf" \) -print)
+
 # if pia vpn provider choosen then copy base config file and pia certs
 if [[ $VPN_PROV == "pia" ]]; then
 
@@ -14,7 +17,7 @@ if [[ $VPN_PROV == "pia" ]]; then
 	cp -f /home/nobody/ca.crt /config/openvpn/ca.crt
 	cp -f /home/nobody/crl.pem /config/openvpn/crl.pem
 	
-	if [[ ! -f "/config/openvpn/openvpn.conf" ]]; then
+	if [[ -z "${OPENVPN_CONFIG}" ]]; then
 		cp -f "/home/nobody/openvpn.conf" "/config/openvpn/openvpn.conf"
 		
 		if [[ -z "${VPN_REMOTE}" || -z "${VPN_PORT}" ]]; then
@@ -50,24 +53,24 @@ fi
 # if custom|airvpn vpn provider chosen then do not copy base config file
 if [[ $VPN_PROV == "custom" || $VPN_PROV == "airvpn" ]]; then
 	echo "[info] VPN provider defined as $VPN_PROV"
-	if [[ ! -f "/config/openvpn/openvpn.conf" ]]; then
-		echo "[crit] VPN provider defined as $VPN_PROV, /config/openvpn.conf file does not exist, please create and restart delugevpn" && exit 1
+	if [[ -z "${OPENVPN_CONFIG}" ]]; then
+		echo "[crit] VPN provider defined as $VPN_PROV, OpenVPN config files does not exist in /config/openvpn/ please create and restart delugevpn" && exit 1
 	fi
 fi
 
 # customise openvpn.conf to ping tunnel every 10 mins
-if ! $(grep -Fxq "ping 600" /config/openvpn/openvpn.conf); then
-	sed -i '/crl-verify crl.pem/a ping 600' /config/openvpn/openvpn.conf
+if ! $(grep -Fxq "ping 600" $OPENVPN_CONFIG); then
+	sed -i '/crl-verify crl.pem/a ping 600' $OPENVPN_CONFIG
 fi
 
 # customise openvpn.conf to restart tunnel after 20 mins if no reply from ping
-if ! $(grep -Fxq "ping-restart 1200" /config/openvpn/openvpn.conf); then
-	sed -i '/ping 600/a ping-restart 1200' /config/openvpn/openvpn.conf
+if ! $(grep -Fxq "ping-restart 1200" $OPENVPN_CONFIG); then
+	sed -i '/ping 600/a ping-restart 1200' $OPENVPN_CONFIG
 fi
 
 # read port number and protocol from openvpn.conf (used to define iptables rule)
-VPN_PORT=$(cat /config/openvpn/openvpn.conf | grep -P -o -m 1 '^remote.*' | grep -P -o -m 1 '[\d]+$')
-VPN_PROTOCOL=$(cat /config/openvpn/openvpn.conf | grep -P -o -m 1 '(?<=proto\s).*')
+VPN_PORT=$(cat $OPENVPN_CONFIG | grep -P -o -m 1 '^remote[^\r\n]+' | grep -P -o -m 1 '[\d]+$')
+VPN_PROTOCOL=$(cat $OPENVPN_CONFIG | grep -P -o -m 1 '(?<=proto\s)[^\r\n]+')
 	
 # set permissions to user nobody
 chown -R nobody:users /config/openvpn
