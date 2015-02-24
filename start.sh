@@ -10,6 +10,14 @@ fi
 # wildcard search for openvpn config files
 VPN_CONFIG=$(find /config/openvpn -maxdepth 1 \( -name "*.ovpn" -o -name "*.conf" \) -print)
 
+# if custom|airvpn vpn provider chosen then do not copy base config file
+if [[ $VPN_PROV == "custom" || $VPN_PROV == "airvpn" ]]; then
+	echo "[info] VPN provider defined as $VPN_PROV"
+	if [[ -z "${VPN_CONFIG}" ]]; then
+		echo "[crit] VPN provider defined as $VPN_PROV, OpenVPN config files does not exist in /config/openvpn/ please create and restart delugevpn" && exit 1
+	fi
+fi
+
 # if pia vpn provider chosen then copy base config file and pia certs
 if [[ $VPN_PROV == "pia" ]]; then
 
@@ -50,27 +58,19 @@ if [[ $VPN_PROV == "pia" ]]; then
 	
 fi
 
-# if custom|airvpn vpn provider chosen then do not copy base config file
-if [[ $VPN_PROV == "custom" || $VPN_PROV == "airvpn" ]]; then
-	echo "[info] VPN provider defined as $VPN_PROV"
-	if [[ -z "${VPN_CONFIG}" ]]; then
-		echo "[crit] VPN provider defined as $VPN_PROV, OpenVPN config files does not exist in /config/openvpn/ please create and restart delugevpn" && exit 1
-	fi
-fi
-
 # customise openvpn.conf to ping tunnel every 10 mins
-if ! $(grep -Fxq "ping 600" $VPN_CONFIG); then
-	sed -i '/remote\s.*/a ping 600' $VPN_CONFIG
+if ! $(grep -Fxq "ping 600" "$VPN_CONFIG"); then
+	sed -i '/remote\s.*/a ping 600' "$VPN_CONFIG"
 fi
 
 # customise openvpn.conf to restart tunnel after 20 mins if no reply from ping
-if ! $(grep -Fxq "ping-restart 1200" $VPN_CONFIG); then
-	sed -i '/ping 600/a ping-restart 1200' $VPN_CONFIG
+if ! $(grep -Fxq "ping-restart 1200" "$VPN_CONFIG"); then
+	sed -i '/ping 600/a ping-restart 1200' "$VPN_CONFIG"
 fi
 
 # read port number and protocol from openvpn.conf (used to define iptables rule)
-VPN_PORT=$(cat $VPN_CONFIG | grep -P -o -m 1 '^remote\s[^\r\n]+' | grep -P -o -m 1 '[\d]+$')
-VPN_PROTOCOL=$(cat $VPN_CONFIG | grep -P -o -m 1 '(?<=proto\s)[^\r\n]+')
+VPN_PORT=$(cat "$VPN_CONFIG" | grep -P -o -m 1 '^remote\s[^\r\n]+' | grep -P -o -m 1 '[\d]+$')
+VPN_PROTOCOL=$(cat "$VPN_CONFIG" | grep -P -o -m 1 '(?<=proto\s)[^\r\n]+')
 	
 # set permissions to user nobody
 chown -R nobody:users /config/openvpn
