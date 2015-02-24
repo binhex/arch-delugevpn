@@ -2,42 +2,41 @@
 
 # create directory
 mkdir -p /config/openvpn
-	
-if [[ -z "${VPN_PROV}" ]]; then
-	echo "[info] VPN provider not defined, please specify via env variable VPN_PROV"	
-fi
 
 # wildcard search for openvpn config files
-VPN_CONFIG=$(find /config/openvpn -maxdepth 1 \( -name "*.ovpn" -o -name "*.conf" \) -print)
+VPN_CONFIG=$(find /config/openvpn -maxdepth 1 -name "*.ovpn" -print)
+	
+if [[ -z "${VPN_PROV}" ]]; then
+	echo "[crit] VPN provider not defined, please specify via env variable VPN_PROV" && exit 1
 
 # if custom|airvpn vpn provider chosen then do not copy base config file
-if [[ $VPN_PROV == "custom" || $VPN_PROV == "airvpn" ]]; then
+elif [[ $VPN_PROV == "custom" || $VPN_PROV == "airvpn" ]]; then
+
 	echo "[info] VPN provider defined as $VPN_PROV"
 	if [[ -z "${VPN_CONFIG}" ]]; then
 		echo "[crit] VPN provider defined as $VPN_PROV, OpenVPN config files does not exist in /config/openvpn/ please create and restart delugevpn" && exit 1
 	fi
-fi
 
 # if pia vpn provider chosen then copy base config file and pia certs
-if [[ $VPN_PROV == "pia" ]]; then
+elif [[ $VPN_PROV == "pia" ]]; then
 
 	echo "[info] VPN provider defined as $VPN_PROV"	
 	cp -f /home/nobody/ca.crt /config/openvpn/ca.crt
 	cp -f /home/nobody/crl.pem /config/openvpn/crl.pem
 	
 	if [[ -z "${VPN_CONFIG}" ]]; then
-		cp -f "/home/nobody/openvpn.conf" "/config/openvpn/openvpn.conf"
+		cp -f "/home/nobody/openvpn.ovpn" "/config/openvpn/openvpn.ovpn"
 		
 		if [[ -z "${VPN_REMOTE}" || -z "${VPN_PORT}" ]]; then
 			echo "[warn] VPN provider remote and/or port not defined, defaulting to Netherlands"
-			sed -i -e "s/remote\s.*/remote nl.privateinternetaccess.com 1194/g" "/config/openvpn/openvpn.conf"
+			sed -i -e "s/remote\s.*/remote nl.privateinternetaccess.com 1194/g" "/config/openvpn/openvpn.ovpn"
 		else
 			echo "[info] VPN provider remote and port defined as $VPN_REMOTE $VPN_PORT"
-			sed -i -e "s/remote\s.*/remote $VPN_REMOTE $VPN_PORT/g" "/config/openvpn/openvpn.conf"
+			sed -i -e "s/remote\s.*/remote $VPN_REMOTE $VPN_PORT/g" "/config/openvpn/openvpn.ovpn"
 		fi		
 		
-		if ! $(grep -Fxq "auth-user-pass credentials.conf" /config/openvpn/openvpn.conf); then
-			sed -i -e 's/auth-user-pass/auth-user-pass credentials.conf/g' /config/openvpn/openvpn.conf
+		if ! $(grep -Fxq "auth-user-pass credentials.conf" /config/openvpn/openvpn.ovpn); then
+			sed -i -e 's/auth-user-pass/auth-user-pass credentials.conf/g' /config/openvpn/openvpn.ovpn
 		fi			
 		
 	fi
@@ -55,20 +54,22 @@ if [[ $VPN_PROV == "pia" ]]; then
 	else
 		echo "${VPN_PASS}" >> /config/openvpn/credentials.conf
 	fi	
-	
+
+else
+	echo "[crit] VPN Provider unknown, please specify either airvpn, pia, or custom" && exit 1
 fi
 
-# customise openvpn.conf to ping tunnel every 10 mins
+# customise openvpn.ovpn to ping tunnel every 10 mins
 if ! $(grep -Fxq "ping 600" "$VPN_CONFIG"); then
 	sed -i '/remote\s.*/a ping 600' "$VPN_CONFIG"
 fi
 
-# customise openvpn.conf to restart tunnel after 20 mins if no reply from ping
+# customise openvpn.ovpn to restart tunnel after 20 mins if no reply from ping
 if ! $(grep -Fxq "ping-restart 1200" "$VPN_CONFIG"); then
 	sed -i '/ping 600/a ping-restart 1200' "$VPN_CONFIG"
 fi
 
-# read port number and protocol from openvpn.conf (used to define iptables rule)
+# read port number and protocol from openvpn.ovpn (used to define iptables rule)
 VPN_PORT=$(cat "$VPN_CONFIG" | grep -P -o -m 1 '^remote\s[^\r\n]+' | grep -P -o -m 1 '[\d]+$')
 VPN_PROTOCOL=$(cat "$VPN_CONFIG" | grep -P -o -m 1 '(?<=proto\s)[^\r\n]+')
 	
