@@ -6,6 +6,7 @@ mkdir -p /config/openvpn
 # wildcard search for openvpn config files
 VPN_CONFIG=$(find /config/openvpn -maxdepth 1 -name "*.ovpn" -print)
 	
+# if vpn provider not provided then exit
 if [[ -z "${VPN_PROV}" ]]; then
 	echo "[crit] VPN provider not defined, please specify via env variable VPN_PROV" && exit 1
 
@@ -14,33 +15,36 @@ elif [[ $VPN_PROV == "custom" || $VPN_PROV == "airvpn" ]]; then
 
 	echo "[info] VPN provider defined as $VPN_PROV"
 	if [[ -z "${VPN_CONFIG}" ]]; then
-		echo "[crit] VPN provider defined as $VPN_PROV, *.ovpn file does not exist in /config/openvpn/ please create and restart delugevpn" && exit 1
+		echo "[crit] VPN provider defined as $VPN_PROV, no files with an ovpn extension exist in /config/openvpn/ please create and restart delugevpn" && exit 1
 	fi
 
 # if pia vpn provider chosen then copy base config file and pia certs
 elif [[ $VPN_PROV == "pia" ]]; then
 
+	# copy default certs
 	echo "[info] VPN provider defined as $VPN_PROV"	
 	cp -f /home/nobody/ca.crt /config/openvpn/ca.crt
 	cp -f /home/nobody/crl.pem /config/openvpn/crl.pem
 	
+	# if no ovpn files exist then copy base file
 	if [[ -z "${VPN_CONFIG}" ]]; then
-		cp -f "/home/nobody/openvpn.ovpn" "/config/openvpn/openvpn.ovpn"
-		
-		if [[ -z "${VPN_REMOTE}" || -z "${VPN_PORT}" ]]; then
-			echo "[warn] VPN provider remote and/or port not defined, defaulting to Netherlands"
-			sed -i -e "s/remote\s.*/remote nl.privateinternetaccess.com 1194/g" "/config/openvpn/openvpn.ovpn"
-		else
-			echo "[info] VPN provider remote and port defined as $VPN_REMOTE $VPN_PORT"
-			sed -i -e "s/remote\s.*/remote $VPN_REMOTE $VPN_PORT/g" "/config/openvpn/openvpn.ovpn"
-		fi		
-		
-		if ! $(grep -Fxq "auth-user-pass credentials.conf" /config/openvpn/openvpn.ovpn); then
-			sed -i -e 's/auth-user-pass/auth-user-pass credentials.conf/g' /config/openvpn/openvpn.ovpn
-		fi			
-		
+		cp -f "/home/nobody/openvpn.ovpn" "/config/openvpn/openvpn.ovpn"	
 	fi
 	
+	# if remote or port not specified then use netherlands
+	if [[ -z "${VPN_REMOTE}" || -z "${VPN_PORT}" ]]; then
+		echo "[warn] VPN provider remote and/or port not defined, defaulting to Netherlands"
+		sed -i -e "s/remote\s.*/remote nl.privateinternetaccess.com 1194/g" "/config/openvpn/openvpn.ovpn"
+	else
+		echo "[info] VPN provider remote and port defined as $VPN_REMOTE $VPN_PORT"
+		sed -i -e "s/remote\s.*/remote $VPN_REMOTE $VPN_PORT/g" "/config/openvpn/openvpn.ovpn"
+	fi
+	
+	# store credentials in separate file for authentication
+	if ! $(grep -Fxq "auth-user-pass credentials.conf" /config/openvpn/openvpn.ovpn); then
+		sed -i -e 's/auth-user-pass/auth-user-pass credentials.conf/g' /config/openvpn/openvpn.ovpn
+	fi			
+		
 	# write vpn username to file
 	if [[ -z "${VPN_USER}" ]]; then
 		echo "[crit] VPN username not specified" && exit 1
@@ -55,8 +59,9 @@ elif [[ $VPN_PROV == "pia" ]]; then
 		echo "${VPN_PASS}" >> /config/openvpn/credentials.conf
 	fi	
 
+# if provider none of the above then exit
 else
-	echo "[crit] VPN Provider unknown, please specify either airvpn, pia, or custom" && exit 1
+	echo "[crit] VPN Provider unknown, please specify airvpn, pia, or custom" && exit 1
 fi
 
 # customise openvpn.ovpn to ping tunnel every 10 mins
