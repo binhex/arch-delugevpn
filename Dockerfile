@@ -32,8 +32,8 @@ ADD apps/privoxy.sh /home/nobody/privoxy.sh
 ADD config/ca.crt /home/nobody/ca.crt
 ADD config/crl.pem /home/nobody/crl.pem
 
-# add sample openvpn conf file (based on pia netherlands)
-ADD config/openvpn.conf /home/nobody/openvpn.conf
+# add sample openvpn.ovpn file (based on pia netherlands)
+ADD config/openvpn.ovpn /home/nobody/openvpn.ovpn
 
 # install app
 #############

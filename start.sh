@@ -14,7 +14,7 @@ elif [[ $VPN_PROV == "custom" || $VPN_PROV == "airvpn" ]]; then
 
 	echo "[info] VPN provider defined as $VPN_PROV"
 	if [[ -z "${VPN_CONFIG}" ]]; then
-		echo "[crit] VPN provider defined as $VPN_PROV, OpenVPN config files does not exist in /config/openvpn/ please create and restart delugevpn" && exit 1
+		echo "[crit] VPN provider defined as $VPN_PROV, *.ovpn file does not exist in /config/openvpn/ please create and restart delugevpn" && exit 1
 	fi
 
 # if pia vpn provider chosen then copy base config file and pia certs
