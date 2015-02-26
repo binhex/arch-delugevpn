@@ -100,10 +100,6 @@ if [[ $ENABLE_PRIVOXY == "yes" ]]; then
 	ip rule add fwmark 2 table privoxy
 	ip route add default via $DEFAULT_GATEWAY table privoxy
 fi
-
-# add route to force ns lookup via eth0 (required to allow ping check for tunnel)
-ip route add 8.8.8.8/32 via $DEFAULT_GATEWAY
-ip route add 8.8.4.4/32 via $DEFAULT_GATEWAY
 	
 echo "[info] ip route"
 ip route
