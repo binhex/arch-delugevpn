@@ -35,10 +35,10 @@ do
 			# lookup the dynamic incoming port (response in json format)
 			INCOMING_PORT=`curl --connect-timeout 5 --max-time 20 --retry 5 --retry-delay 0 --retry-max-time 120 -s -d "user=$USERNAME&pass=$PASSWORD&client_id=$CLIENT_ID&local_ip=$LOCAL_IP" https://www.privateinternetaccess.com/vpninfo/port_forward_assignment | head -1 | grep -Po "[0-9]*"`
 
-			echo "[info] PIA incoming port is $INCOMING_PORT"
-
 			if [[ $INCOMING_PORT =~ ^-?[0-9]+$ ]]; then
-		  
+
+				echo "[info] PIA incoming port is $INCOMING_PORT"
+				
 				# enable bind incoming port to specific port (disable random)
 				/usr/bin/deluge-console -c /config "config --set random_port False"
 
@@ -48,14 +48,13 @@ do
 				# set incoming port
 				/usr/bin/deluge-console -c /config "config --set listen_ports ($INCOMING_PORT,$INCOMING_PORT)"
 				
-			else
-			
-				echo "[warn] PIA incoming port is not an integer, downloads will be slow"
+			else			
+				echo "[warn] PIA incoming port is not an integer, downloads will be slow, check if remote gateway supports port forwarding"
 			fi
 			
 		fi
 
-		if [[ $VPN_PROV == "airvpn" ]]; then
+		if [[ $VPN_PROV == "custom" || $VPN_PROV == "airvpn" ]]; then
 		
 			# enable bind incoming port to specific port (disable random)
 			/usr/bin/deluge-console -c /config "config --set random_port False"
@@ -64,14 +63,6 @@ do
 			/usr/bin/deluge-console -c /config "config --set listen_interface $LOCAL_IP"
 		fi		
 		
-		if [[ $VPN_PROV == "custom" ]]; then
-		
-			# enable bind incoming port to specific port (disable random)
-			/usr/bin/deluge-console -c /config "config --set random_port False"
-
-			# set listen interface to tunnel local ip
-			/usr/bin/deluge-console -c /config "config --set listen_interface $LOCAL_IP"
-		fi		
 	fi
 	
 	sleep 10m

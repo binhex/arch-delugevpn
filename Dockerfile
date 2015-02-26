@@ -1,4 +1,4 @@
-FROM binhex/arch-base:2015020300
+FROM binhex/arch-base:2015022600
 MAINTAINER binhex
 
 # additional files
@@ -19,7 +19,7 @@ ADD apps/checkip.sh /home/nobody/checkip.sh
 # add bash script to run deluge daemon
 ADD apps/deluge.sh /home/nobody/deluge.sh
 
-# add bash script to identify pia incoming port
+# add bash script to configure deluge
 ADD apps/setport.sh /home/nobody/setport.sh
 
 # add bash script to run deluge webui
@@ -38,7 +38,7 @@ ADD config/openvpn.ovpn /home/nobody/openvpn.ovpn
 # install app
 #############
 
-# install install app using pacman, set perms, cleanup
+# install app using pacman, set perms, cleanup
 RUN pacman -Sy --noconfirm && \
 	pacman -S net-tools openvpn privoxy unzip unrar librsvg pygtk python2-service-identity python2-mako python2-notify deluge --noconfirm && \
 	chmod +x /root/start.sh /root/openvpn.sh /home/nobody/checkip.sh /home/nobody/deluge.sh /home/nobody/setport.sh /home/nobody/webui.sh /home/nobody/privoxy.sh && \
@@ -63,12 +63,6 @@ EXPOSE 8112
 
 # expose port for privoxy
 EXPOSE 8118
-
-# set environment variables for user nobody
-ENV HOME /home/nobody
-
-# set environment variable for terminal
-ENV TERM xterm
 
 # run supervisor
 ################
