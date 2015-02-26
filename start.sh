@@ -100,6 +100,10 @@ if [[ $ENABLE_PRIVOXY == "yes" ]]; then
 	ip rule add fwmark 2 table privoxy
 	ip route add default via $DEFAULT_GATEWAY table privoxy
 fi
+
+# add route to force ns lookup via eth0 (required to allow ping check for tunnel)
+ip route add 8.8.8.8/32 via $DEFAULT_GATEWAY
+ip route add 8.8.4.4/32 via $DEFAULT_GATEWAY
 	
 echo "[info] ip route"
 ip route
@@ -165,7 +169,7 @@ echo "[info] iptables"
 iptables -S
 echo "--------------------"
 
-# add in google public nameservers (isp may block lookup when connected to vpn)
+# add in google public nameservers (isp may block ns lookup when connected to vpn)
 echo 'nameserver 8.8.8.8' > /etc/resolv.conf
 echo 'nameserver 8.8.4.4' >> /etc/resolv.conf
 
