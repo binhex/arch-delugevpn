@@ -86,8 +86,11 @@ chmod -R 775 /config/openvpn
 [ -d /dev/net ] || mkdir -p /dev/net
 [ -c /dev/net/tun ] || mknod /dev/net/tun c 10 200
 
-# get gateway ip for eth0
+# get ip for local gateway (eth0)
 DEFAULT_GATEWAY=$(ip route show default | awk '/default/ {print $3}')
+
+# get ip for remote gateway
+REMOTE_GATEWAY=$(getent hosts $VPN_REMOTE | cut -d' ' -f1)
 
 # setup route for deluge webui using set-mark to route traffic for port 8112 to eth0
 echo "8112    webui" >> /etc/iproute2/rt_tables
@@ -100,6 +103,13 @@ if [[ $ENABLE_PRIVOXY == "yes" ]]; then
 	ip rule add fwmark 2 table privoxy
 	ip route add default via $DEFAULT_GATEWAY table privoxy
 fi
+		
+# add route for ns lookup via eth0 (required when tunnel down)
+ip route add 8.8.8.8/32 via $DEFAULT_GATEWAY
+ip route add 8.8.4.4/32 via $DEFAULT_GATEWAY
+
+# add route to remote gateway via eth0 (required when tunnel down)
+ip route add $REMOTE_GATEWAY via $DEFAULT_GATEWAY
 	
 echo "[info] ip route"
 ip route

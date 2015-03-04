@@ -1,4 +1,4 @@
-FROM binhex/arch-base:2015022600
+FROM binhex/arch-base:2015030300
 MAINTAINER binhex
 
 # additional files
@@ -35,19 +35,15 @@ ADD config/crl.pem /home/nobody/crl.pem
 # add sample openvpn.ovpn file (based on pia netherlands)
 ADD config/openvpn.ovpn /home/nobody/openvpn.ovpn
 
+# add install bash script
+ADD install.sh /root/install.sh
+
 # install app
 #############
 
-# install app using pacman, set perms, cleanup
-RUN pacman -Sy --noconfirm && \
-	pacman -S net-tools openvpn privoxy unzip unrar librsvg pygtk python2-service-identity python2-mako python2-notify deluge --noconfirm && \
-	chmod +x /root/start.sh /root/openvpn.sh /home/nobody/checkip.sh /home/nobody/deluge.sh /home/nobody/setport.sh /home/nobody/webui.sh /home/nobody/privoxy.sh && \
-	chown -R nobody:users /home/nobody /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy && \
-	chmod -R 775 /home/nobody /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy && \
-	yes|pacman -Scc && \
-	rm -rf /usr/share/locale/* && \
-	rm -rf /usr/share/man/* && \
-	rm -rf /tmp/*
+# make executable and run bash scripts to install app
+RUN chmod +x /root/install.sh /root/start.sh /root/openvpn.sh /home/nobody/checkip.sh /home/nobody/deluge.sh /home/nobody/setport.sh /home/nobody/webui.sh /home/nobody/privoxy.sh && \
+	/bin/bash /root/install.sh
 
 # docker settings
 #################
