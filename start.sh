@@ -65,14 +65,14 @@ else
 	echo "[crit] VPN provider unknown, please specify airvpn, pia, or custom" && exit 1
 fi
 
-# customise openvpn.ovpn to ping tunnel every 10 mins
-if ! $(grep -Fxq "ping 600" "$VPN_CONFIG"); then
-	sed -i '/remote\s.*/a ping 600' "$VPN_CONFIG"
+# customise openvpn.ovpn to ping tunnel every 5 mins
+if ! $(grep -Fxq "ping 300" "$VPN_CONFIG"); then
+	sed -i '/remote\s.*/a ping 300' "$VPN_CONFIG"
 fi
 
-# customise openvpn.ovpn to restart tunnel after 20 mins if no reply from ping
-if ! $(grep -Fxq "ping-restart 1200" "$VPN_CONFIG"); then
-	sed -i '/ping 600/a ping-restart 1200' "$VPN_CONFIG"
+# customise openvpn.ovpn to restart tunnel after 10 mins if no reply from ping (twice)
+if ! $(grep -Fxq "ping-restart 600" "$VPN_CONFIG"); then
+	sed -i '/ping 300/a ping-restart 600' "$VPN_CONFIG"
 fi
 
 # read port number and protocol from openvpn.ovpn (used to define iptables rule)

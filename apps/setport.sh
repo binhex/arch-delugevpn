@@ -5,7 +5,7 @@ while [[ $(netstat -lnt | awk '$6 == "LISTEN" && $4 ~ ".58846"') == "" ]]; do
 	sleep 0.1
 done
 
-# loop over incoming port, checking every 10 minutes
+# loop over incoming port, checking every 5 minutes
 while true
 do
 	# run script to check ip is valid for tun0
@@ -13,9 +13,7 @@ do
 	
 	# query deluge for current ip for tunnel
 	LISTEN_INTERFACE=`/usr/bin/deluge-console -c /config "config listen_interface" | grep -P -o -m 1 '[\d\.]+'`
-		 
-	echo "[info] Deluge listening interface is $LISTEN_INTERFACE"
-		
+			
 	# if current listen interface ip is different to tunnel local ip then force re-detect of incoming port
 	if [[ $LISTEN_INTERFACE != "$LOCAL_IP" ]]; then
 
@@ -65,5 +63,5 @@ do
 		
 	fi
 	
-	sleep 10m
+	sleep 5m
 done	
