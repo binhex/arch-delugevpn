@@ -130,6 +130,9 @@ echo "[info] ip route"
 ip route
 echo "--------------------"
 
+# input iptable rules
+###
+
 # set policy to drop for input
 iptables -P INPUT DROP
 
@@ -137,15 +140,15 @@ iptables -P INPUT DROP
 iptables -A INPUT -i tun0 -j ACCEPT
 
 # accept input to vpn gateway
-iptables -A INPUT -p $VPN_PROTOCOL -i eth0 --sport $VPN_PORT -j ACCEPT
+iptables -A INPUT -i eth0 -p $VPN_PROTOCOL --sport $VPN_PORT -j ACCEPT
 
 # accept input to deluge webui port 8112
-iptables -A INPUT -p tcp -i eth0 --dport 8112 -j ACCEPT
-iptables -A INPUT -p tcp -i eth0 --sport 8112 -j ACCEPT
+iptables -A INPUT -i eth0 -p tcp --dport 8112 -j ACCEPT
+iptables -A INPUT -i eth0 -p tcp --sport 8112 -j ACCEPT
 
 # accept input to privoxy port 8118
-iptables -A INPUT -p tcp -i eth0 --dport 8118 -j ACCEPT
-iptables -A INPUT -p tcp -i eth0 --sport 8118 -j ACCEPT
+iptables -A INPUT -i eth0 -p tcp --dport 8118 -j ACCEPT
+iptables -A INPUT -i eth0 -p tcp --sport 8118 -j ACCEPT
 	
 # accept input dns lookup
 iptables -A INPUT -p udp --sport 53 -j ACCEPT
@@ -156,6 +159,9 @@ iptables -A INPUT -p icmp --icmp-type echo-reply -j ACCEPT
 # accept input to local loopback
 iptables -A INPUT -i lo -j ACCEPT
 
+# output iptable rules
+###
+
 # set policy to drop for output
 iptables -P OUTPUT DROP
 
@@ -163,11 +169,11 @@ iptables -P OUTPUT DROP
 iptables -A OUTPUT -o tun0 -j ACCEPT
 
 # accept output to vpn gateway
-iptables -A OUTPUT -p $VPN_PROTOCOL -o eth0 --dport $VPN_PORT -j ACCEPT
+iptables -A OUTPUT -o eth0 -p $VPN_PROTOCOL --dport $VPN_PORT -j ACCEPT
 
 # accept output to deluge webui port 8112 (used when tunnel down)
-iptables -A OUTPUT -p tcp -o eth0 --dport 8112 -j ACCEPT
-iptables -A OUTPUT -p tcp -o eth0 --sport 8112 -j ACCEPT
+iptables -A OUTPUT -o eth0 -p tcp --dport 8112 -j ACCEPT
+iptables -A OUTPUT -o eth0 -p tcp --sport 8112 -j ACCEPT
 
 # accept output to deluge webui port 8112 (used when tunnel up)
 iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
