@@ -5,6 +5,9 @@ while [[ $(netstat -lnt | awk '$6 == "LISTEN" && $4 ~ ".58846"') == "" ]]; do
 	sleep 0.1
 done
 
+# create pia client id (randomly generated)
+CLIENT_ID=`head -n 100 /dev/urandom | md5sum | tr -d " -"`
+
 # while loop to check/set incoming port every 50 mins (required for pia)
 while true
 do
@@ -16,9 +19,6 @@ do
 		# get username and password from credentials file
 		USERNAME=$(sed -n '1p' /config/openvpn/credentials.conf)
 		PASSWORD=$(sed -n '2p' /config/openvpn/credentials.conf)
-
-		# create pia client id (randomly generated)
-		CLIENT_ID=`head -n 100 /dev/urandom | md5sum | tr -d " -"`
 	
 		echo "[info] PIA settings: Username=$USERNAME, Password=$PASSWORD, Client ID=$CLIENT_ID, Local IP=$LOCAL_IP"
 
