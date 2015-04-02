@@ -26,7 +26,7 @@ do
 		PIA_INCOMING_PORT=`curl --connect-timeout 5 --max-time 20 --retry 5 --retry-delay 0 --retry-max-time 120 -s -d "user=$USERNAME&pass=$PASSWORD&client_id=$CLIENT_ID&local_ip=$LOCAL_IP" https://www.privateinternetaccess.com/vpninfo/port_forward_assignment | head -1 | grep -Po "[0-9]*"`
 		
 		# lookup the currently set deluge incoming port
-		DELUGE_INCOMING_PORT=`/usr/bin/deluge-console -c /config "config listen_ports" | grep -P -o -m 1 '[\d]+'`
+		DELUGE_INCOMING_PORT=`/usr/bin/deluge-console -c /config "config listen_ports" | grep -P -o -m 1 '[\d]+(?=\,)'`
 
 		if [[ $PIA_INCOMING_PORT =~ ^-?[0-9]+$ ]]; then
 
