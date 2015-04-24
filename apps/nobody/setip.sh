@@ -13,7 +13,7 @@ do
 	
 	# query deluge for current ip for tunnel
 	LISTEN_INTERFACE=`/usr/bin/deluge-console -c /config "config listen_interface" | grep -P -o -m 1 '[\d\.]+'`
-			
+	
 	# if current listen interface ip is different to tunnel local ip then re-configure deluge
 	if [[ $LISTEN_INTERFACE != "$LOCAL_IP" ]]; then
 

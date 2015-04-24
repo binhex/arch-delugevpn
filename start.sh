@@ -5,7 +5,7 @@ mkdir -p /config/openvpn
 
 # wildcard search for openvpn config files
 VPN_CONFIG=$(find /config/openvpn -maxdepth 1 -name "*.ovpn" -print)
-	
+
 # if vpn provider not set then exit
 if [[ -z "${VPN_PROV}" ]]; then
 	echo "[crit] VPN provider not defined, please specify via env variable VPN_PROV" && exit 1
@@ -22,35 +22,38 @@ elif [[ $VPN_PROV == "custom" || $VPN_PROV == "airvpn" ]]; then
 elif [[ $VPN_PROV == "pia" ]]; then
 
 	# copy default certs
-	echo "[info] VPN provider defined as $VPN_PROV"	
+	echo "[info] VPN provider defined as $VPN_PROV"
 	cp -f /home/nobody/ca.crt /config/openvpn/ca.crt
 	cp -f /home/nobody/crl.pem /config/openvpn/crl.pem
-	
+
 	# if no ovpn files exist then copy base file
 	if [[ -z "${VPN_CONFIG}" ]]; then
 		cp -f "/home/nobody/openvpn.ovpn" "/config/openvpn/openvpn.ovpn"
 		VPN_CONFIG="/config/openvpn/openvpn.ovpn"
 	fi
-	
-	# if remote or port not specified then use netherlands
-	if [[ -z "${VPN_REMOTE}" || -z "${VPN_PORT}" ]]; then
-		echo "[warn] VPN provider remote and/or port not defined, defaulting to Netherlands"
+
+	# if remote not specified then use netherlands and default port
+	if [[ -z "${VPN_REMOTE}" ]]; then
+		echo "[warn] VPN provider remote not defined, defaulting to Netherlands port 1194"
 		sed -i -e "s/remote\s.*/remote nl.privateinternetaccess.com 1194/g" "$VPN_CONFIG"
+	elif [[ ! -z "${VPN_REMOTE}" && -z "${VPN_PORT}" ]]; then
+		echo "[warn] VPN provider port not defined, defaulting to 1194"
+		sed -i -e "s/remote\s.*/remote $VPN_REMOTE 1194/g" "$VPN_CONFIG"
 	else
 		echo "[info] VPN provider remote and port defined as $VPN_REMOTE $VPN_PORT"
 		sed -i -e "s/remote\s.*/remote $VPN_REMOTE $VPN_PORT/g" "$VPN_CONFIG"
 	fi
-	
+
 	# store credentials in separate file for authentication
 	if ! $(grep -Fq "auth-user-pass credentials.conf" "$VPN_CONFIG"); then
 		sed -i -e 's/auth-user-pass.*/auth-user-pass credentials.conf/g' "$VPN_CONFIG"
-	fi			
-		
+	fi
+
 	# write vpn username to file
 	if [[ -z "${VPN_USER}" ]]; then
 		echo "[crit] VPN username not specified" && exit 1
 	else
-		echo "${VPN_USER}" > /config/openvpn/credentials.conf	
+		echo "${VPN_USER}" > /config/openvpn/credentials.conf
 	fi
 
 	# append vpn password to file
@@ -58,7 +61,7 @@ elif [[ $VPN_PROV == "pia" ]]; then
 		echo "[crit] VPN password not specified" && exit 1
 	else
 		echo "${VPN_PASS}" >> /config/openvpn/credentials.conf
-	fi	
+	fi
 
 # if provider none of the above then exit
 else
@@ -78,7 +81,7 @@ fi
 # read port number and protocol from openvpn.ovpn (used to define iptables rule)
 VPN_PORT=$(cat "$VPN_CONFIG" | grep -P -o -m 1 '^remote\s[^\r\n]+' | grep -P -o -m 1 '[\d]+$')
 VPN_PROTOCOL=$(cat "$VPN_CONFIG" | grep -P -o -m 1 '(?<=proto\s)[^\r\n]+')
-	
+
 # set permissions to user nobody
 chown -R nobody:users /config/openvpn
 chmod -R 775 /config/openvpn
@@ -101,17 +104,17 @@ REMOTE_GATEWAY=$(getent hosts $VPN_REMOTE | cut -d' ' -f1)
 if [[ -z "${REMOTE_GATEWAY}" ]]; then
 	ip route add $VPN_REMOTE via $DEFAULT_GATEWAY
 
-# add route to remote gateway subnet via eth0 (required when tunnel down)	
+# add route to remote gateway subnet via eth0 (required when tunnel down)
 else
 
 	for REMOTE_GATEWAY_IP in $REMOTE_GATEWAY; do
-	
+
 		REMOTE_GATEWAY_SUBNET=$(echo $REMOTE_GATEWAY_IP | grep -P -o -m 1 '[\d]{1,3}\.[\d]{1,3}\.')
 		REMOTE_GATEWAY_SUBNET+="0.0/16"
-		ip route add $REMOTE_GATEWAY_SUBNET via $DEFAULT_GATEWAY	
-		
+		ip route add $REMOTE_GATEWAY_SUBNET via $DEFAULT_GATEWAY
+
 	done
-		
+
 fi
 
 # setup route for deluge webui using set-mark to route traffic for port 8112 to eth0
@@ -125,7 +128,7 @@ if [[ $ENABLE_PRIVOXY == "yes" ]]; then
 	ip rule add fwmark 2 table privoxy
 	ip route add default via $DEFAULT_GATEWAY table privoxy
 fi
-			
+
 echo "[info] ip route"
 ip route
 echo "--------------------"
@@ -149,7 +152,7 @@ iptables -A INPUT -i eth0 -p tcp --sport 8112 -j ACCEPT
 # accept input to privoxy port 8118
 iptables -A INPUT -i eth0 -p tcp --dport 8118 -j ACCEPT
 iptables -A INPUT -i eth0 -p tcp --sport 8118 -j ACCEPT
-	
+
 # accept input dns lookup
 iptables -A INPUT -p udp --sport 53 -j ACCEPT
 
@@ -186,7 +189,7 @@ iptables -t mangle -A OUTPUT -p tcp --sport 8118 -j MARK --set-mark 2
 # accept output dns lookup
 iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
 
-# accept output icmp (ping) 
+# accept output icmp (ping)
 iptables -A OUTPUT -p icmp --icmp-type echo-request -j ACCEPT
 
 # accept output to local loopback
