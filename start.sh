@@ -32,13 +32,22 @@ elif [[ $VPN_PROV == "pia" ]]; then
 		VPN_CONFIG="/config/openvpn/openvpn.ovpn"
 	fi
 
-	# if remote not specified then use netherlands and default port
-	if [[ -z "${VPN_REMOTE}" ]]; then
-		echo "[warn] VPN provider remote not defined, defaulting to Netherlands port 1194"
+	# if no remote gateway or port specified then use netherlands and default port
+	if [[ -z "${VPN_REMOTE}" && -z "${VPN_PORT}" ]]; then
+		echo "[warn] VPN remote gateway and port not defined, defaulting to netherlands port 1194"
 		sed -i -e "s/remote\s.*/remote nl.privateinternetaccess.com 1194/g" "$VPN_CONFIG"
+		
+	# if no remote gateway but port defined then use netherlands and defined port
+	elif [[ -z "${VPN_REMOTE}" && ! -z "${VPN_PORT}" ]]; then
+		echo "[warn] VPN remote gateway not defined and port defined, defaulting to netherlands"
+		sed -i -e "s/remote\s.*/remote nl.privateinternetaccess.com $VPN_PORT/g" "$VPN_CONFIG"
+		
+	# if remote gateway defined but port not defined then use default port
 	elif [[ ! -z "${VPN_REMOTE}" && -z "${VPN_PORT}" ]]; then
-		echo "[warn] VPN provider port not defined, defaulting to 1194"
+		echo "[warn] VPN remote gateway defined but no port defined, defaulting to port 1194"
 		sed -i -e "s/remote\s.*/remote $VPN_REMOTE 1194/g" "$VPN_CONFIG"
+		
+	# if remote gateway and port defined then use both
 	else
 		echo "[info] VPN provider remote and port defined as $VPN_REMOTE $VPN_PORT"
 		sed -i -e "s/remote\s.*/remote $VPN_REMOTE $VPN_PORT/g" "$VPN_CONFIG"
