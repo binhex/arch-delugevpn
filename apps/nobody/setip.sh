@@ -8,7 +8,7 @@ done
 # if vpn set to "no" then set deluge to listen on all ip addresses
 if [[ $VPN_ENABLED == "no" ]]; then
 
-	echo "[info] VPN not enabled, configuring Deluge listen address to all IP addresses on the local machine"
+	echo "[info] VPN not enabled, configuring Deluge listen interface to all IP addresses on the local machine"
 	/usr/bin/deluge-console -c /config "config --set listen_interface 0.0.0.0"
 
 else

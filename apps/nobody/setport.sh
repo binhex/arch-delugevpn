@@ -8,8 +8,7 @@ done
 # if vpn set to "no" then set deluge to random incoming port
 if [[ $VPN_ENABLED == "no" ]]; then
 
-	echo "[info] VPN not enabled, set deluge to random incoming port"
-	/usr/bin/deluge-console -c /config "config --set random_port True"
+	echo "[info] VPN not enabled, skipping configuration of incoming port"
 
 else
 
