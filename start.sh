@@ -19,8 +19,8 @@ else
 	if [[ -z "${VPN_PROV}" ]]; then
 		echo "[crit] VPN provider not defined, please specify via env variable VPN_PROV" && exit 1
 
-	# if custom|airvpn vpn provider chosen then do NOT copy base config file
-	elif [[ $VPN_PROV == "custom" || $VPN_PROV == "airvpn" ]]; then
+	# if airvpn vpn provider chosen then do NOT copy base config file
+	elif [[ $VPN_PROV == "airvpn" ]]; then
 
 		echo "[info] VPN provider defined as $VPN_PROV"
 		if [[ -z "${VPN_CONFIG}" ]]; then
@@ -60,6 +60,33 @@ else
 		else
 			echo "[info] VPN provider remote and port defined as $VPN_REMOTE $VPN_PORT"
 			sed -i -e "s/remote\s.*/remote $VPN_REMOTE $VPN_PORT/g" "$VPN_CONFIG"
+		fi
+
+		# store credentials in separate file for authentication
+		if ! $(grep -Fq "auth-user-pass credentials.conf" "$VPN_CONFIG"); then
+			sed -i -e 's/auth-user-pass.*/auth-user-pass credentials.conf/g' "$VPN_CONFIG"
+		fi
+
+		# write vpn username to file
+		if [[ -z "${VPN_USER}" ]]; then
+			echo "[crit] VPN username not specified" && exit 1
+		else
+			echo "${VPN_USER}" > /config/openvpn/credentials.conf
+		fi
+
+		# append vpn password to file
+		if [[ -z "${VPN_PASS}" ]]; then
+			echo "[crit] VPN password not specified" && exit 1
+		else
+			echo "${VPN_PASS}" >> /config/openvpn/credentials.conf
+		fi
+
+	# if custom vpn provider chosen then do NOT copy base config file
+	elif [[ $VPN_PROV == "custom" ]]; then
+
+		echo "[info] VPN provider defined as $VPN_PROV"
+		if [[ -z "${VPN_CONFIG}" ]]; then
+			echo "[crit] VPN provider defined as $VPN_PROV, no files with an ovpn extension exist in /config/openvpn/ please create and restart delugevpn" && exit 1
 		fi
 
 		# store credentials in separate file for authentication
@@ -146,11 +173,6 @@ else
 		ip rule add fwmark 2 table privoxy
 		ip route add default via $DEFAULT_GATEWAY table privoxy
 	fi
-
-	# setup route for deluge daemon using set-mark to route traffic for port 58846 to eth0
-	#echo "58846    daemon" >> /etc/iproute2/rt_tables
-	#ip rule add fwmark 3 table daemon
-	#ip route add default via $DEFAULT_GATEWAY table daemon
 
 	echo "[info] ip route"
 	ip route
