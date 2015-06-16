@@ -1,4 +1,4 @@
-FROM binhex/arch-base:2015050700
+FROM binhex/arch-openvpn
 MAINTAINER binhex
 
 # additional files
@@ -10,14 +10,8 @@ ADD *.conf /etc/supervisor/conf.d/
 # add bash scripts to install app, and setup iptables, routing etc
 ADD *.sh /root/
 
-# add bash script to run openvpn
-ADD apps/root/*.sh /root/
-
-# add bash script to run deluge and privoxy
+# add bash script to run deluge
 ADD apps/nobody/*.sh /home/nobody/
-
-# add pia certificates and sample openvpn.ovpn file
-ADD config/pia/* /home/nobody/
 
 # install app
 #############
@@ -37,9 +31,6 @@ VOLUME /data
 
 # expose port for deluge webui
 EXPOSE 8112
-
-# expose port for privoxy
-EXPOSE 8118
 
 # run supervisor
 ################
