@@ -11,8 +11,8 @@ pacman -Sy --noconfirm
 pacman -S --needed $pacman_packages --noconfirm
 
 # download and install package
-curl -L https://github.com/binhex/arch-packages/raw/master/deluge-1.3.11-3-any.pkg.tar.xz -o /tmp/deluge-1.3.11-3-any.pkg.tar.xz
-curl -L https://github.com/binhex/arch-packages/raw/master/deluge-1.3.11-3-any.pkg.tar.xz.sig -o /tmp/deluge-1.3.11-3-any.pkg.tar.xz.sig
+curl -L http://seblu.net/a/arm/month/extra/os/x86_64/deluge-1.3.11-3-any.pkg.tar.xz -o /tmp/deluge-1.3.11-3-any.pkg.tar.xz
+curl -L http://seblu.net/a/arm/month/extra/os/x86_64/deluge-1.3.11-3-any.pkg.tar.xz.sig -o /tmp/deluge-1.3.11-3-any.pkg.tar.xz.sig
 pacman -U /tmp/deluge-1.3.11-3-any.pkg.tar.xz --noconfirm
 
 # set permissions
