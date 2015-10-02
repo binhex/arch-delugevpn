@@ -18,6 +18,6 @@ check_valid_ip() {
 LOCAL_IP=""
 while ! check_valid_ip "$LOCAL_IP"
 do
-	sleep 0.1
+	sleep 0.5
 	LOCAL_IP=`ifconfig tun0 2>/dev/null | grep 'inet' | grep -P -o -m 1 '(?<=inet\s)[^\s]+'`
 done
