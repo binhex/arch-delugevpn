@@ -4,16 +4,11 @@
 set -e
 
 # define pacman packages
-pacman_packages="unzip unrar librsvg pygtk python2-service-identity python2-mako python2-notify"
+pacman_packages="unzip unrar librsvg pygtk python2-service-identity python2-mako python2-notify deluge"
 
 # install pre-reqs
 pacman -Sy --noconfirm
 pacman -S --needed $pacman_packages --noconfirm
-
-# download and install package
-curl -L http://seblu.net/a/arm/month/extra/os/x86_64/deluge-1.3.11-3-any.pkg.tar.xz -o /tmp/deluge-1.3.11-3-any.pkg.tar.xz
-curl -L http://seblu.net/a/arm/month/extra/os/x86_64/deluge-1.3.11-3-any.pkg.tar.xz.sig -o /tmp/deluge-1.3.11-3-any.pkg.tar.xz.sig
-pacman -U /tmp/deluge-1.3.11-3-any.pkg.tar.xz --noconfirm
 
 # set permissions
 chown -R nobody:users /home/nobody /usr/bin/deluged /usr/bin/deluge-web
