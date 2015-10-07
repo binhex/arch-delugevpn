@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ ! -f /config/core.conf ]]; then
+if [[ -f /config/core.conf ]]; then
 	# reset listen interface ip address for deluge
 	sed -i -e 's/"listen_interface".*/"listen_interface": "",/g' /config/core.conf
 fi
