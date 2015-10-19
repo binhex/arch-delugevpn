@@ -9,20 +9,19 @@ check_valid_ip() {
 
 	# check if ip address looks valid
 	if [[ $IP_ADDRESS =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-		echo "[info] tun0 interface ip address format correct"
-	else
-		echo "[warn] tun0 interface ip address format incorrect"; return 1
-	fi
+		echo "[info] VPN interface (tun0) ip address format correct"
+		
+		# check that interface is up
+		ifconfig | grep tun0 | grep -Eq 'UP'
 
-	# check that interface is up
-	ifconfig | grep tun0 | grep -Eq 'UP'
-
-	if [ $? -eq 0 ]; then
-		echo "[info] tun0 interface UP"
+		if [ $? -eq 0 ]; then
+			echo "[info] VPN interface (tun0) is UP"
+		else
+			return 1
+		fi
 	else
-		echo "[warn] tun0 interface not UP"; return 1
-	fi
-	
+		return 1
+
 	return 0
 }
 

@@ -1,11 +1,13 @@
 #!/bin/bash
 
-echo "[info] configuring Deluge listen interface..."
+echo "[info] Configuring Deluge listen interface..."
 
 if [[ -f /config/core.conf ]]; then
 	# get currently allocated ip address for adapter tun0
 	LOCAL_IP=`ifconfig tun0 2>/dev/null | grep 'inet' | grep -P -o -m 1 '(?<=inet\s)[^\s]+'`
-
+	
+	echo "[info] Manually setting Deluge listen interface to $LOCAL_IP"
+	
 	# set listen interface ip address for deluge
 	sed -i -e "s/\"listen_interface\": \".*\"/\"listen_interface\": \"${LOCAL_IP}\"/g" /config/core.conf
 fi
