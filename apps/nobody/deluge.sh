@@ -1,11 +1,6 @@
 #!/bin/bash
 
-if [[ -f /config/core.conf ]]; then
-	# reset listen interface ip address for deluge
-	sed -i -e 's/"listen_interface".*/"listen_interface": "0.0.0.0",/g' /config/core.conf
-fi
-
-# if vpn set to "no" then set deluge to random incoming port
+# if vpn set to "no" then skip config deluge ip and port
 if [[ $VPN_ENABLED == "no" ]]; then
 	echo "[info] VPN not enabled, skipping configuration of Deluge"
 else
