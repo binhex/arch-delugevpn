@@ -7,7 +7,7 @@ set -e
 pacman_packages="unzip unrar librsvg pygtk python2-service-identity python2-mako python2-notify deluge"
 
 # install pre-reqs
-pacman -Sy --noconfirm
+pacman -Syu --ignore filesystem --noconfirm
 pacman -S --needed $pacman_packages --noconfirm
 
 # set permissions
