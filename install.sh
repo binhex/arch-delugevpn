@@ -14,6 +14,9 @@ pacman -S --needed $pacman_packages --noconfirm
 chown -R nobody:users /home/nobody /usr/bin/deluged /usr/bin/deluge-web
 chmod -R 775 /home/nobody /usr/bin/deluged /usr/bin/deluge-web
 
+# install patched deluge scheduler plugin (bug with 1.3.12 release)
+curl -o /usr/lib/python2.7/site-packages/deluge/plugins/Scheduler-0.2-py2.7.egg https://raw.githubusercontent.com/binhex/arch-patches/master/arch-deluge/plugins/scheduler/Scheduler-0.2-py2.7.egg
+
 # cleanup
 yes|pacman -Scc
 rm -rf /usr/share/locale/*
