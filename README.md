@@ -1,4 +1,4 @@
-# Deluge + OpenVPN + Privoxy
+**Deluge + OpenVPN + Privoxy**
 
 [Deluge website](http://deluge-torrent.org/)
 [OpenVPN website](https://openvpn.net/)
@@ -32,6 +32,7 @@ docker run -d \
 	-e LAN_RANGE=<lan ipv4 range> \
 	binhex/arch-delugevpn
 ```
+
 
 Please replace all user variables in the above command defined by <> with the correct values.
 
@@ -70,6 +71,7 @@ docker run -d \
 	binhex/arch-delugevpn
 ```
 
+
 **AirVPN provider**
 
 AirVPN users will need to generate a unique OpenVPN configuration
@@ -98,6 +100,7 @@ docker run -d \
 	-e LAN_RANGE=192.168.1.1-192.168.1.254 \
 	binhex/arch-delugevpn
 ```
+
 
 **Notes**
 
