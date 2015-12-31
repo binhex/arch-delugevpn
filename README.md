@@ -38,11 +38,11 @@ Please replace all user variables in the above command defined by <> with the co
 
 **Access Deluge**
 
-http://\<host ip\>:8112
+`http://<host ip>:8112`
 
 **Access Privoxy**
 
-http://\<host ip\>:8118
+`http://<host ip>:8118`
 
 **PIA provider**
 
