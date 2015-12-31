@@ -21,11 +21,11 @@ rm -f /usr/lib/python2.7/site-packages/deluge/plugins/Scheduler-0.2-py2.7.egg
 curl -o /tmp/libtorrent-rasterbar.tar.xz -L http://ala.seblu.net/packages/l/libtorrent-rasterbar/libtorrent-rasterbar-1%3A1.0.7-2-x86_64.pkg.tar.xz
 pacman -U /tmp/libtorrent-rasterbar.tar.xz --noconfirm
 
-curl -o /tmp/boost.tar.xz -L http://ala.seblu.net/packages/b/boost/boost-1.59.0-5-x86_64.pkg.tar.xz
-pacman -U /tmp/boost.tar.xz --noconfirm
-
 curl -o /tmp/boost-libs.tar.xz -L http://ala.seblu.net/packages/b/boost-libs/boost-libs-1.59.0-5-x86_64.pkg.tar.xz
 pacman -U /tmp/boost-libs.tar.xz --noconfirm
+
+curl -o /tmp/boost.tar.xz -L http://ala.seblu.net/packages/b/boost/boost-1.59.0-5-x86_64.pkg.tar.xz
+pacman -U /tmp/boost.tar.xz --noconfirm
 
 # cleanup
 yes|pacman -Scc
