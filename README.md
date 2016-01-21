@@ -1,7 +1,7 @@
 **Deluge + OpenVPN + Privoxy**
 
-[Deluge website](http://deluge-torrent.org/)
-[OpenVPN website](https://openvpn.net/)
+[Deluge website](http://deluge-torrent.org/)  
+[OpenVPN website](https://openvpn.net/)  
 [Privoxy website](http://www.privoxy.org/)
 
 **Description**
