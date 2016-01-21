@@ -33,7 +33,6 @@ docker run -d \
 	binhex/arch-delugevpn
 ```
 
-
 Please replace all user variables in the above command defined by <> with the correct values.
 
 **Access Deluge**
@@ -57,8 +56,8 @@ docker run -d \
 	-p 8112:8112 \
 	-p 8118:8118 \
 	--name=delugevpn \
-	-v /root/docker/data:/data \
-	-v /root/docker/config:/config \
+	-v /apps/docker/deluge/data:/data \
+	-v /apps/docker/deluge/config:/config \
 	-v /etc/localtime:/etc/localtime:ro \
 	-e VPN_ENABLED=yes \
 	-e VPN_USER=myusername \
@@ -70,7 +69,6 @@ docker run -d \
 	-e LAN_RANGE=192.168.1.1-192.168.1.254 \
 	binhex/arch-delugevpn
 ```
-
 
 **AirVPN provider**
 
@@ -91,8 +89,8 @@ docker run -d \
 	-p 8112:8112 \
 	-p 8118:8118 \
 	--name=delugevpn \
-	-v /root/docker/data:/data \
-	-v /root/docker/config:/config \
+	-v /apps/docker/deluge/data:/data \
+	-v /apps/docker/deluge/config:/config \
 	-v /etc/localtime:/etc/localtime:ro \
 	-e VPN_ENABLED=yes \
 	-e VPN_PROV=airvpn \
@@ -100,7 +98,6 @@ docker run -d \
 	-e LAN_RANGE=192.168.1.1-192.168.1.254 \
 	binhex/arch-delugevpn
 ```
-
 
 **Notes**
 
