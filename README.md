@@ -1,4 +1,4 @@
-**Deluge + OpenVPN + Privoxy**
+**Application**
 
 [Deluge website](http://deluge-torrent.org/)  
 [OpenVPN website](https://openvpn.net/)  
@@ -6,9 +6,13 @@
 
 **Description**
 
-Deluge is a full-featured ​BitTorrent client for Linux, OS X, Unix and Windows. It uses ​libtorrent in its backend and features multiple user-interfaces including: GTK+, web and console. It has been designed using the client server model with a daemon process that handles all the bittorrent activity. The Deluge daemon is able to run on headless machines with the user-interfaces being able to connect remotely from any platform.
+Deluge is a full-featured ​BitTorrent client for Linux, OS X, Unix and Windows. It uses ​libtorrent in its backend and features multiple user-interfaces including: GTK+, web and console. It has been designed using the client server model with a daemon process that handles all the bittorrent activity. The Deluge daemon is able to run on headless machines with the user-interfaces being able to connect remotely from any platform. This Docker includes OpenVPN to ensure a secure and private connection to the Internet, including use of iptables to prevent IP leakage when the tunnel is down. It also includes Privoxy to allow unfiltered access to index sites, to use Privoxy please point your application at `http://<host ip>:8181`.
 
-This Docker includes OpenVPN to ensure a secure and private connection to the Internet, including use of iptables to prevent IP leakage when the tunnel is down. It also includes Privoxy to allow unfiltered access to index sites, to use Privoxy please point your application at `http://<host ip>:8181`.
+**Build notes**
+
+Latest stable Deluge release from Arch Linux repo.
+Latest stable OpenVPN release from Arch Linux repo.
+Latest stable Privoxy release from Arch Linux repo.
 
 **Usage**
 ```
