@@ -29,6 +29,7 @@ docker run -d \
 	-e VPN_PASS=<vpn password> \
 	-e VPN_REMOTE=<vpn remote gateway> \
 	-e VPN_PORT=<vpn remote port> \
+	-e VPN_PROTOCOL=<vpn remote protocol> \
 	-e VPN_PROV=<pia|airvpn|custom> \
 	-e ENABLE_PRIVOXY=<yes|no> \
 	-e LAN_RANGE=<lan ipv4 range> \
@@ -64,6 +65,7 @@ docker run -d \
 	-e VPN_PASS=mypassword \
 	-e VPN_REMOTE=nl.privateinternetaccess.com \
 	-e VPN_PORT=1194 \
+	-e VPN_PROTOCOL=udp \
 	-e VPN_PROV=pia \
 	-e ENABLE_PRIVOXY=yes \
 	-e LAN_RANGE=192.168.1.1-192.168.1.254 \
