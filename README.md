@@ -33,6 +33,7 @@ docker run -d \
 	-e VPN_PROV=<pia|airvpn|custom> \
 	-e ENABLE_PRIVOXY=<yes|no> \
 	-e LAN_RANGE=<lan ipv4 range> \
+	-e DEBUG=<true|false> \
 	binhex/arch-delugevpn
 ```
 
@@ -69,6 +70,7 @@ docker run -d \
 	-e VPN_PROV=pia \
 	-e ENABLE_PRIVOXY=yes \
 	-e LAN_RANGE=192.168.1.1-192.168.1.254 \
+	-e DEBUG=false \
 	binhex/arch-delugevpn
 ```
 
@@ -97,6 +99,7 @@ docker run -d \
 	-e VPN_PROV=airvpn \
 	-e ENABLE_PRIVOXY=yes \
 	-e LAN_RANGE=192.168.1.1-192.168.1.254 \
+	-e DEBUG=false \
 	binhex/arch-delugevpn
 ```
 
@@ -104,4 +107,4 @@ docker run -d \
 
 Default password for the webui is "deluge"
 
-[Support forum](http://lime-technology.com/forum/index.php?topic=38055.0)
+[Support forum](http://lime-technology.com/forum/index.php?topic=45811.0)
