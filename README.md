@@ -107,4 +107,4 @@ docker run -d \
 
 Default password for the webui is "deluge"
 
-[Support forum](http://lime-technology.com/forum/index.php?topic=45811.0)
+[Support forum](http://lime-technology.com/forum/index.php?topic=45812.0)
