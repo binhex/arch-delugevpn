@@ -1,11 +1,16 @@
 #!/bin/bash
 
+# ip route
+###
+
 # check kernel for iptable_mangle module
 lsmod | grep "iptable_mangle" > /dev/null
 iptable_mangle_exit_code=$?
 
 # if iptable_mangle is available (kernel module) then set mark
 if [[ $iptable_mangle_exit_code == 0 ]]; then
+
+	echo "[info] iptable_mangle support detected, adding fwmark for tables"
 
 	# setup route for deluge webui using set-mark to route traffic for port 8112 to eth0
 	echo "8112    webui" >> /etc/iproute2/rt_tables
@@ -27,13 +32,23 @@ if [[ $iptable_mangle_exit_code == 0 ]]; then
 	fi
 
 else
+	
+	if [[ ! -z "${LAN_NETWORK}" ]]; then
 
-	# add in route for lan network (env var) via docker eth0 for kernels without iptable_mangle
-	ip route add "${LAN_NETWORK}" via "${DEFAULT_GATEWAY}" dev eth0
+		echo "[info] iptable_mangle not supported, adding ${LAN_NETWORK} as route"
+
+		# add in route for lan network (env var) via docker eth0 for kernels without iptable_mangle
+		ip route add "${LAN_NETWORK}" via "${DEFAULT_GATEWAY}" dev eth0
+
+	else
+
+		echo "[crit] LAN network not defined, please specify via env variable LAN_NETWORK" && exit 1
+
+	fi
 
 fi
 
-echo "[info] ip routing table"
+echo "[info] ip routes defined..."
 ip route
 echo "--------------------"
 
@@ -96,9 +111,17 @@ iptables -A OUTPUT -o eth0 -p $VPN_PROTOCOL --dport $VPN_PORT -j ACCEPT
 iptables -A OUTPUT -o eth0 -p tcp --dport 8112 -j ACCEPT
 iptables -A OUTPUT -o eth0 -p tcp --sport 8112 -j ACCEPT
 
+# accept output from privoxy port 8118 (used when tunnel down)
+if [[ $ENABLE_PRIVOXY == "yes" ]]; then
+	iptables -A OUTPUT -o eth0 -p tcp --dport 8118 -j ACCEPT
+	iptables -A OUTPUT -o eth0 -p tcp --sport 8118 -j ACCEPT
+fi
+
 # if iptable mangle is available (kernel module) then use mark
 if [[ $iptable_mangle_exit_code == 0 ]]; then
 
+	echo "[info] iptable_mangle support detected, using mark"
+	
 	# accept output from deluge webui port 8112 (use mark to force connection over eth0 when tun up)
 	iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
 	iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
@@ -126,6 +149,6 @@ iptables -A OUTPUT -p icmp --icmp-type echo-request -j ACCEPT
 # accept output from local loopback adapter
 iptables -A OUTPUT -o lo -j ACCEPT
 
-echo "[info] iptables"
+echo "[info] iptables defined..."
 iptables -S
 echo "--------------------"
