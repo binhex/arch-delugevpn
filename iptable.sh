@@ -44,8 +44,7 @@ if [[ $ENABLE_PRIVOXY == "yes" ]]; then
 fi
 
 # accept input to deluge daemon port 58846 for lan network
-iptables -A INPUT -i eth0 -s "${LAN_NETWORK}" -j ACCEPT
-iptables -A INPUT -i eth0 -d "${LAN_NETWORK}" -j ACCEPT
+iptables -A INPUT -i eth0 -s "${LAN_NETWORK}" -p tcp --dport 58846 -j ACCEPT
 
 # accept input dns lookup
 iptables -A INPUT -p udp --sport 53 -j ACCEPT
@@ -81,9 +80,8 @@ if [[ $ENABLE_PRIVOXY == "yes" ]]; then
 	iptables -A OUTPUT -o eth0 -p tcp --sport 8118 -j ACCEPT
 fi
 
-# accept input to deluge daemon port 58846 for lan network
-iptables -A OUTPUT -i eth0 -s "${LAN_NETWORK}" -j ACCEPT
-iptables -A OUTPUT -i eth0 -d "${LAN_NETWORK}" -j ACCEPT
+# accept output to deluge daemon port 58846 for lan network
+iptables -A OUTPUT -o eth0 -d "${LAN_NETWORK}" -p tcp --sport 58846 -j ACCEPT
 
 # accept output for dns lookup
 iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
