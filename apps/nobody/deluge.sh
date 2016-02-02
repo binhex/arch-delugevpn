@@ -2,8 +2,16 @@
 
 # if vpn set to "no" then skip config deluge ip and port
 if [[ $VPN_ENABLED == "no" ]]; then
+
 	echo "[info] VPN not enabled, skipping configuration of Deluge"
+	
+	# if config file exists then set listen interface to empty string to prevent error on startup
+	if [[ -f /config/core.conf ]]; then
+		sed -i -e "s/\"listen_interface\": \".*\"/\"listen_interface\": \"\"/g" /config/core.conf
+	fi
+	
 else
+
 	echo "[info] VPN enabled, configuring Deluge..."
 
 	# run script to check ip is valid for tun0

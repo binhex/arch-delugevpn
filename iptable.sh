@@ -1,22 +1,36 @@
 #!/bin/bash
 
-# setup route for deluge webui using set-mark to route traffic for port 8112 to eth0
-echo "8112    webui" >> /etc/iproute2/rt_tables
-ip rule add fwmark 1 table webui
-ip route add default via $DEFAULT_GATEWAY table webui
+# check kernel for iptable_mangle module
+lsmod | grep "iptable_mangle" > /dev/null
+iptable_mangle_exit_code=$?
 
-# setup route for privoxy using set-mark to route traffic for port 8118 to eth0
-if [[ $ENABLE_PRIVOXY == "yes" ]]; then
-	echo "8118    privoxy" >> /etc/iproute2/rt_tables
-	ip rule add fwmark 2 table privoxy
-	ip route add default via $DEFAULT_GATEWAY table privoxy
-fi
+# if iptable_mangle is available (kernel module) then set mark
+if [[ $iptable_mangle_exit_code == 0 ]]; then
 
-# setup route for deluge daemon using set-mark to route traffic for port 58846 to eth0
-if [[ ! -z "${LAN_RANGE}" ]]; then
-	echo "58846    deluged" >> /etc/iproute2/rt_tables
-	ip rule add fwmark 3 table deluged
-	ip route add default via $DEFAULT_GATEWAY table deluged
+	# setup route for deluge webui using set-mark to route traffic for port 8112 to eth0
+	echo "8112    webui" >> /etc/iproute2/rt_tables
+	ip rule add fwmark 1 table webui
+	ip route add default via $DEFAULT_GATEWAY table webui
+
+	# setup route for privoxy using set-mark to route traffic for port 8118 to eth0
+	if [[ $ENABLE_PRIVOXY == "yes" ]]; then
+		echo "8118    privoxy" >> /etc/iproute2/rt_tables
+		ip rule add fwmark 2 table privoxy
+		ip route add default via $DEFAULT_GATEWAY table privoxy
+	fi
+
+	# setup route for deluge daemon using set-mark to route traffic for port 58846 to eth0
+	if [[ ! -z "${LAN_RANGE}" ]]; then
+		echo "58846    deluged" >> /etc/iproute2/rt_tables
+		ip rule add fwmark 3 table deluged
+		ip route add default via $DEFAULT_GATEWAY table deluged
+	fi
+
+else
+
+	# add in route for lan network (env var) via docker eth0 for kernels without iptable_mangle
+	ip route add "${LAN_NETWORK}" via "${DEFAULT_GATEWAY}" dev eth0
+
 fi
 
 echo "[info] ip routing table"
@@ -82,20 +96,25 @@ iptables -A OUTPUT -o eth0 -p $VPN_PROTOCOL --dport $VPN_PORT -j ACCEPT
 iptables -A OUTPUT -o eth0 -p tcp --dport 8112 -j ACCEPT
 iptables -A OUTPUT -o eth0 -p tcp --sport 8112 -j ACCEPT
 
-# accept output from deluge webui port 8112 (use mark to force connection over eth0 when tun up)
-iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
-iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
+# if iptable mangle is available (kernel module) then use mark
+if [[ $iptable_mangle_exit_code == 0 ]]; then
 
-# accept output from privoxy port 8118 if enabled (use mark to force connection over eth0 when tun up)
-if [[ $ENABLE_PRIVOXY == "yes" ]]; then
-	iptables -t mangle -A OUTPUT -p tcp --dport 8118 -j MARK --set-mark 2
-	iptables -t mangle -A OUTPUT -p tcp --sport 8118 -j MARK --set-mark 2
-fi
+	# accept output from deluge webui port 8112 (use mark to force connection over eth0 when tun up)
+	iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
+	iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
 
-# accept output from deluge daemon port 58846 for lan range if specified (use mark to force connection over eth0 when tun up)
-if [[ ! -z "${LAN_RANGE}" ]]; then
-	iptables -t mangle -A OUTPUT -m iprange --dst-range $LAN_RANGE -j MARK --set-mark 3
-	iptables -t mangle -A OUTPUT -m iprange --src-range $LAN_RANGE -j MARK --set-mark 3
+	# accept output from privoxy port 8118 if enabled (use mark to force connection over eth0 when tun up)
+	if [[ $ENABLE_PRIVOXY == "yes" ]]; then
+		iptables -t mangle -A OUTPUT -p tcp --dport 8118 -j MARK --set-mark 2
+		iptables -t mangle -A OUTPUT -p tcp --sport 8118 -j MARK --set-mark 2
+	fi
+
+	# accept output from deluge daemon port 58846 for lan range if specified (use mark to force connection over eth0 when tun up)
+	if [[ ! -z "${LAN_RANGE}" ]]; then
+		iptables -t mangle -A OUTPUT -m iprange --dst-range $LAN_RANGE -j MARK --set-mark 3
+		iptables -t mangle -A OUTPUT -m iprange --src-range $LAN_RANGE -j MARK --set-mark 3
+	fi
+
 fi
 
 # accept output for dns lookup
