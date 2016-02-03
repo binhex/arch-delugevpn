@@ -19,6 +19,37 @@ echo "--------------------"
 ip route
 echo "--------------------"
 
+
+# setup iptables marks to allow routing of defined ports via eth0
+###
+
+# check kernel for iptable_mangle module
+lsmod | grep "iptable_mangle" > /dev/null
+iptable_mangle_exit_code=$?
+
+# if iptable_mangle is available (kernel module) then set mark
+if [[ $iptable_mangle_exit_code == 0 ]]; then
+
+	echo "[info] iptable_mangle support detected, adding fwmark for tables"
+
+	# setup route for deluge webui using set-mark to route traffic for port 8112 to eth0
+	echo "8112    webui" >> /etc/iproute2/rt_tables
+	ip rule add fwmark 1 table webui
+	ip route add default via $DEFAULT_GATEWAY table webui
+
+	# setup route for privoxy using set-mark to route traffic for port 8118 to eth0
+	if [[ $ENABLE_PRIVOXY == "yes" ]]; then
+		echo "8118    privoxy" >> /etc/iproute2/rt_tables
+		ip rule add fwmark 2 table privoxy
+		ip route add default via $DEFAULT_GATEWAY table privoxy
+	fi
+
+else
+
+	echo "[warn] iptable_mangle module not supported, you will not be able to connect to Deluge webui or Privoxy outside of your LAN"
+
+fi
+
 # input iptable rules
 ###
 
@@ -71,14 +102,31 @@ iptables -A OUTPUT -s 172.17.0.0/16 -d 172.17.0.0/16 -j ACCEPT
 # accept output from vpn gateway
 iptables -A OUTPUT -o eth0 -p $VPN_PROTOCOL --dport $VPN_PORT -j ACCEPT
 
-# accept output from deluge webui port 8112
-iptables -A OUTPUT -o eth0 -p tcp --dport 8112 -j ACCEPT
-iptables -A OUTPUT -o eth0 -p tcp --sport 8112 -j ACCEPT
+# if iptable mangle is available (kernel module) then use mark
+if [[ $iptable_mangle_exit_code == 0 ]]; then
 
-# accept output from privoxy port 8118
-if [[ $ENABLE_PRIVOXY == "yes" ]]; then
-	iptables -A OUTPUT -o eth0 -p tcp --dport 8118 -j ACCEPT
-	iptables -A OUTPUT -o eth0 -p tcp --sport 8118 -j ACCEPT
+	# accept output from deluge webui port 8112 (use mark to force connection over eth0 when tun up)
+	iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
+	iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
+
+	# accept output from privoxy port 8118 if enabled (use mark to force connection over eth0 when tun up)
+	if [[ $ENABLE_PRIVOXY == "yes" ]]; then
+		iptables -t mangle -A OUTPUT -p tcp --dport 8118 -j MARK --set-mark 2
+		iptables -t mangle -A OUTPUT -p tcp --sport 8118 -j MARK --set-mark 2
+	fi
+	
+else
+
+	# accept output from deluge webui port 8112
+	iptables -A OUTPUT -o eth0 -p tcp --dport 8112 -j ACCEPT
+	iptables -A OUTPUT -o eth0 -p tcp --sport 8112 -j ACCEPT
+
+	# accept output from privoxy port 8118
+	if [[ $ENABLE_PRIVOXY == "yes" ]]; then
+		iptables -A OUTPUT -o eth0 -p tcp --dport 8118 -j ACCEPT
+		iptables -A OUTPUT -o eth0 -p tcp --sport 8118 -j ACCEPT
+	fi
+
 fi
 
 # accept output to deluge daemon port 58846 for lan network
