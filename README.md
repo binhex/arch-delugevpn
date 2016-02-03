@@ -32,7 +32,7 @@ docker run -d \
 	-e VPN_PROTOCOL=<vpn remote protocol> \
 	-e VPN_PROV=<pia|airvpn|custom> \
 	-e ENABLE_PRIVOXY=<yes|no> \
-	-e LAN_RANGE=<lan ipv4 range> \
+	-e LAN_NETWORK=<lan ipv4 network with cidr notation> \
 	-e DEBUG=<true|false> \
 	binhex/arch-delugevpn
 ```
@@ -69,7 +69,7 @@ docker run -d \
 	-e VPN_PROTOCOL=udp \
 	-e VPN_PROV=pia \
 	-e ENABLE_PRIVOXY=yes \
-	-e LAN_RANGE=192.168.1.1-192.168.1.254 \
+	-e LAN_NETWORK=192.168.1.0/24 \
 	-e DEBUG=false \
 	binhex/arch-delugevpn
 ```
@@ -98,7 +98,7 @@ docker run -d \
 	-e VPN_ENABLED=yes \
 	-e VPN_PROV=airvpn \
 	-e ENABLE_PRIVOXY=yes \
-	-e LAN_RANGE=192.168.1.1-192.168.1.254 \
+	-e LAN_NETWORK=192.168.1.0/24 \
 	-e DEBUG=false \
 	binhex/arch-delugevpn
 ```

@@ -14,7 +14,8 @@ else
 
 fi
 
-echo "[info] ip routes defined as follows..."
+echo "[info] ip route defined as follows..."
+echo "--------------------"
 ip route
 echo "--------------------"
 
@@ -70,11 +71,11 @@ iptables -A OUTPUT -s 172.17.0.0/16 -d 172.17.0.0/16 -j ACCEPT
 # accept output from vpn gateway
 iptables -A OUTPUT -o eth0 -p $VPN_PROTOCOL --dport $VPN_PORT -j ACCEPT
 
-# accept output from deluge webui port 8112 (used when tunnel down)
+# accept output from deluge webui port 8112
 iptables -A OUTPUT -o eth0 -p tcp --dport 8112 -j ACCEPT
 iptables -A OUTPUT -o eth0 -p tcp --sport 8112 -j ACCEPT
 
-# accept output from privoxy port 8118 (used when tunnel down)
+# accept output from privoxy port 8118
 if [[ $ENABLE_PRIVOXY == "yes" ]]; then
 	iptables -A OUTPUT -o eth0 -p tcp --dport 8118 -j ACCEPT
 	iptables -A OUTPUT -o eth0 -p tcp --sport 8118 -j ACCEPT
@@ -93,5 +94,6 @@ iptables -A OUTPUT -p icmp --icmp-type echo-request -j ACCEPT
 iptables -A OUTPUT -o lo -j ACCEPT
 
 echo "[info] iptables defined as follows..."
+echo "--------------------"
 iptables -S
 echo "--------------------"
