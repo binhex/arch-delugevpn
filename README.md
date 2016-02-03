@@ -32,7 +32,7 @@ docker run -d \
 	-e VPN_PROTOCOL=<vpn remote protocol> \
 	-e VPN_PROV=<pia|airvpn|custom> \
 	-e ENABLE_PRIVOXY=<yes|no> \
-	-e LAN_NETWORK=<lan ipv4 network with cidr notation> \
+	-e LAN_NETWORK=<lan ipv4 network>/<cidr notation> \
 	-e DEBUG=<true|false> \
 	binhex/arch-delugevpn
 ```
