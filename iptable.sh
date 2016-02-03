@@ -75,7 +75,7 @@ if [[ $ENABLE_PRIVOXY == "yes" ]]; then
 	iptables -A INPUT -i eth0 -p tcp --sport 8118 -j ACCEPT
 fi
 
-# accept input to deluge daemon port 58846 for lan network
+# accept input to deluge daemon port 58846 - used for lan access
 iptables -A INPUT -i eth0 -s "${LAN_NETWORK}" -p tcp --dport 58846 -j ACCEPT
 
 # accept input dns lookup
@@ -105,31 +105,29 @@ iptables -A OUTPUT -o eth0 -p $VPN_PROTOCOL --dport $VPN_PORT -j ACCEPT
 # if iptable mangle is available (kernel module) then use mark
 if [[ $iptable_mangle_exit_code == 0 ]]; then
 
-	# accept output from deluge webui port 8112 (use mark to force connection over eth0 when tun up)
+	# accept output from deluge webui port 8112 - used for external access
 	iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
 	iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
 
-	# accept output from privoxy port 8118 if enabled (use mark to force connection over eth0 when tun up)
+	# accept output from privoxy port 8118 - used for external access
 	if [[ $ENABLE_PRIVOXY == "yes" ]]; then
 		iptables -t mangle -A OUTPUT -p tcp --dport 8118 -j MARK --set-mark 2
 		iptables -t mangle -A OUTPUT -p tcp --sport 8118 -j MARK --set-mark 2
 	fi
 	
-else
-
-	# accept output from deluge webui port 8112
-	iptables -A OUTPUT -o eth0 -p tcp --dport 8112 -j ACCEPT
-	iptables -A OUTPUT -o eth0 -p tcp --sport 8112 -j ACCEPT
-
-	# accept output from privoxy port 8118
-	if [[ $ENABLE_PRIVOXY == "yes" ]]; then
-		iptables -A OUTPUT -o eth0 -p tcp --dport 8118 -j ACCEPT
-		iptables -A OUTPUT -o eth0 -p tcp --sport 8118 -j ACCEPT
-	fi
-
 fi
 
-# accept output to deluge daemon port 58846 for lan network
+# accept output from deluge webui port 8112 - used for lan access
+iptables -A OUTPUT -o eth0 -p tcp --dport 8112 -j ACCEPT
+iptables -A OUTPUT -o eth0 -p tcp --sport 8112 -j ACCEPT
+
+# accept output from privoxy port 8118 - used for lan access
+if [[ $ENABLE_PRIVOXY == "yes" ]]; then
+	iptables -A OUTPUT -o eth0 -p tcp --dport 8118 -j ACCEPT
+	iptables -A OUTPUT -o eth0 -p tcp --sport 8118 -j ACCEPT
+fi
+
+# accept output to deluge daemon port 58846 - used for lan access
 iptables -A OUTPUT -o eth0 -d "${LAN_NETWORK}" -p tcp --sport 58846 -j ACCEPT
 
 # accept output for dns lookup
