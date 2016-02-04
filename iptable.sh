@@ -27,7 +27,16 @@ echo "--------------------"
 lsmod | grep "iptable_mangle" > /dev/null
 iptable_mangle_exit_code=$?
 
-# if iptable_mangle is available (kernel module) then set mark
+# if iptable_mangle is not available then attempt to load module
+if [[ $iptable_mangle_exit_code != 0 ]]; then
+
+	# attempt to load module
+	echo "[info] iptable_mangle module not supported, attempting to load..."
+	modprobe iptable_mangle > /dev/null
+	iptable_mangle_exit_code=$?
+fi
+
+# if iptable_mangle is available then set fwmark
 if [[ $iptable_mangle_exit_code == 0 ]]; then
 
 	echo "[info] iptable_mangle support detected, adding fwmark for tables"
