@@ -5,10 +5,13 @@ MAINTAINER binhex
 ##################
 
 # add supervisor conf file for app
-ADD *.conf /etc/supervisor/conf.d/
+ADD setup/*.conf /etc/supervisor/conf.d/
 
-# add bash scripts to install app, and setup iptables, routing etc
-ADD *.sh /root/
+# add bash scripts to install app
+ADD setup/*.sh /root/
+
+# add bash script to setup iptables
+ADD apps/root/*.sh /root/
 
 # add bash script to run deluge
 ADD apps/nobody/*.sh /home/nobody/
@@ -32,8 +35,8 @@ VOLUME /data
 # expose port for deluge webui
 EXPOSE 8112
 
-# run supervisor
-################
+# set permissions
+#################
 
-# run supervisor
-CMD ["supervisord", "-c", "/etc/supervisor.conf", "-n"]
+# run script to set uid, gid and permissions
+CMD ["/bin/bash", "/root/init.sh"]

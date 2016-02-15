@@ -10,10 +10,6 @@ pacman_packages="unzip unrar pygtk python2-service-identity python2-mako python2
 pacman -Syu --ignore filesystem --noconfirm
 pacman -S --needed $pacman_packages --noconfirm
 
-# set permissions
-chown -R nobody:users /home/nobody /usr/bin/deluged /usr/bin/deluge-web
-chmod -R 775 /home/nobody /usr/bin/deluged /usr/bin/deluge-web
-
 # remove faulty scheduler plugin (bug with 1.3.12 release)
 rm -f /usr/lib/python2.7/site-packages/deluge/plugins/Scheduler-0.2-py2.7.egg
 

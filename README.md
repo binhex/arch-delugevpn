@@ -17,24 +17,26 @@ Latest stable Privoxy release from Arch Linux repo.
 **Usage**
 ```
 docker run -d \
-	--cap-add=NET_ADMIN \
-	-p 8112:8112 \
-	-p 8118:8118 \
-	--name=<container name> \
-	-v <path for data files>:/data \
-	-v <path for config files>:/config \
-	-v /etc/localtime:/etc/localtime:ro \
-	-e VPN_ENABLED=<yes|no> \
-	-e VPN_USER=<vpn username> \
-	-e VPN_PASS=<vpn password> \
-	-e VPN_REMOTE=<vpn remote gateway> \
-	-e VPN_PORT=<vpn remote port> \
-	-e VPN_PROTOCOL=<vpn remote protocol> \
-	-e VPN_PROV=<pia|airvpn|custom> \
-	-e ENABLE_PRIVOXY=<yes|no> \
-	-e LAN_NETWORK=<lan ipv4 network>/<cidr notation> \
-	-e DEBUG=<true|false> \
-	binhex/arch-delugevpn
+    --cap-add=NET_ADMIN \
+    -p 8112:8112 \
+    -p 8118:8118 \
+    --name=<container name> \
+    -v <path for data files>:/data \
+    -v <path for config files>:/config \
+    -v /etc/localtime:/etc/localtime:ro \
+    -e VPN_ENABLED=<yes|no> \
+    -e VPN_USER=<vpn username> \
+    -e VPN_PASS=<vpn password> \
+    -e VPN_REMOTE=<vpn remote gateway> \
+    -e VPN_PORT=<vpn remote port> \
+    -e VPN_PROTOCOL=<vpn remote protocol> \
+    -e VPN_PROV=<pia|airvpn|custom> \
+    -e ENABLE_PRIVOXY=<yes|no> \
+    -e LAN_NETWORK=<lan ipv4 network>/<cidr notation> \
+    -e DEBUG=<true|false> \
+    -e UID=<uid for user> \
+    -e GID=<gid for user> \
+    binhex/arch-delugevpn
 ```
 
 Please replace all user variables in the above command defined by <> with the correct values.
@@ -54,24 +56,26 @@ PIA users will need to supply VPN_USER and VPN_PASS, optionally define VPN_REMOT
 **PIA example**
 ```
 docker run -d \
-	--cap-add=NET_ADMIN \
-	-p 8112:8112 \
-	-p 8118:8118 \
-	--name=delugevpn \
-	-v /apps/docker/deluge/data:/data \
-	-v /apps/docker/deluge/config:/config \
-	-v /etc/localtime:/etc/localtime:ro \
-	-e VPN_ENABLED=yes \
-	-e VPN_USER=myusername \
-	-e VPN_PASS=mypassword \
-	-e VPN_REMOTE=nl.privateinternetaccess.com \
-	-e VPN_PORT=1194 \
-	-e VPN_PROTOCOL=udp \
-	-e VPN_PROV=pia \
-	-e ENABLE_PRIVOXY=yes \
-	-e LAN_NETWORK=192.168.1.0/24 \
-	-e DEBUG=false \
-	binhex/arch-delugevpn
+    --cap-add=NET_ADMIN \
+    -p 8112:8112 \
+    -p 8118:8118 \
+    --name=delugevpn \
+    -v /apps/docker/deluge/data:/data \
+    -v /apps/docker/deluge/config:/config \
+    -v /etc/localtime:/etc/localtime:ro \
+    -e VPN_ENABLED=yes \
+    -e VPN_USER=myusername \
+    -e VPN_PASS=mypassword \
+    -e VPN_REMOTE=nl.privateinternetaccess.com \
+    -e VPN_PORT=1194 \
+    -e VPN_PROTOCOL=udp \
+    -e VPN_PROV=pia \
+    -e ENABLE_PRIVOXY=yes \
+    -e LAN_NETWORK=192.168.1.0/24 \
+    -e DEBUG=false \
+    -e UID=0 \
+    -e GID=0 \
+    binhex/arch-delugevpn
 ```
 
 **AirVPN provider**
@@ -88,22 +92,30 @@ AirVPN users will need to generate a unique OpenVPN configuration file by using 
 **AirVPN example**
 ```
 docker run -d \
-	--cap-add=NET_ADMIN \
-	-p 8112:8112 \
-	-p 8118:8118 \
-	--name=delugevpn \
-	-v /apps/docker/deluge/data:/data \
-	-v /apps/docker/deluge/config:/config \
-	-v /etc/localtime:/etc/localtime:ro \
-	-e VPN_ENABLED=yes \
-	-e VPN_PROV=airvpn \
-	-e ENABLE_PRIVOXY=yes \
-	-e LAN_NETWORK=192.168.1.0/24 \
-	-e DEBUG=false \
-	binhex/arch-delugevpn
+    --cap-add=NET_ADMIN \
+    -p 8112:8112 \
+    -p 8118:8118 \
+    --name=delugevpn \
+    -v /apps/docker/deluge/data:/data \
+    -v /apps/docker/deluge/config:/config \
+    -v /etc/localtime:/etc/localtime:ro \
+    -e VPN_ENABLED=yes \
+    -e VPN_PROV=airvpn \
+    -e ENABLE_PRIVOXY=yes \
+    -e LAN_NETWORK=192.168.1.0/24 \
+    -e DEBUG=false \
+    -e UID=0 \
+    -e GID=0 \
+    binhex/arch-delugevpn
 ```
 
 **Notes**
+
+User ID (UID) and Group ID (GID) can be found by issuing the following command for the user you want to run the container as:-
+
+```
+id <username>
+```
 
 Default password for the webui is "deluge"
 
