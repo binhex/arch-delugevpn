@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# exit script if return code != 0
+set -e
+
 # if uid not specified then use default uid for user nobody 
 if [[ -z "${UID}" ]]; then
 	UID="99"
@@ -18,11 +21,21 @@ echo "[info] Env var UID  defined as ${UID}"
 groupmod -o -g "${GID}" users
 echo "[info] Env var GID defined as ${GID}"
 
-echo "[info] Setting permissions..."
+# check for presence of perms file, if it exists then skip
+# setting permissions, otherwise recursively set on /config
+if [[ ! -f "/config/perms.txt" ]]; then
 
-# set permissions for /config volume mapping
-chown -R "${UID}":"${GID}" /config
-chmod -R 775 /config
+	# set permissions for /config volume mapping
+	echo "[info] Setting permissions recursively on /config..."
+	chown -R "${UID}":"${GID}" /config
+	chmod -R 775 /config
+	echo "This file prevents permissions from being applied/re-applied to /config, if you want to reset permissions then please delete this file and restart the container." > /config/perms.txt
+
+else
+
+	echo "[info] Permissions already set for /config"
+
+fi
 
 # set permissions inside container
 chown -R "${UID}":"${GID}" /home/nobody /usr/bin/deluged /usr/bin/deluge-web
