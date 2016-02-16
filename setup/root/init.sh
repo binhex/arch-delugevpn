@@ -38,8 +38,8 @@ else
 fi
 
 # set permissions inside container
-chown -R "${UID}":"${GID}" /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /root /home/nobody
-chmod -R 775 /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /root /home/nobody
+chown -R "${UID}":"${GID}" /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /home/nobody
+chmod -R 775 /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /home/nobody
 
 echo "[info] Starting Supervisor..."
 
