@@ -8,7 +8,7 @@ MAINTAINER binhex
 ADD setup/*.conf /etc/supervisor/conf.d/
 
 # add bash scripts to install app
-ADD setup/*.sh /root/
+ADD setup/root/*.sh /root/
 
 # add bash script to setup iptables
 ADD apps/root/*.sh /root/
