@@ -7,7 +7,6 @@ set -e
 pacman_packages="unzip unrar pygtk python2-service-identity python2-mako python2-notify deluge"
 
 # install pre-reqs
-pacman -Syu --ignore filesystem --noconfirm
 pacman -S --needed $pacman_packages --noconfirm
 
 # remove faulty scheduler plugin (bug with 1.3.12 release)
