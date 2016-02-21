@@ -5,21 +5,21 @@ set -e
 
 # if uid not specified then use default uid for user nobody 
 if [[ -z "${PUID}" ]]; then
-	UID="99"
+	PPUID="99"
 fi
 
 # if gid not specifed then use default gid for group users
 if [[ -z "${PGID}" ]]; then
-	GID="100"
+	PPGID="100"
 fi
 
 # set user nobody to specified user id (non unique)
 usermod -o -u "${PUID}" nobody
-echo "[info] Env var UID  defined as ${UID}"
+echo "[info] Env var PUID  defined as ${PUID}"
 
 # set group users to specified group id (non unique)
 groupmod -o -g "${PGID}" users
-echo "[info] Env var GID defined as ${GID}"
+echo "[info] Env var PGID defined as ${PGID}"
 
 # check for presence of perms file, if it exists then skip
 # setting permissions, otherwise recursively set on /config
