@@ -5,12 +5,12 @@ set -e
 
 # if uid not specified then use default uid for user nobody 
 if [[ -z "${PUID}" ]]; then
-	PPUID="99"
+	PUID="99"
 fi
 
 # if gid not specifed then use default gid for group users
 if [[ -z "${PGID}" ]]; then
-	PPGID="100"
+	PGID="100"
 fi
 
 # set user nobody to specified user id (non unique)
