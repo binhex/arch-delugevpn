@@ -34,8 +34,8 @@ docker run -d \
     -e ENABLE_PRIVOXY=<yes|no> \
     -e LAN_NETWORK=<lan ipv4 network>/<cidr notation> \
     -e DEBUG=<true|false> \
-    -e PPUID=<PUID for user> \
-    -e PPGID=<PGID for user> \
+    -e PUID=<PUID for user> \
+    -e PGID=<PGID for user> \
     binhex/arch-delugevpn
 ```
 
@@ -73,8 +73,8 @@ docker run -d \
     -e ENABLE_PRIVOXY=yes \
     -e LAN_NETWORK=192.168.1.0/24 \
     -e DEBUG=false \
-    -e PPUID=0 \
-    -e PPGID=0 \
+    -e PUID=0 \
+    -e PGID=0 \
     binhex/arch-delugevpn
 ```
 
@@ -104,14 +104,14 @@ docker run -d \
     -e ENABLE_PRIVOXY=yes \
     -e LAN_NETWORK=192.168.1.0/24 \
     -e DEBUG=false \
-    -e PPUID=0 \
-    -e PPGID=0 \
+    -e PUID=0 \
+    -e PGID=0 \
     binhex/arch-delugevpn
 ```
 
 **Notes**
 
-User ID (PPUID) and Group ID (PPGID) can be found by issuing the following command for the user you want to run the container as:-
+User ID (PUID) and Group ID (PGID) can be found by issuing the following command for the user you want to run the container as:-
 
 ```
 id <username>
