@@ -111,13 +111,13 @@ docker run -d \
 
 **Notes**
 
+Default password for the webui is "deluge"
+
 User ID (PUID) and Group ID (PGID) can be found by issuing the following command for the user you want to run the container as:-
 
 ```
 id <username>
 ```
-
-Default password for the webui is "deluge"
 ___
 If you appreciate my work, then please consider buying me a beer  :D
 
