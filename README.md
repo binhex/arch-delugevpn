@@ -34,8 +34,8 @@ docker run -d \
     -e ENABLE_PRIVOXY=<yes|no> \
     -e LAN_NETWORK=<lan ipv4 network>/<cidr notation> \
     -e DEBUG=<true|false> \
-    -e PUID=<PUID for user> \
-    -e PGID=<PGID for user> \
+    -e PUID=<UID for user> \
+    -e PGID=<GID for user> \
     binhex/arch-delugevpn
 ```
 
