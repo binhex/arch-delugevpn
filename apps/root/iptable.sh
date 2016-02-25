@@ -27,6 +27,10 @@ echo "--------------------"
 lsmod | grep "iptable_mangle" > /dev/null
 iptable_mangle_exit_code=$?
 
+if [[ "${DEBUG}" == "true" ]]; then
+	echo "[debug] Modules currently loaded for kernel" ; lsmod
+fi
+
 # if iptable_mangle is not available then attempt to load module
 if [[ $iptable_mangle_exit_code != 0 ]]; then
 
