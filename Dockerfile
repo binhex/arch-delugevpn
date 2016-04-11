@@ -16,6 +16,9 @@ ADD apps/root/*.sh /root/
 # add bash script to run deluge
 ADD apps/nobody/*.sh /home/nobody/
 
+# add pre-configured config files for nobody
+ADD config/nobody/ /home/nobody/
+
 # install app
 #############
 
