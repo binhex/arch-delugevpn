@@ -10,4 +10,6 @@ if [ -f /home/nobody/.flexget/.flexget-lock ]; then
 fi
 
 # run flexget daemon
-/usr/sbin/flexget -c /home/nobody/.flexget/config.yml daemon start
+flexget web passwd flexpass
+flexget daemon start --daemonize
+
