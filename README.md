@@ -124,6 +124,14 @@ If you appreciate my work, then please consider buying me a beer  :D
 
 [![PayPal donation](https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MM5E27UX6AUU4)
 
-[Support forum](http://lime-technology.com/forum/index.php?topic=45812.0)
+[Support forum](http://lime-technology.com/forum/index.php?topic=45812.0)  
+
+FlexGet is a multipurpose automation tool for content like torrents, nzbs, podcasts, comics, series, movies, etc. It can use different kinds of sources like RSS-feeds, html pages, csv files, search engines and there are even plugins for sites that do not provide any kind of useful feeds.
+
+There are numerous plugins that allow utilizing FlexGet in interesting ways and more are being added continuously.
+
+FlexGet is extremely useful in conjunction with applications which have watch directory support or provide interface for external utilities like FlexGet.
+
+
 
 
