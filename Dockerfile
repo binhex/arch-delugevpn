@@ -49,6 +49,9 @@ VOLUME /config
 # map /data to host defined data path (used to store data from app)
 VOLUME /data
 
+# map /home/nobody/.flexget to host defined data path (used to store data from app)
+VOLUME /home/nobody/.flexget
+
 # expose port for deluge webui
 EXPOSE 8112
 
