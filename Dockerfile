@@ -1,5 +1,5 @@
 FROM binhex/arch-openvpn
-MAINTAINER binhex
+MAINTAINER paulpoco
 
 # additional files
 ##################
