@@ -31,6 +31,13 @@ RUN pip2 install --upgrade setuptools
 RUN pip2 install flexget
 RUN mkdir /home/nobody/.flexget
 RUN export EDITOR=nano
+RUN /usr/sbin/flexget web passwd flexpassword #change later once installed
+# Add our crontab file
+ADD crons.conf /home/nobody/.flexget/crons/crons.conf
+
+# Use the crontab file.
+RUN crontab /home/nobody/.flexget/crons/crons.conf
+
 
 
 # docker settings
