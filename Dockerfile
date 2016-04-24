@@ -26,13 +26,10 @@ ADD config/nobody/ /home/nobody/
 RUN chmod +x /root/*.sh /home/nobody/*.sh && \
 	/bin/bash /root/install.sh
 
-RUN yes| pacman -Sy
-RUN yes| pacman -S python2-pip
+RUN pacman -Syu --needed --noconfirm python2-pip nano cronie
 RUN pip2 install --upgrade setuptools
 RUN pip2 install flexget
-RUN yes| pacman -S nano
 RUN mkdir /home/nobody/.flexget
-RUN yes| pacman -S cronie
 RUN export EDITOR=nano
 
 # docker settings
