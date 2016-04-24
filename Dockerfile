@@ -13,7 +13,7 @@ ADD setup/root/*.sh /root/
 # add bash script to setup iptables
 ADD apps/root/*.sh /root/
 
-# add bash script to run deluge
+# add bash script to run deluge & flexget
 ADD apps/nobody/*.sh /home/nobody/
 
 # add pre-configured config files for nobody
