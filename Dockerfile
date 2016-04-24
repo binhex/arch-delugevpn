@@ -21,6 +21,16 @@ ADD config/nobody/ /home/nobody/
 
 # install app
 #############
+RUN yes| pacman -Sy
+RUN yes| pacman -S python2-pip
+RUN yes| pip2 install --upgrade setuptools
+RUN yes| pip2 install flexget
+RUN yes| pacman -S nano
+RUN yes| mkdir /home/nobody/.flexget
+RUN yes| pacman -S cronie
+RUN yes| export EDITOR=nano
+
+
 
 # make executable and run bash scripts to install app
 RUN chmod +x /root/*.sh /home/nobody/*.sh && \
