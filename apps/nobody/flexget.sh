@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 echo "[info] Starting Flexget daemon..."
