@@ -35,7 +35,7 @@ ADD bashrc /home/nobody/.bashrc
 VOLUME /config
 
 # map /data to host defined data path (used to store data from app)
-VOLUME /data
+VOLUME /Media
 
 # map /home/nobody/.flexget to host defined data path (used to store data from app)
 VOLUME /home/nobody/.flexget
