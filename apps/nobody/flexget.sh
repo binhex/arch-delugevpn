@@ -4,9 +4,9 @@
 echo "[info] Starting Flexget daemon..."
 
 # Remove lockfile if exists
-if [ -f /home/nobody/.flexget/.flexget-lock ]; then
+if [ -f /home/nobody/.flexget/.config-lock ]; then
         echo "Lockfile found...removing"
-        /bin/rm -f /home/nobody/.flexget/.flexget-lock
+        /bin/rm -f /home/nobody/.flexget/.config-lock
 fi
 
 # run flexget set webui password and run daemon
