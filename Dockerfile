@@ -26,20 +26,11 @@ ADD config/nobody/ /home/nobody/
 RUN chmod +x /root/*.sh /home/nobody/*.sh && \
 	/bin/bash /root/install.sh
 
-RUN pacman -Syu --needed --noconfirm python2-pip nano cronie
+RUN pacman -Syu --needed --noconfirm python2-pip nano
 RUN pip2 install --upgrade setuptools
 RUN pip2 install flexget
 RUN mkdir /home/nobody/.flexget
-# RUN export EDITOR=nano
-# change later once installed
-# RUN /usr/sbin/flexget web passwd flexpassword
-# Add our crontab file
-#ADD crons.conf /home/nobody/.flexget/crons/crons.conf
 
-# Use the crontab file.
-#RUN crontab /home/nobody/.flexget/crons/crons.conf
-
-# Add our ~/.bashrc file for default nano editor
 ADD bashrc /home/nobody/.bashrc
 
 # docker settings
