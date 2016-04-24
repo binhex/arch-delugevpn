@@ -42,8 +42,6 @@ RUN mkdir /home/nobody/.flexget
 # Add our ~/.bashrc file for default nano editor
 ADD bashrc /home/nobody/.bashrc
 
-RUN flexget daemon start
-
 # docker settings
 #################
 
