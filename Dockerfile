@@ -32,6 +32,7 @@ RUN pip2 install flexget
 RUN mkdir /home/nobody/.flexget
 RUN export EDITOR=nano
 
+
 # docker settings
 #################
 
@@ -43,6 +44,9 @@ VOLUME /data
 
 # expose port for deluge webui
 EXPOSE 8112
+
+# expose port for flexget webui
+EXPOSE 3539
 
 # set permissions
 #################
