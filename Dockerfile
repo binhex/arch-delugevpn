@@ -32,7 +32,7 @@ RUN pip2 install flexget
 RUN mkdir /home/nobody/.flexget
 RUN export EDITOR=nano
 #change later once installed
-RUN /usr/sbin/flexget web passwd flexpassword
+#RUN /usr/sbin/flexget web passwd flexpassword
 # Add our crontab file
 ADD crons.conf /home/nobody/.flexget/crons/crons.conf
 
