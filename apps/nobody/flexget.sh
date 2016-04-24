@@ -9,7 +9,6 @@ if [ -f /home/nobody/.flexget/.flexget-lock ]; then
         /bin/rm -f /home/nobody/.flexget/.flexget-lock
 fi
 
-# run flexget daemon
-flexget web passwd flexpass
-flexget daemon start --daemonize
-
+# run flexget set webui password and run daemon
+/usr/bin/flexget -c /home/nobody/.flexget/config.yml daemon start
+/usr/bin/flexget web passwd flexpass
