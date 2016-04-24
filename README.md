@@ -4,6 +4,7 @@ This is a fork of the fine work of Binhex at https://github.com/binhex/arch-delu
 
 [Flexget website](http://flexget.com/)    
 [Deluge website](http://deluge-torrent.org/) 
+
 [OpenVPN website](https://openvpn.net/)  
 [Privoxy website](http://www.privoxy.org/)
 
@@ -15,10 +16,10 @@ Deluge is a full-featured ​BitTorrent client for Linux, OS X, Unix and Windows
 
 FlexGet is a multipurpose automation tool for content like torrents, nzbs, podcasts, comics, series, movies, etc. It can use different kinds of sources like RSS-feeds, html pages, csv files, search engines and there are even plugins for sites that do not provide any kind of useful feeds.  There are numerous plugins that allow utilizing FlexGet in interesting ways and more are being added continuously.  FlexGet is extremely useful in conjunction with applications which have watch directory support or provide interface for external utilities like FlexGet.
 
-**Access Flexget-webui**
+**Access Flexget-webui** [password is flexpass]
 
-password is flexpass
-Change passord with:
+ Change passord with:   
+
     docker exec -it paulpoco-delugevpn /bin/bash
     flexget web passwd <some_password>  #from inside container
 
