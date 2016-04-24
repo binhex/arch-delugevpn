@@ -34,13 +34,15 @@ RUN mkdir /home/nobody/.flexget
 # change later once installed
 # RUN /usr/sbin/flexget web passwd flexpassword
 # Add our crontab file
-ADD crons.conf /home/nobody/.flexget/crons/crons.conf
+#ADD crons.conf /home/nobody/.flexget/crons/crons.conf
 
 # Use the crontab file.
-RUN crontab /home/nobody/.flexget/crons/crons.conf
+#RUN crontab /home/nobody/.flexget/crons/crons.conf
 
 # Add our ~/.bashrc file for default nano editor
 ADD bashrc /home/nobody/.bashrc
+
+RUN flexget daemon start
 
 # docker settings
 #################
