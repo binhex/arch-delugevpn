@@ -1,3 +1,5 @@
+This is a fork of the fine work of Binhex at https://github.com/binhex/arch-delugevpn
+
 **Application**
 
 [Flexget website](http://flexget.com/)    
@@ -5,15 +7,29 @@
 [OpenVPN website](https://openvpn.net/)  
 [Privoxy website](http://www.privoxy.org/)
 
-**Description**
+**Description Binhex's DelugeVPN**
 
 Deluge is a full-featured ​BitTorrent client for Linux, OS X, Unix and Windows. It uses ​libtorrent in its backend and features multiple user-interfaces including: GTK+, web and console. It has been designed using the client server model with a daemon process that handles all the bittorrent activity. The Deluge daemon is able to run on headless machines with the user-interfaces being able to connect remotely from any platform. This Docker includes OpenVPN to ensure a secure and private connection to the Internet, including use of iptables to prevent IP leakage when the tunnel is down. It also includes Privoxy to allow unfiltered access to index sites, to use Privoxy please point your application at `http://<host ip>:8118`.
+
+**Description Flexget with webui daemon**
+
+FlexGet is a multipurpose automation tool for content like torrents, nzbs, podcasts, comics, series, movies, etc. It can use different kinds of sources like RSS-feeds, html pages, csv files, search engines and there are even plugins for sites that do not provide any kind of useful feeds.  There are numerous plugins that allow utilizing FlexGet in interesting ways and more are being added continuously.  FlexGet is extremely useful in conjunction with applications which have watch directory support or provide interface for external utilities like FlexGet.
+
+**Access Flexget-webui**
+
+password is flexpass
+Change passord with:
+    docker exec -it paulpoco-delugevpn /bin/bash
+    flexget web passwd <some_password>  #from inside container
+
+`http://<host ip>:3539`
 
 **Build notes**
 
 Latest stable Deluge release from Arch Linux repo.
 Latest stable OpenVPN release from Arch Linux repo.
 Latest stable Privoxy release from Arch Linux repo.
+Latest stable Flexget release from Python.
 
 **Usage**
 ```
@@ -120,18 +136,8 @@ User ID (PUID) and Group ID (PGID) can be found by issuing the following command
 id <username>
 ```
 ___
-If you appreciate my work, then please consider buying me a beer  :D
+If you appreciate Binhex's work, then please consider buying him a beer  :D
 
 [![PayPal donation](https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MM5E27UX6AUU4)
 
-[Support forum](http://lime-technology.com/forum/index.php?topic=45812.0)  
-
-FlexGet is a multipurpose automation tool for content like torrents, nzbs, podcasts, comics, series, movies, etc. It can use different kinds of sources like RSS-feeds, html pages, csv files, search engines and there are even plugins for sites that do not provide any kind of useful feeds.
-
-There are numerous plugins that allow utilizing FlexGet in interesting ways and more are being added continuously.
-
-FlexGet is extremely useful in conjunction with applications which have watch directory support or provide interface for external utilities like FlexGet.
-
-
-
-
+[Support forum](http://lime-technology.com/forum/index.php?topic=45812.0)  is only for Binhex's version without Flexget
