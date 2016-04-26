@@ -1,0 +1,10 @@
+# dummy config.yml
+
+
+tasks:
+  taskname:
+    rss: http://example.com/torrents.xml
+    series:
+      - some series 1
+      - some series 2
+    download: /Media
