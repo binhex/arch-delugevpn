@@ -9,5 +9,5 @@ if [ -f /home/nobody/.flexget/.config-lock ]; then
 fi
 
 # run flexget set webui password and run daemon
-/usr/bin/flexget -c /home/nobody/.flexget/config.yml daemon start
 /usr/bin/flexget web passwd flexpass
+/usr/bin/flexget -c /home/nobody/.flexget/config.yml daemon start
