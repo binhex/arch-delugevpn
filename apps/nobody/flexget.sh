@@ -18,6 +18,11 @@ else
   chmod +x /home/nobody/.flexget/config.yml
 fi
 
+# if FLEXGET_WEBUI_PASSWORD not specified then use default FLEXGET_WEBUI_PASSWORD = flexpass 
+if [[ -z "${FLEXGET_WEBUI_PASSWORD}" ]]; then
+	FLEXGET_WEBUI_PASSWORD="flexpass"
+fi
+
 # run flexget set webui password and run daemon
-/usr/bin/flexget web passwd flexpass
+/usr/bin/flexget web passwd "${FLEXGET_WEBUI_PASSWORD}"
 /usr/bin/flexget -c /home/nobody/.flexget/config.yml daemon start
