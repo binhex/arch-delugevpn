@@ -21,6 +21,9 @@ fi
 # if FLEXGET_WEBUI_PASSWORD not specified then use default FLEXGET_WEBUI_PASSWORD = flexpass 
 if [[ -z "${FLEXGET_WEBUI_PASSWORD}" ]]; then
 	FLEXGET_WEBUI_PASSWORD="flexpass"
+	echo "Using default Flexget-webui password of flexpass"
+else
+	echo "Using userdefined Flexget-webui password of " "${FLEXGET_WEBUI_PASSWORD}"
 fi
 
 # run flexget set webui password and run daemon
