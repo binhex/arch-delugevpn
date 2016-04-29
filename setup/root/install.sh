@@ -13,7 +13,7 @@ pacman -S --needed $pacman_packages --noconfirm
 rm -f /usr/lib/python2.7/site-packages/deluge/plugins/Scheduler-0.2-py2.7.egg
 
 #install flextget
-pip2 install --upgrade pip2
+pip2 install --upgrade pip
 pip2 install --upgrade --force-reinstall requests[security]
 pip2 install --upgrade setuptools
 pip2 install --upgrade flexget
