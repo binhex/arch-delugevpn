@@ -22,7 +22,7 @@ pip2 install --upgrade flexget
 source /root/aor.sh
 
 # cleanup
-pacman -Rs gcc
+yes|pacman -Rs gcc
 yes|pacman -Scc
 rm -rf /usr/share/locale/*
 rm -rf /usr/share/man/*
