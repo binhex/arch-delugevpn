@@ -139,7 +139,10 @@ else
 				echo "[info] Reload required, configuring Deluge..."
 
 				# set listen interface to tunnel local ip using command line
-				/usr/bin/deluge-console -c /config "config --set listen_interface $deluge_ip"
+				/usr/bin/deluge-console -c /config "config --set listen_interface $vpn_ip"
+
+				# set deluge ip to current vpn ip (used when checking for changes on next run)
+				deluge_ip="${vpn_ip}"
 
 				if [[ $VPN_PROV == "pia" ]]; then
 
@@ -147,14 +150,21 @@ else
 					/usr/bin/deluge-console -c /config "config --set random_port False"
 
 					# set incoming port
-					/usr/bin/deluge-console -c /config "config --set listen_ports ($deluge_port,$deluge_port)"
+					/usr/bin/deluge-console -c /config "config --set listen_ports ($vpn_port,$vpn_port)"
+					
+					# set deluge port to current vpn port (used when checking for changes on next run)
+					deluge_port="${vpn_port}"
+
 
 				fi
 
 			else
 
 				# set listen interface ip address for deluge using sed
-				sed -i -e 's~"listen_interface":\s*"[^"]*~"listen_interface": "'"${deluge_ip}"'~g' /config/core.conf
+				sed -i -e 's~"listen_interface":\s*"[^"]*~"listen_interface": "'"${vpn_ip}"'~g' /config/core.conf
+
+				# set deluge ip to current vpn ip (used when checking for changes on next run)
+				deluge_ip="${vpn_ip}"
 
 				echo "[info] All checks complete, starting Deluge..."
 				
@@ -172,7 +182,10 @@ else
 					/usr/bin/deluge-console -c /config "config --set random_port False"
 
 					# set incoming port
-					/usr/bin/deluge-console -c /config "config --set listen_ports ($deluge_port,$deluge_port)"
+					/usr/bin/deluge-console -c /config "config --set listen_ports ($vpn_port,$vpn_port)"
+
+					# set deluge port to current vpn port (used when checking for changes on next run)
+					deluge_port="${vpn_port}"
 
 				fi
 
