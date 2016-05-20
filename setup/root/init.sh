@@ -21,19 +21,19 @@ echo "[info] Env var PUID  defined as ${PUID}"
 groupmod -o -g "${PGID}" users
 echo "[info] Env var PGID defined as ${PGID}"
 
-# check for presence of perms file, if it exists then skip
-# setting permissions, otherwise recursively set on /config
+# check for presence of perms file, if it exists then skip setting
+# permissions, otherwise recursively set on /config and /data
 if [[ ! -f "/config/perms.txt" ]]; then
 
-	# set permissions for /config volume mapping
-	echo "[info] Setting permissions recursively on /config..."
-	chown -R "${PUID}":"${PGID}" /config
-	chmod -R 775 /config
+	# set permissions for /config and /data volume mapping
+	echo "[info] Setting permissions recursively on /config and /data..."
+	chown -R "${PUID}":"${PGID}" /config /data
+	chmod -R 775 /config /data
 	echo "This file prevents permissions from being applied/re-applied to /config, if you want to reset permissions then please delete this file and restart the container." > /config/perms.txt
 
 else
 
-	echo "[info] Permissions already set for /config"
+	echo "[info] Permissions already set for /config and /data"
 
 fi
 
