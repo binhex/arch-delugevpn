@@ -1,12 +1,31 @@
 #!/bin/bash
 
+# check for presence of network interface docker0
+check_network=$(ifconfig | grep docker0)
+
+# if network interface docker0 is present then we are running in host mode and thus must exit
+if [[ ! -z "${check_network}" ]]; then
+	echo "[crit] Network type detected as 'Host', this will cause major issues, please stop the container and switch back to 'Bridge' mode" && exit 1
+fi
+
 # ip route
 ###
 
 if [[ ! -z "${LAN_NETWORK}" ]]; then
 
-	echo "[info] Adding ${LAN_NETWORK} as route via docker eth0"
-	ip route add "${LAN_NETWORK}" via "${DEFAULT_GATEWAY}" dev eth0
+	# split comma seperated string into list from LAN_NETWORK env variable
+	IFS=',' read -ra lan_network_list <<< "${LAN_NETWORK}"
+
+	# process lan networks in the list
+	for lan_network_item in "${lan_network_list[@]}"; do
+
+		# strip whitespace from start and end of lan_network_item
+		lan_network_item=$(echo "${lan_network_item}" | sed -e 's/^[ \t]*//')
+
+		echo "[info] Adding ${lan_network_item} as route via docker eth0"
+		ip route add "${lan_network_item}" via "${DEFAULT_GATEWAY}" dev eth0
+
+	done
 
 else
 
@@ -88,8 +107,16 @@ if [[ $ENABLE_PRIVOXY == "yes" ]]; then
 	iptables -A INPUT -i eth0 -p tcp --sport 8118 -j ACCEPT
 fi
 
-# accept input to deluge daemon port 58846 - used for lan access
-iptables -A INPUT -i eth0 -s "${LAN_NETWORK}" -p tcp --dport 58846 -j ACCEPT
+# process lan networks in the list
+for lan_network_item in "${lan_network_list[@]}"; do
+
+	# strip whitespace from start and end of lan_network_item
+	lan_network_item=$(echo "${lan_network_item}" | sed -e 's/^[ \t]*//')
+
+	# accept input to deluge daemon port - used for lan access
+	iptables -A INPUT -i eth0 -s "${lan_network_item}" -p tcp --dport 58846 -j ACCEPT
+
+done
 
 # accept input dns lookup
 iptables -A INPUT -p udp --sport 53 -j ACCEPT
@@ -140,8 +167,16 @@ if [[ $ENABLE_PRIVOXY == "yes" ]]; then
 	iptables -A OUTPUT -o eth0 -p tcp --sport 8118 -j ACCEPT
 fi
 
-# accept output to deluge daemon port 58846 - used for lan access
-iptables -A OUTPUT -o eth0 -d "${LAN_NETWORK}" -p tcp --sport 58846 -j ACCEPT
+# process lan networks in the list
+for lan_network_item in "${lan_network_list[@]}"; do
+
+	# strip whitespace from start and end of lan_network_item
+	lan_network_item=$(echo "${lan_network_item}" | sed -e 's/^[ \t]*//')
+
+	# accept output to deluge daemon port - used for lan access
+	iptables -A OUTPUT -o eth0 -d "${lan_network_item}" -p tcp --sport 58846 -j ACCEPT
+
+done
 
 # accept output for dns lookup
 iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
