@@ -102,7 +102,7 @@ docker run -d \
     -v /apps/docker/deluge/config:/config \
     -v /etc/localtime:/etc/localtime:ro \
     -e VPN_ENABLED=yes \
-	-e VPN_REMOTE=example.airvpn.org \
+    -e VPN_REMOTE=nl.vpn.airdns.org \
     -e VPN_PORT=443 \
     -e VPN_PROTOCOL=udp \
     -e VPN_PROV=airvpn \
