@@ -125,6 +125,9 @@ else
 
 						echo "[warn] PIA incoming port is not an integer, downloads will be slow, does PIA remote gateway supports port forwarding?"
 
+						# set vpn port to current deluge port, as we currently cannot detect incoming port (line saturated, or issues with pia)
+						vpn_port="${deluge_port}"
+
 					fi
 
 					# mark as reload required due to first run
