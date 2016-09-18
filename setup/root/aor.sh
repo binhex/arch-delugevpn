@@ -4,8 +4,8 @@
 set -e
 
 # define arch official repo (aor) packages
-aor_packages="deluge"
+# aor_packages="deluge"
 
 # download and install package
-curl -L -o "/tmp/$aor_packages.tar.xz" "https://www.archlinux.org/packages/extra/any/$aor_packages/download/"
-pacman -U "/tmp/$aor_packages.tar.xz" --noconfirm
+# curl -L -o "/tmp/$aor_packages.tar.xz" "https://www.archlinux.org/packages/extra/any/$aor_packages/download/"
+# pacman -U "/tmp/$aor_packages.tar.xz" --noconfirm
