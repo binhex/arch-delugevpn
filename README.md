@@ -82,12 +82,10 @@ docker run -d \
     -v /apps/docker/deluge/config:/config \
     -v /etc/localtime:/etc/localtime:ro \
     -e VPN_ENABLED=yes \
-    -e VPN_USER=myusername \
-    -e VPN_PASS=mypassword \
-    -e VPN_REMOTE=nl.privateinternetaccess.com \
-    -e VPN_PORT=1198 \
+    -e VPN_REMOTE=nl.vpn.airdns.org \
+    -e VPN_PORT=443 \
     -e VPN_PROTOCOL=udp \
-    -e VPN_PROV=pia \
+    -e VPN_PROV=airvpn \
     -e ENABLE_PRIVOXY=yes \
     -e LAN_NETWORK=192.168.1.0/24 \
     -e DEBUG=false \
