@@ -196,15 +196,6 @@ else
 
 			fi
 
-			if [[ "${DEBUG}" == "true" ]]; then
-
-				echo "[debug] VPN incoming port is $vpn_port"
-				echo "[debug] Deluge incoming port is $deluge_port"
-				echo "[debug] VPN IP is $vpn_ip"
-				echo "[debug] Deluge IP is $deluge_ip"
-
-			fi
-
 			# reset triggers to negative values
 			first_run="false"
 			reload="false"
@@ -215,7 +206,16 @@ else
 
 		fi
 
-		echo "[info] Sleeping for ${sleep_period} mins before rechecking listen interface and port (port checking is for PIA only)"
+		if [[ "${DEBUG}" == "true" ]]; then
+
+			echo "[debug] VPN incoming port is $vpn_port"
+			echo "[debug] Deluge incoming port is $deluge_port"
+			echo "[debug] VPN IP is $vpn_ip"
+			echo "[debug] Deluge IP is $deluge_ip"
+			echo "[debug] Sleeping for ${sleep_period} mins before rechecking listen interface and port (port checking is for PIA only)"
+
+		fi
+
 		sleep "${sleep_period}"m
 
 	done
