@@ -118,6 +118,9 @@ docker run -d \
     -v /apps/docker/deluge/config:/config \
     -v /etc/localtime:/etc/localtime:ro \
     -e VPN_ENABLED=yes \
+    -e VPN_REMOTE=example.airvpn.org \
+    -e VPN_PORT=443 \
+    -e VPN_PROTOCOL=udp \
     -e VPN_PROV=airvpn \
     -e ENABLE_PRIVOXY=yes \
     -e LAN_NETWORK=192.168.1.0/24 \
@@ -136,6 +139,8 @@ User ID (PUID) and Group ID (PGID) can be found by issuing the following command
 ```
 id <username>
 ```
+The STRONG_CERTS environment variable is used to define whether to use strong certificates and enhanced encryption ciphers when connecting to PIA (does not affect other providers).
+
 ___
 If you appreciate Binhex's work, then please consider buying him a beer  :D
 
