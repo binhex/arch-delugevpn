@@ -18,6 +18,10 @@ pip2 install --upgrade flexget
 # call aor script (arch official repo) - commented out for now to force non dev version, remove comment and deluge from above packages list once official release out
 source /root/aor.sh
 
+# manually remove .dev0 from compiled package name (is a result of pull commit from github)
+mv "/usr/lib/python2.7/site-packages/deluge-1.3.13.dev0-py2.7.egg-info/" "/usr/lib/python2.7/site-packages/deluge-1.3.13-py2.7.egg-info/"
+sed -i -e 's~\.dev0~~g' "/usr/lib/python2.7/site-packages/deluge-1.3.13-py2.7.egg-info/PKG-INFO" "/usr/bin/deluge" "/usr/bin/deluge-console" "/usr/bin/deluged" "/usr/bin/deluge-gtk" "/usr/bin/deluge-web"
+
 # cleanup
 yes|pacman -Rs gcc
 yes|pacman -Scc
