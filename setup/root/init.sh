@@ -44,4 +44,4 @@ chmod -R 775 /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy 
 echo "[info] Starting Supervisor..."
 
 # run supervisor
-"/usr/bin/supervisord" -c "/etc/supervisor.conf" -n
+exec /usr/bin/supervisord -c /etc/supervisor.conf -n
