@@ -30,6 +30,7 @@ docker run -d \
     -e VPN_REMOTE=<vpn remote gateway> \
     -e VPN_PORT=<vpn remote port> \
     -e VPN_PROTOCOL=<vpn remote protocol> \
+    -e VPN_DEVICE_TYPE=<tun|tap> \
     -e VPN_PROV=<pia|airvpn|custom> \
     -e STRONG_CERTS=<yes|no> \
     -e ENABLE_PRIVOXY=<yes|no> \
@@ -70,6 +71,7 @@ docker run -d \
     -e VPN_REMOTE=nl.privateinternetaccess.com \
     -e VPN_PORT=1198 \
     -e VPN_PROTOCOL=udp \
+    -e VPN_DEVICE_TYPE=tun \
     -e VPN_PROV=pia \
     -e STRONG_CERTS=no \
     -e ENABLE_PRIVOXY=yes \
@@ -105,6 +107,7 @@ docker run -d \
     -e VPN_REMOTE=nl.vpn.airdns.org \
     -e VPN_PORT=443 \
     -e VPN_PROTOCOL=udp \
+    -e VPN_DEVICE_TYPE=tun \
     -e VPN_PROV=airvpn \
     -e ENABLE_PRIVOXY=yes \
     -e LAN_NETWORK=192.168.1.0/24 \
