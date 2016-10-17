@@ -89,7 +89,7 @@ fi
 iptables -P INPUT DROP
 
 # accept input to tunnel adapter
-iptables -A INPUT -i tun0 -j ACCEPT
+iptables -A INPUT -i "${VPN_DEVICE_TYPE}"0 -j ACCEPT
 
 # accept input to/from docker containers (172.x range is internal dhcp)
 iptables -A INPUT -s 172.17.0.0/16 -d 172.17.0.0/16 -j ACCEPT
@@ -134,7 +134,7 @@ iptables -A INPUT -i lo -j ACCEPT
 iptables -P OUTPUT DROP
 
 # accept output from tunnel adapter
-iptables -A OUTPUT -o tun0 -j ACCEPT
+iptables -A OUTPUT -o "${VPN_DEVICE_TYPE}"0 -j ACCEPT
 
 # accept output to/from docker containers (172.x range is internal dhcp)
 iptables -A OUTPUT -s 172.17.0.0/16 -d 172.17.0.0/16 -j ACCEPT
