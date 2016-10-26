@@ -25,6 +25,9 @@ echo "[info] Setting permissions on files/folders inside container..." | ts '%Y-
 chown -R "${PUID}":"${PGID}" /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /home/nobody
 chmod -R 775 /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /home/nobody
 
+# restore stdout/stderr (to prevent duplicate logging from supervisor)
+exec 1>&3 2>&4
+
 echo "[info] Starting Supervisor..." | ts '%Y-%m-%d %H:%M:%.S'
 exec /usr/bin/supervisord -c /etc/supervisor.conf -n
 EOF
