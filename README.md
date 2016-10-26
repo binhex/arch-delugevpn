@@ -35,6 +35,7 @@ docker run -d \
     -e STRONG_CERTS=<yes|no> \
     -e ENABLE_PRIVOXY=<yes|no> \
     -e LAN_NETWORK=<lan ipv4 network>/<cidr notation> \
+    -e NAME_SERVERS=<name server ip(s)> \
     -e DEBUG=<true|false> \
     -e PUID=<UID for user> \
     -e PGID=<GID for user> \
@@ -76,6 +77,7 @@ docker run -d \
     -e STRONG_CERTS=no \
     -e ENABLE_PRIVOXY=yes \
     -e LAN_NETWORK=192.168.1.0/24 \
+    -e NAME_SERVERS=8.8.8.8,8.8.4.4 \
     -e DEBUG=false \
     -e PUID=0 \
     -e PGID=0 \
@@ -111,6 +113,7 @@ docker run -d \
     -e VPN_PROV=airvpn \
     -e ENABLE_PRIVOXY=yes \
     -e LAN_NETWORK=192.168.1.0/24 \
+    -e NAME_SERVERS=8.8.8.8,8.8.4.4 \
     -e DEBUG=false \
     -e PUID=0 \
     -e PGID=0 \
