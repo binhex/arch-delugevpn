@@ -20,14 +20,14 @@ pacman -U /tmp/deluge-1.3.11-3-any.pkg.tar.xz --noconfirm
 mv "/usr/lib/python2.7/site-packages/deluge-1.3.13.dev0-py2.7.egg-info/" "/usr/lib/python2.7/site-packages/deluge-1.3.13-py2.7.egg-info/"
 sed -i -e 's~\.dev0~~g' "/usr/lib/python2.7/site-packages/deluge-1.3.13-py2.7.egg-info/PKG-INFO" "/usr/bin/deluge" "/usr/bin/deluge-console" "/usr/bin/deluged" "/usr/bin/deluge-gtk" "/usr/bin/deluge-web"
 
-# set python.eggs folder to rx only for group and others
-mkdir -p /home/nobody/.python-eggs && chmod -R 755 /home/nobody/.python-eggs
-
 # create file with contets of here doc
 cat <<'EOF' > /tmp/permissions_heredoc
 echo "[info] Setting permissions on files/folders inside container..." | ts '%Y-%m-%d %H:%M:%.S'
 chown -R "${PUID}":"${PGID}" /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /home/nobody
 chmod -R 775 /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /home/nobody
+
+# set python.eggs folder to rx only for group and others
+mkdir -p /home/nobody/.python-eggs && chmod -R 755 /home/nobody/.python-eggs
 
 EOF
 
