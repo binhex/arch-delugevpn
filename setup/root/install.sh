@@ -21,7 +21,7 @@ mv "/usr/lib/python2.7/site-packages/deluge-1.3.13.dev0-py2.7.egg-info/" "/usr/l
 sed -i -e 's~\.dev0~~g' "/usr/lib/python2.7/site-packages/deluge-1.3.13-py2.7.egg-info/PKG-INFO" "/usr/bin/deluge" "/usr/bin/deluge-console" "/usr/bin/deluged" "/usr/bin/deluge-gtk" "/usr/bin/deluge-web"
 
 # set python.eggs folder to rx only for group and others
-chmod -R 755 /home/nobody/.python-eggs
+mkdir -p /home/nobody/.python-eggs && chmod -R 755 /home/nobody/.python-eggs
 
 # create file with contets of here doc
 cat <<'EOF' > /tmp/permissions_heredoc
