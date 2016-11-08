@@ -4,7 +4,7 @@
 set -e
 
 # define pacman packages
-pacman_packages="unzip unrar pygtk python2-service-identity python2-mako python2-notify gnu-netcat python2-pip nano"
+pacman_packages="pygtk python2-service-identity python2-mako python2-notify gnu-netcat python2-pip nano"
 
 # install pre-reqs
 pacman -S --needed $pacman_packages --noconfirm
