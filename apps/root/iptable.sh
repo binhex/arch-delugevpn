@@ -85,6 +85,10 @@ iptables -A INPUT -i eth0 -p $VPN_PROTOCOL --sport $VPN_PORT -j ACCEPT
 iptables -A INPUT -i eth0 -p tcp --dport 8112 -j ACCEPT
 iptables -A INPUT -i eth0 -p tcp --sport 8112 -j ACCEPT
 
+# accept input to flexget webui port 3539
+iptables -A INPUT -i eth0 -p tcp --dport 3539 -j ACCEPT
+iptables -A INPUT -i eth0 -p tcp --sport 3539 -j ACCEPT
+
 # accept input to privoxy port 8118 if enabled
 if [[ $ENABLE_PRIVOXY == "yes" ]]; then
 	iptables -A INPUT -i eth0 -p tcp --dport 8118 -j ACCEPT
@@ -133,6 +137,10 @@ if [[ $iptable_mangle_exit_code == 0 ]]; then
 	iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
 	iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
 
+	# accept output from flexget webui port 3539 - used for external access
+	iptables -t mangle -A OUTPUT -p tcp --dport 3539 -j MARK --set-mark 1
+	iptables -t mangle -A OUTPUT -p tcp --sport 3539 -j MARK --set-mark 1
+
 	# accept output from privoxy port 8118 - used for external access
 	if [[ $ENABLE_PRIVOXY == "yes" ]]; then
 		iptables -t mangle -A OUTPUT -p tcp --dport 8118 -j MARK --set-mark 2
@@ -144,6 +152,10 @@ fi
 # accept output from deluge webui port 8112 - used for lan access
 iptables -A OUTPUT -o eth0 -p tcp --dport 8112 -j ACCEPT
 iptables -A OUTPUT -o eth0 -p tcp --sport 8112 -j ACCEPT
+
+# accept output from flexget webui port 3539 - used for lan access
+iptables -A OUTPUT -o eth0 -p tcp --dport 3539 -j ACCEPT
+iptables -A OUTPUT -o eth0 -p tcp --sport 3539 -j ACCEPT
 
 # accept output from privoxy port 8118 - used for lan access
 if [[ $ENABLE_PRIVOXY == "yes" ]]; then
