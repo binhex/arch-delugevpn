@@ -38,6 +38,12 @@ VOLUME /data
 # expose port for deluge webui
 EXPOSE 8112
 
+# expose port for privoxy
+EXPOSE 8118
+
+# expose port for deluge daemon (used in conjunction with LAN_NETWORK env var)
+EXPOSE 58846
+
 # set permissions
 #################
 
