@@ -41,6 +41,12 @@ VOLUME /home/nobody/.flexget
 # expose port for deluge webui
 EXPOSE 8112
 
+# expose port for privoxy
+EXPOSE 8118
+
+# expose port for deluge daemon (used in conjunction with LAN_NETWORK env var)
+EXPOSE 58846
+
 # expose port for flexget webui
 EXPOSE 3539
 
