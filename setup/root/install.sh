@@ -167,19 +167,29 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 		export VPN_DEVICE_TYPE="tun"
 	fi
 
-	export STRONG_CERTS=$(echo "${STRONG_CERTS}" | sed -e 's/^[ \t]*//')
-	if [[ ! -z "${STRONG_CERTS}" ]]; then
-		echo "[info] STRONG_CERTS defined as '${STRONG_CERTS}'" | ts '%Y-%m-%d %H:%M:%.S'
+	export VPN_OPTIONS=$(echo "${VPN_OPTIONS}" | sed -e 's/^[ \t]*//')
+	if [[ ! -z "${VPN_OPTIONS}" ]]; then
+		echo "[info] VPN_OPTIONS defined as '${VPN_OPTIONS}'" | ts '%Y-%m-%d %H:%M:%.S'
 	else
-		echo "[warn] STRONG_CERTS not defined (via -e STRONG_CERTS), defaulting to 'no'" | ts '%Y-%m-%d %H:%M:%.S'
-		export STRONG_CERTS="no"
+		echo "[info] VPN_OPTIONS not defined (via -e VPN_OPTIONS)" | ts '%Y-%m-%d %H:%M:%.S'
+		export VPN_OPTIONS=""
 	fi
 
+	if [[ $VPN_PROV == "pia" ]]; then
+		export STRONG_CERTS=$(echo "${STRONG_CERTS}" | sed -e 's/^[ \t]*//')
+		if [[ ! -z "${STRONG_CERTS}" ]]; then
+			echo "[info] STRONG_CERTS defined as '${STRONG_CERTS}'" | ts '%Y-%m-%d %H:%M:%.S'
+		else
+			echo "[warn] STRONG_CERTS not defined (via -e STRONG_CERTS), defaulting to 'no'" | ts '%Y-%m-%d %H:%M:%.S'
+			export STRONG_CERTS="no"
+		fi
+	fi
+	
 	export ENABLE_PRIVOXY=$(echo "${ENABLE_PRIVOXY}" | sed -e 's/^[ \t]*//')
 	if [[ ! -z "${ENABLE_PRIVOXY}" ]]; then
 		echo "[info] ENABLE_PRIVOXY defined as '${ENABLE_PRIVOXY}'" | ts '%Y-%m-%d %H:%M:%.S'
 	else
-		echo "[warn] ENABLE_PRIVOXY not defined (via -e ENABLE_PRIVOXY), defaulting to 'no'" | ts '%Y-%m-%d %H:%M:%.S'
+		echo "[info] ENABLE_PRIVOXY not defined (via -e ENABLE_PRIVOXY), defaulting to 'no'" | ts '%Y-%m-%d %H:%M:%.S'
 		export ENABLE_PRIVOXY="no"
 	fi
 
