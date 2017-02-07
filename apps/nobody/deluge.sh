@@ -61,7 +61,7 @@ else
 		if [[ ! -z "${vpn_ip}" ]]; then
 
 			# check if deluge is running, if not then skip reconfigure for port/ip
-			if ! pgrep -f /usr/bin/deluged > /dev/null; then
+			if ! pgrep -x deluged > /dev/null; then
 
 				echo "[info] Deluge not running"
 
