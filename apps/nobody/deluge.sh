@@ -90,13 +90,14 @@ else
 				# run scripts to identify vpn port
 				source /home/nobody/getvpnport.sh
 
-				# if vpn port is not an integer then log warning
+				# if vpn port is not an integer then dont change port
 				if [[ ! "${VPN_INCOMING_PORT}" =~ ^-?[0-9]+$ ]]; then
-
-					echo "[warn] PIA incoming port is not an integer, downloads will be slow, does PIA remote gateway supports port forwarding?"
 
 					# set vpn port to current deluge port, as we currently cannot detect incoming port (line saturated, or issues with pia)
 					VPN_INCOMING_PORT="${deluge_port}"
+
+					# ignore port change as we cannot detect new port
+					port_change="false"
 
 				else
 
