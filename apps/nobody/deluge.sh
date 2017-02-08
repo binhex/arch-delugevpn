@@ -30,12 +30,6 @@ else
 
 	echo "[info] VPN is enabled, checking VPN tunnel local ip is valid"
 
-	# create pia client id (randomly generated)
-	client_id=`head -n 100 /dev/urandom | md5sum | tr -d " -"`
-
-	# run script to check ip is valid for tunnel device
-	source /home/nobody/getvpnip.sh
-
 	# set triggers to first run
 	deluge_running="false"
 	ip_change="false"
