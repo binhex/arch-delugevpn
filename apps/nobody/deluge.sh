@@ -39,14 +39,8 @@ else
 	deluge_port="6890"
 	deluge_ip="0.0.0.0"
 
-	# remove previously run pid file (if it exists)
-	rm -f /home/nobody/downloader.sleep.pid
-
 	# while loop to check ip and port
 	while true; do
-
-		# write the current session's pid to file (used to kill sleep process if deluge/openvpn terminates)
-		echo $$ > /home/nobody/downloader.sleep.pid
 
 		# run script to check ip is valid for tunnel device (will block until valid)
 		source /home/nobody/getvpnip.sh
@@ -208,12 +202,7 @@ else
 
 		fi
 
-		# if pia then throttle checks to 10 mins (to prevent hammering api for incoming port), else 30 secs
-		if [[ "${VPN_PROV}" == "pia" ]]; then
-			sleep 10m
-		else
-			sleep 30s
-		fi
+		sleep 30s
 
 	done
 
