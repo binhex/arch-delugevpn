@@ -48,6 +48,7 @@ docker run -d \
     -e VPN_REMOTE=<vpn remote gateway> \
     -e VPN_PORT=<vpn remote port> \
     -e VPN_PROTOCOL=<vpn remote protocol> \
+    -e VPN_DEVICE_TYPE=<tun|tap> \
     -e VPN_PROV=<pia|airvpn|custom> \
     -e ENABLE_PRIVOXY=<yes|no> \
     -e LAN_NETWORK=<lan ipv4 network>/<cidr notation> \
@@ -73,25 +74,29 @@ PIA users will need to supply VPN_USER and VPN_PASS, optionally define VPN_REMOT
 
 **PIA example**
 ```
-docker run -d \
-    --cap-add=NET_ADMIN \
-    -p 8112:8112 \
-    -p 8118:8118 \
-    --name=delugevpn \
-    -v /apps/docker/deluge/data:/data \
-    -v /apps/docker/deluge/config:/config \
-    -v /etc/localtime:/etc/localtime:ro \
-    -e VPN_ENABLED=yes \
-    -e VPN_REMOTE=nl.vpn.airdns.org \
-    -e VPN_PORT=443 \
-    -e VPN_PROTOCOL=udp \
-    -e VPN_PROV=airvpn \
-    -e ENABLE_PRIVOXY=yes \
-    -e LAN_NETWORK=192.168.1.0/24 \
-    -e DEBUG=false \
-    -e PUID=0 \
-    -e PGID=0 \
-    binhex/arch-delugevpn
+ docker run -d \
+     --cap-add=NET_ADMIN \
+     -p 8112:8112 \
+     -p 8118:8118 \
+     --name=delugevpn \
+     -v /apps/docker/deluge/data:/data \
+     -v /apps/docker/deluge/config:/config \
+     -v /etc/localtime:/etc/localtime:ro \
+     -e VPN_ENABLED=yes \
+     -e VPN_USER=myusername \
+     -e VPN_PASS=mypassword \
+      -e VPN_REMOTE=nl.privateinternetaccess.com \
+      -e VPN_PORT=1198 \
+      -e VPN_PROTOCOL=udp \
+ +    -e VPN_DEVICE_TYPE=tun \
+      -e VPN_PROV=pia \
+      -e STRONG_CERTS=no \
+      -e ENABLE_PRIVOXY=yes \
+     -e LAN_NETWORK=192.168.1.0/24 \
+     -e DEBUG=false \
+     -e PUID=0 \
+     -e PGID=0 \
+     binhex/arch-delugevpn
 ```
 
 **AirVPN provider**
@@ -107,25 +112,26 @@ AirVPN users will need to generate a unique OpenVPN configuration file by using 
 
 **AirVPN example**
 ```
-docker run -d \
-    --cap-add=NET_ADMIN \
-    -p 8112:8112 \
-    -p 8118:8118 \
-    --name=delugevpn \
-    -v /apps/docker/deluge/data:/data \
-    -v /apps/docker/deluge/config:/config \
-    -v /etc/localtime:/etc/localtime:ro \
-    -e VPN_ENABLED=yes \
-    -e VPN_REMOTE=example.airvpn.org \
-    -e VPN_PORT=443 \
-    -e VPN_PROTOCOL=udp \
-    -e VPN_PROV=airvpn \
-    -e ENABLE_PRIVOXY=yes \
-    -e LAN_NETWORK=192.168.1.0/24 \
-    -e DEBUG=false \
-    -e PUID=0 \
-    -e PGID=0 \
-    binhex/arch-delugevpn
+ docker run -d \
+     --cap-add=NET_ADMIN \
+     -p 8112:8112 \
+     -p 8118:8118 \
+     --name=delugevpn \
+     -v /apps/docker/deluge/data:/data \
+     -v /apps/docker/deluge/config:/config \
+     -v /etc/localtime:/etc/localtime:ro \
+     -e VPN_ENABLED=yes \
+     -e VPN_REMOTE=nl.vpn.airdns.org \
+     -e VPN_PORT=443 \
+     -e VPN_PROTOCOL=udp \
+     -e VPN_DEVICE_TYPE=tun \
+     -e VPN_PROV=airvpn \
+     -e ENABLE_PRIVOXY=yes \
+     -e LAN_NETWORK=192.168.1.0/24 \
+     -e DEBUG=false \
+     -e PUID=0 \
+     -e PGID=0 \
+     binhex/arch-delugevpn
 ```
 
 **Notes**
