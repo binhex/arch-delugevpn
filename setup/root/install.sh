@@ -67,8 +67,8 @@ sed -i -e 's~\.dev0~~g' "/usr/lib/python2.7/site-packages/deluge-1.3.13-py2.7.eg
 # create file with contets of here doc
 cat <<'EOF' > /tmp/permissions_heredoc
 echo "[info] Setting permissions on files/folders inside container..." | ts '%Y-%m-%d %H:%M:%.S'
-chown -R "${PUID}":"${PGID}" /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /home/nobody /home/nobody/.flexget
-chmod -R 775 /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /home/nobody /home/nobody/.flexget
+chown -R "${PUID}":"${PGID}" /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /home/nobody /home/nobody/.flexget /home/nobody/.cache
+chmod -R 775 /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /home/nobody /home/nobody/.flexget /home/nobody/.cache
 # set python.eggs folder to rx only for group and others
 mkdir -p /home/nobody/.python-eggs && chmod -R 755 /home/nobody/.python-eggs
 EOF
