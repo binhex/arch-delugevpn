@@ -26,6 +26,14 @@ pacman -U /tmp/deluge-1.3.11-3-any.pkg.tar.xz --noconfirm
 mv "/usr/lib/python2.7/site-packages/deluge-1.3.13.dev0-py2.7.egg-info/" "/usr/lib/python2.7/site-packages/deluge-1.3.13-py2.7.egg-info/"
 sed -i -e 's~\.dev0~~g' "/usr/lib/python2.7/site-packages/deluge-1.3.13-py2.7.egg-info/PKG-INFO" "/usr/bin/deluge" "/usr/bin/deluge-console" "/usr/bin/deluged" "/usr/bin/deluge-gtk" "/usr/bin/deluge-web"
  
+cat <<EOF >> /root/init.sh
+echo "[info] Setting permissions on files/folders inside container..." | ts '%Y-%m-%d %H:%M:%.S'
+chown -R "${PUID}":"${PGID}" /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /home/nobody /home/nobody/.flexget
+chmod -R 775 /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /home/nobody /home/nobody/.flexget
+
+echo "[info] Starting Supervisor..." | ts '%Y-%m-%d %H:%M:%.S'
+exec /usr/bin/supervisord -c /etc/supervisor.conf -n
+EOF
 
 # cleanup
 yes|pacman -Rs gcc
