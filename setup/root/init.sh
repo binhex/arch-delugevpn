@@ -36,7 +36,7 @@ if [[ ! -f "/config/perms.txt" ]]; then
 	echo "[info] Setting permissions recursively on /config and /data..." | ts '%Y-%m-%d %H:%M:%S,%3N'
 	chown -R "${PUID}":"${PGID}" /config /data
 	chmod -R 775 /config /data
-	echo "This file prevents permissions from being applied/re-applied to /config, if you want to reset permissions then please delete this file and restart the container." > /config/perms.txt | ts '%Y-%m-%d %H:%M:%S,%3N'
+	echo "This file prevents permissions from being applied/re-applied to /config, if you want to reset permissions then please delete this file and restart the container." > /config/perms.txt
 
 else
 
@@ -63,9 +63,6 @@ fi
 # set permissions inside container
 chown -R "${PUID}":"${PGID}" /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /home/nobody /usr/bin/flexget /usr/sbin/flexget
 chmod -R 775 /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /home/nobody /usr/bin/flexget /usr/sbin/flexget
-
-# strip whitespace from start and end of env var
-export VPN_ENABLED=$(echo "${VPN_ENABLED}" | sed -e 's/^[ \t]*//')
 
 export VPN_PROV=$(echo "${VPN_PROV}" | sed -e 's/^[ \t]*//')
 if [[ ! -z "${VPN_PROV}" ]]; then
@@ -114,6 +111,14 @@ if [[ ! -z "${LAN_NETWORK}" ]]; then
 	echo "[info] LAN_NETWORK defined as ${LAN_NETWORK}" | ts '%Y-%m-%d %H:%M:%S,%3N'
 else
 	echo "[crit] LAN_NETWORK not specified, please specify using env variable LAN_NETWORK" | ts '%Y-%m-%d %H:%M:%S,%3N' && exit 1
+fi
+
+export VPN_ENABLED=$(echo "${VPN_ENABLED}" | sed -e 's/^[ \t]*//')
+if [[ ! -z "${VPN_ENABLED}" ]]; then
+	echo "[info] VPN_ENABLED defined as ${VPN_ENABLED}" | ts '%Y-%m-%d %H:%M:%S,%3N'
+else
+	echo "[warn] VPN_ENABLED not defined,(via -e VPN_ENABLED), defaulting to 'yes'" | ts '%Y-%m-%d %H:%M:%S,%3N'
+	export VPN_ENABLED="yes"
 fi
 
 export VPN_DEVICE_TYPE=$(echo "${VPN_DEVICE_TYPE}" | sed -e 's/^[ \t]*//')
