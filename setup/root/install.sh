@@ -19,7 +19,7 @@ find /tmp/scripts-master/ -type f -name '*.sh' -exec mv -i {} /root/  \;
 ####
 
 # define pacman packages
-pacman_packages="unzip unrar pygtk python2-service-identity python2-mako python2-notify gnu-netcat python2-pip nano gcc pkg-config freetype2"
+pacman_packages="unzip unrar pygtk python2-service-identity python2-mako python2-twisted python2-notify gnu-netcat python2-pip nano gcc pkg-config freetype2"
 
 # install pre-reqs
 pacman -S --needed $pacman_packages --noconfirm
