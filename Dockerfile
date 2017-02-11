@@ -36,13 +36,22 @@ ADD bashrc /home/nobody/.bashrc
 VOLUME /config
 
 # map /data to host defined data path (used to store data from app)
+VOLUME /data
+
+# map /Media to host defined save path (used to store Media from app)
 VOLUME /Media
 
-# map /home/nobody/.flexget to host defined data path (used to store data from app)
+# map /home/nobody/.flexget to host defined data path (used to store data from flexget)
 VOLUME /home/nobody/.flexget
 
 # expose port for deluge webui
 EXPOSE 8112
+
+# expose port for privoxy
+EXPOSE 8118
+
+# expose port for deluge daemon (used in conjunction with LAN_NETWORK env var)
+EXPOSE 58846
 
 # expose port for flexget webui
 EXPOSE 3539
