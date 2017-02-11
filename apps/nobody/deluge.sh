@@ -35,7 +35,7 @@ else
 	# create pia client id (randomly generated)
 	client_id=`head -n 100 /dev/urandom | md5sum | tr -d " -"`
 
-	# run script to check ip is valid for tun0
+	# run script to check ip is valid for tunnel device
 	source /home/nobody/checkip.sh
 
 	# set triggers to first run
