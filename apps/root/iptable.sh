@@ -11,27 +11,19 @@ fi
 # ip route
 ###
 
-if [[ ! -z "${LAN_NETWORK}" ]]; then
+# split comma seperated string into list from LAN_NETWORK env variable
+IFS=',' read -ra lan_network_list <<< "${LAN_NETWORK}"
 
-	# split comma seperated string into list from LAN_NETWORK env variable
-	IFS=',' read -ra lan_network_list <<< "${LAN_NETWORK}"
+# process lan networks in the list
+for lan_network_item in "${lan_network_list[@]}"; do
 
-	# process lan networks in the list
-	for lan_network_item in "${lan_network_list[@]}"; do
+	# strip whitespace from start and end of lan_network_item
+	lan_network_item=$(echo "${lan_network_item}" | sed -e 's/^[ \t]*//')
 
-		# strip whitespace from start and end of lan_network_item
-		lan_network_item=$(echo "${lan_network_item}" | sed -e 's/^[ \t]*//')
+	echo "[info] Adding ${lan_network_item} as route via docker eth0"
+	ip route add "${lan_network_item}" via "${DEFAULT_GATEWAY}" dev eth0
 
-		echo "[info] Adding ${lan_network_item} as route via docker eth0"
-		ip route add "${lan_network_item}" via "${DEFAULT_GATEWAY}" dev eth0
-
-	done
-
-else
-
-	echo "[crit] LAN network not defined, please specify via env variable LAN_NETWORK" && exit 1
-
-fi
+done
 
 echo "[info] ip route defined as follows..."
 echo "--------------------"
