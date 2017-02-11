@@ -1,13 +1,5 @@
 #!/bin/bash
 
-# check for presence of network interface docker0
-check_network=$(ifconfig | grep docker0)
-
-# if network interface docker0 is present then we are running in host mode and thus must exit
-if [[ ! -z "${check_network}" ]]; then
-	echo "[crit] Network type detected as 'Host', this will cause major issues, please stop the container and switch back to 'Bridge' mode" && exit 1
-fi
-
 # ip route
 ###
 
