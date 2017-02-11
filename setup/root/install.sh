@@ -193,6 +193,7 @@ sed -i '/# ENVVARS_PLACEHOLDER/{
 rm /tmp/envvars_heredoc
 
 # cleanup
+yes|pacman -Rs gcc
 yes|pacman -Scc
 rm -rf /usr/share/locale/*
 rm -rf /usr/share/man/*
