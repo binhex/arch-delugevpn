@@ -22,29 +22,24 @@ echo "--------------------"
 ip route
 echo "--------------------"
 
-
 # setup iptables marks to allow routing of defined ports via eth0
 ###
-
-# check kernel for iptable_mangle module
-lsmod | grep "iptable_mangle" > /dev/null
-iptable_mangle_exit_code=$?
 
 if [[ "${DEBUG}" == "true" ]]; then
 	echo "[debug] Modules currently loaded for kernel" ; lsmod
 fi
 
-# if iptable_mangle is not available then attempt to load module
+# check kernel for iptable_mangle module
+lsmod | grep "iptable_mangle" > /dev/null
+iptable_mangle_exit_code=$?
+
+# delect if iptable mangle module present
 if [[ $iptable_mangle_exit_code != 0 ]]; then
 
-	# attempt to load module
-	echo "[info] iptable_mangle module not supported, attempting to load..."
-	modprobe iptable_mangle > /dev/null
-	iptable_mangle_exit_code=$?
-fi
+	echo "[warn] iptable_mangle module not supported, you will not be able to connect to ruTorrent or Privoxy outside of your LAN"
+	echo "[info] Please attempt to load the module by executing the following on your host:- '/sbin/modprobe iptable_mangle'"
 
-# if iptable_mangle is available then set fwmark
-if [[ $iptable_mangle_exit_code == 0 ]]; then
+else
 
 	echo "[info] iptable_mangle support detected, adding fwmark for tables"
 
@@ -52,17 +47,6 @@ if [[ $iptable_mangle_exit_code == 0 ]]; then
 	echo "8112    webui" >> /etc/iproute2/rt_tables
 	ip rule add fwmark 1 table webui
 	ip route add default via $DEFAULT_GATEWAY table webui
-
-	# setup route for privoxy using set-mark to route traffic for port 8118 to eth0
-	if [[ $ENABLE_PRIVOXY == "yes" ]]; then
-		echo "8118    privoxy" >> /etc/iproute2/rt_tables
-		ip rule add fwmark 2 table privoxy
-		ip route add default via $DEFAULT_GATEWAY table privoxy
-	fi
-
-else
-
-	echo "[warn] iptable_mangle module not supported, you will not be able to connect to Deluge webui or Privoxy outside of your LAN"
 
 fi
 
@@ -89,13 +73,6 @@ iptables -A INPUT -i eth0 -p tcp --sport 8112 -j ACCEPT
 iptables -A INPUT -i eth0 -p tcp --dport 3539 -j ACCEPT
 iptables -A INPUT -i eth0 -p tcp --sport 3539 -j ACCEPT
 
-
-# accept input to privoxy port 8118 if enabled
-if [[ $ENABLE_PRIVOXY == "yes" ]]; then
-	iptables -A INPUT -i eth0 -p tcp --dport 8118 -j ACCEPT
-	iptables -A INPUT -i eth0 -p tcp --sport 8118 -j ACCEPT
-fi
-
 # process lan networks in the list
 for lan_network_item in "${lan_network_list[@]}"; do
 
@@ -104,6 +81,11 @@ for lan_network_item in "${lan_network_list[@]}"; do
 
 	# accept input to deluge daemon port - used for lan access
 	iptables -A INPUT -i eth0 -s "${lan_network_item}" -p tcp --dport 58846 -j ACCEPT
+
+	# accept input to privoxy if enabled
+	if [[ $ENABLE_PRIVOXY == "yes" ]]; then
+		iptables -A INPUT -i eth0 -p tcp -s "${lan_network_item}" -d 172.17.0.0/16 -j ACCEPT
+	fi
 
 done
 
@@ -137,17 +119,11 @@ if [[ $iptable_mangle_exit_code == 0 ]]; then
 	# accept output from deluge webui port 8112 - used for external access
 	iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
 	iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
-
+	
 	# accept output from flexget webui port 3539 - used for external access
 	iptables -t mangle -A OUTPUT -p tcp --dport 3539 -j MARK --set-mark 1
 	iptables -t mangle -A OUTPUT -p tcp --sport 3539 -j MARK --set-mark 1
 
-	# accept output from privoxy port 8118 - used for external access
-	if [[ $ENABLE_PRIVOXY == "yes" ]]; then
-		iptables -t mangle -A OUTPUT -p tcp --dport 8118 -j MARK --set-mark 2
-		iptables -t mangle -A OUTPUT -p tcp --sport 8118 -j MARK --set-mark 2
-	fi
-	
 fi
 
 # accept output from deluge webui port 8112 - used for lan access
@@ -158,12 +134,6 @@ iptables -A OUTPUT -o eth0 -p tcp --sport 8112 -j ACCEPT
 iptables -A OUTPUT -o eth0 -p tcp --dport 3539 -j ACCEPT
 iptables -A OUTPUT -o eth0 -p tcp --sport 3539 -j ACCEPT
 
-# accept output from privoxy port 8118 - used for lan access
-if [[ $ENABLE_PRIVOXY == "yes" ]]; then
-	iptables -A OUTPUT -o eth0 -p tcp --dport 8118 -j ACCEPT
-	iptables -A OUTPUT -o eth0 -p tcp --sport 8118 -j ACCEPT
-fi
-
 # process lan networks in the list
 for lan_network_item in "${lan_network_list[@]}"; do
 
@@ -172,6 +142,11 @@ for lan_network_item in "${lan_network_list[@]}"; do
 
 	# accept output to deluge daemon port - used for lan access
 	iptables -A OUTPUT -o eth0 -d "${lan_network_item}" -p tcp --sport 58846 -j ACCEPT
+
+	# accept output from privoxy if enabled - used for lan access
+	if [[ $ENABLE_PRIVOXY == "yes" ]]; then
+		iptables -A OUTPUT -o eth0 -p tcp -s 172.17.0.0/16 -d "${lan_network_item}" -j ACCEPT
+	fi
 
 done
 
