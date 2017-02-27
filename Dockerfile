@@ -16,7 +16,7 @@ ADD apps/root/*.sh /root/
 # add bash script to run deluge
 ADD apps/nobody/*.sh /home/nobody/
 
-# add pre-configured config files for nobody
+# add pre-configured config files for deluge
 ADD config/nobody/ /home/nobody/
 
 # install app
@@ -43,6 +43,10 @@ EXPOSE 8118
 
 # expose port for deluge daemon (used in conjunction with LAN_NETWORK env var)
 EXPOSE 58846
+
+# expose port for deluge incoming port (used only if VPN_ENABLED=no)
+EXPOSE 58946
+EXPOSE 58946/udp
 
 # set permissions
 #################
