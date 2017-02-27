@@ -16,6 +16,9 @@ ADD apps/root/*.sh /root/
 # add bash script to run deluge
 ADD apps/nobody/*.sh /home/nobody/
 
+# add python script to configure deluge
+ADD apps/nobody/*.py /home/nobody/
+
 # add pre-configured config files for deluge
 ADD config/nobody/ /home/nobody/
 
