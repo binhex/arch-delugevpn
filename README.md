@@ -21,6 +21,7 @@ docker run -d \
     -p 8112:8112 \
     -p 8118:8118 \
     -p 58846:58846 \
+    -p 58946:58946 \
     --name=<container name> \
     -v <path for data files>:/data \
     -v <path for config files>:/config \
@@ -65,6 +66,7 @@ docker run -d \
     -p 8112:8112 \
     -p 8118:8118 \
     -p 58846:58846 \
+    -p 58946:58946 \
     --name=delugevpn \
     -v /apps/docker/deluge/data:/data \
     -v /apps/docker/deluge/config:/config \
@@ -105,6 +107,7 @@ docker run -d \
     -p 8112:8112 \
     -p 8118:8118 \
     -p 58846:58846 \
+    -p 58946:58946 \
     --name=delugevpn \
     -v /apps/docker/deluge/data:/data \
     -v /apps/docker/deluge/config:/config \
