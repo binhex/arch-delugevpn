@@ -15,6 +15,12 @@ unzip /tmp/scripts-master.zip -d /tmp
 # move shell scripts to /root
 find /tmp/scripts-master/ -type f -name '*.sh' -exec mv -i {} /root/  \;
 
+# custom scripts
+####
+
+# call custom install script
+source /root/custom.sh
+
 # pacman packages
 ####
 
