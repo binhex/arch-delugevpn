@@ -25,7 +25,7 @@ source /root/custom.sh
 ####
 
 # define pacman packages
-pacman_packages="pygtk python2-service-identity python2-mako python2-notify gnu-netcat"
+pacman_packages="pygtk python2-service-identity python2-mako python2-notify gnu-netcat ipcalc"
 
 # install compiled packages using pacman
 if [[ ! -z "${pacman_packages}" ]]; then
