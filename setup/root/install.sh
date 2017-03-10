@@ -56,11 +56,15 @@ source /root/aur.sh
 # create file with contets of here doc
 cat <<'EOF' > /tmp/permissions_heredoc
 echo "[info] Setting permissions on files/folders inside container..." | ts '%Y-%m-%d %H:%M:%.S'
+
+# create path to store deluge python eggs
+mkdir -p /home/nobody/.cache/Python-Eggs
+
 chown -R "${PUID}":"${PGID}" /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /home/nobody
 chmod -R 775 /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /home/nobody
 
 # remove permissions for group and other from the Python-Eggs folder
-mkdir -p /home/nobody/.cache/Python-Eggs && chmod -R 700 /home/nobody/.cache/Python-Eggs
+chmod -R 700 /home/nobody/.cache/Python-Eggs
 
 EOF
 
