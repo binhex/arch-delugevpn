@@ -27,8 +27,10 @@ source /root/custom.sh
 # define pacman packages
 pacman_packages="unzip unrar pygtk python2-service-identity python2-mako python2-twisted python2-notify gnu-netcat ipcalc python2-pip nano gcc pkg-config freetype2"
 
-# install pre-reqs
-pacman -S --needed $pacman_packages --noconfirm
+# install compiled packages using pacman
+if [[ ! -z "${pacman_packages}" ]]; then
+	pacman -S --needed $pacman_packages --noconfirm
+fi
 
 #install flextget
 pip2 install --upgrade pip
@@ -85,12 +87,15 @@ rm /tmp/permissions_heredoc
 ####
 
 cat <<'EOF' > /tmp/envvars_heredoc
+
 # check for presence of network interface docker0
 check_network=$(ifconfig | grep docker0 || true)
+
 # if network interface docker0 is present then we are running in host mode and thus must exit
 if [[ ! -z "${check_network}" ]]; then
 	echo "[crit] Network type detected as 'Host', this will cause major issues, please stop the container and switch back to 'Bridge' mode" | ts '%Y-%m-%d %H:%M:%.S' && exit 1
 fi
+
 export VPN_ENABLED=$(echo "${VPN_ENABLED}" | sed -e 's/^[ \t]*//')
 if [[ ! -z "${VPN_ENABLED}" ]]; then
 	echo "[info] VPN_ENABLED defined as '${VPN_ENABLED}'" | ts '%Y-%m-%d %H:%M:%.S'
@@ -98,6 +103,7 @@ else
 	echo "[warn] VPN_ENABLED not defined,(via -e VPN_ENABLED), defaulting to 'yes'" | ts '%Y-%m-%d %H:%M:%.S'
 	export VPN_ENABLED="yes"
 fi
+
 if [[ $VPN_ENABLED == "yes" ]]; then
 	export VPN_PROV=$(echo "${VPN_PROV}" | sed -e 's/^[ \t]*//')
 	if [[ ! -z "${VPN_PROV}" ]]; then
