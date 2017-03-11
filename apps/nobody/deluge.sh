@@ -20,7 +20,7 @@ if [[ "${VPN_ENABLED}" == "no" ]]; then
 	deluge_ip="0.0.0.0"
 
 	# set listen interface ip address for deluge using python script
-	/home/nobody/config_deluge_core.py "${deluge_ip}"
+	/home/nobody/config_deluge.py "${deluge_ip}"
 
 	# run Deluge (non daemonized, blocking)
 	echo "[info] Attempting to start Deluge..."
@@ -154,7 +154,7 @@ else
 				echo "[info] Attempting to start Deluge..."
 
 				# set listen interface ip address for deluge using python script
-				/home/nobody/config_deluge_core.py "${vpn_ip}"
+				/home/nobody/config_deluge.py "${vpn_ip}"
 
 				# run deluge daemon (daemonized, non-blocking)
 				/usr/bin/deluged -c /config -L info -l /config/deluged.log
