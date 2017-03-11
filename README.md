@@ -56,6 +56,7 @@ docker run -d \
     -e LAN_NETWORK=<lan ipv4 network>/<cidr notation> \
     -e NAME_SERVERS=<name server ip(s)> \
     -e DEBUG=<true|false> \
+    -e UMASK=<umask for created files> \
     -e PUID=<UID for user> \
     -e PGID=<GID for user> \
     binhex/arch-delugevpn
@@ -100,6 +101,7 @@ PIA users will need to supply VPN_USER and VPN_PASS, optionally define VPN_REMOT
      -e LAN_NETWORK=192.168.1.0/24 \
      -e NAME_SERVERS=8.8.8.8,8.8.4.4 \
      -e DEBUG=false \
+     -e UMASK=000 \
      -e PUID=0 \
      -e PGID=0 \
      binhex/arch-delugevpn
@@ -138,6 +140,7 @@ AirVPN users will need to generate a unique OpenVPN configuration file by using 
      -e LAN_NETWORK=192.168.1.0/24 \
      -e NAME_SERVERS=8.8.8.8,8.8.4.4 \
      -e DEBUG=false \
+     -e UMASK=000 \
      -e PUID=0 \
      -e PGID=0 \
      binhex/arch-delugevpn
