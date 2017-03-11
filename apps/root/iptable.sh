@@ -33,12 +33,11 @@ fi
 lsmod | grep "tun" > /dev/null
 tun_exit_code=$?
 
-# delect if iptable mangle module present
+# delect if tun module present
 if [[ $tun_exit_code != 0 ]]; then
 
-	echo "[crit] 'tun' module not available, you will not be able to connect to Deluge or Privoxy outside of your LAN"
+	echo "[warn] 'tun' module not available, you will not be able to connect to Deluge or Privoxy outside of your LAN"
 	echo "[info] Synology users: Please attempt to load the module by executing the following on your host:- 'insmod /lib/modules/tun.ko'"
-	exit 1
 
 fi
 
