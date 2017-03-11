@@ -29,6 +29,19 @@ if [[ "${DEBUG}" == "true" ]]; then
 	echo "[debug] Modules currently loaded for kernel" ; lsmod
 fi
 
+# check kernel for tun module
+lsmod | grep "tun" > /dev/null
+tun_exit_code=$?
+
+# delect if iptable mangle module present
+if [[ $tun_exit_code != 0 ]]; then
+
+	echo "[crit] 'tun' module not available, you will not be able to connect to Deluge or Privoxy outside of your LAN"
+	echo "[info] Synology users: Please attempt to load the module by executing the following on your host:- 'insmod /lib/modules/tun.ko'"
+	exit 1
+
+fi
+
 # check kernel for iptable_mangle module
 lsmod | grep "iptable_mangle" > /dev/null
 iptable_mangle_exit_code=$?
@@ -36,9 +49,10 @@ iptable_mangle_exit_code=$?
 # delect if iptable mangle module present
 if [[ $iptable_mangle_exit_code != 0 ]]; then
 
-	echo "[warn] iptable_mangle module not supported, you will not be able to connect to ruTorrent or Privoxy outside of your LAN"
-	echo "[info] Please attempt to load the module by executing the following on your host:- '/sbin/modprobe iptable_mangle'"
-
+	echo "[warn] 'iptable_mangle' module not available, you will not be able to connect to Deluge or Privoxy outside of your LAN"
+	echo "[info] unRAID users: Please attempt to load the module by executing the following on your host:- '/sbin/modprobe iptable_mangle'"
+	echo "[info] Synology users: Please attempt to load the module by executing the following on your host:- 'insmod /lib/modules/iptable_mangle.ko'"
+  
 else
 
 	echo "[info] iptable_mangle support detected, adding fwmark for tables"
