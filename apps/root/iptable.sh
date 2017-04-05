@@ -36,7 +36,9 @@ tun_exit_code=$?
 # delect if tun module present
 if [[ $tun_exit_code != 0 ]]; then
 
-	echo "[warn] 'tun' module not available, you will not be able to connect to Deluge or Privoxy outside of your LAN"
+	echo "[warn] 'tun' kernel module not available, you will not be able to establish a VPN tunnel"
+	echo "[info] unRAID users: Please attempt to load the module by executing the following on your host:- '/sbin/modprobe tun'"
+	echo "[info] Ubuntu users: Please attempt to load the module by executing the following on your host:- '/sbin/modprobe tun'"
 	echo "[info] Synology users: Please attempt to load the module by executing the following on your host:- 'insmod /lib/modules/tun.ko'"
 
 fi
@@ -48,8 +50,9 @@ iptable_mangle_exit_code=$?
 # delect if iptable mangle module present
 if [[ $iptable_mangle_exit_code != 0 ]]; then
 
-	echo "[warn] 'iptable_mangle' module not available, you will not be able to connect to Deluge or Privoxy outside of your LAN"
+	echo "[warn] 'iptable_mangle' kernel module not available, you will not be able to connect to the applications Web UI or Privoxy outside of your LAN"
 	echo "[info] unRAID users: Please attempt to load the module by executing the following on your host:- '/sbin/modprobe iptable_mangle'"
+	echo "[info] Ubuntu users: Please attempt to load the module by executing the following on your host:- '/sbin/modprobe iptable_mangle'"
 	echo "[info] Synology users: Please attempt to load the module by executing the following on your host:- 'insmod /lib/modules/iptable_mangle.ko'"
 
 else
