@@ -13,7 +13,7 @@ curl --connect-timeout 5 --max-time 10 --retry 5 --retry-delay 0 --retry-max-tim
 unzip /tmp/scripts-master.zip -d /tmp
 
 # move shell scripts to /root
-find /tmp/scripts-master/ -type f -name '*.sh' -exec mv -i {} /root/  \;
+mv /tmp/scripts-master/shell/arch/docker/*.sh /root/
 
 # custom scripts
 ####
