@@ -29,20 +29,6 @@ if [[ "${DEBUG}" == "true" ]]; then
 	echo "[debug] Modules currently loaded for kernel" ; lsmod
 fi
 
-# check kernel for tun module
-lsmod | grep "tun" > /dev/null
-tun_exit_code=$?
-
-# delect if tun module present
-if [[ $tun_exit_code != 0 ]]; then
-
-	echo "[warn] 'tun' kernel module not available, you will not be able to establish a VPN tunnel"
-	echo "[info] unRAID users: Please attempt to load the module by executing the following on your host:- '/sbin/modprobe tun'"
-	echo "[info] Ubuntu users: Please attempt to load the module by executing the following on your host:- '/sbin/modprobe tun'"
-	echo "[info] Synology users: Please attempt to load the module by executing the following on your host:- 'insmod /lib/modules/tun.ko'"
-
-fi
-
 # check kernel for iptable_mangle module
 lsmod | grep "iptable_mangle" > /dev/null
 iptable_mangle_exit_code=$?
