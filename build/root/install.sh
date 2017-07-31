@@ -100,32 +100,82 @@ else
 fi
 
 if [[ $VPN_ENABLED == "yes" ]]; then
+
+	# create directory to store openvpn config files
+	mkdir -p /config/openvpn
+
+	# set perms and owner for files in /config/openvpn directory
+	set +e
+	chown -R "${PUID}":"${PGID}" "/config/openvpn" &> /dev/null
+	exit_code_chown=$?
+	chmod -R 775 "/config/openvpn" &> /dev/null
+	exit_code_chmod=$?
+	set -e
+
+	if (( ${exit_code_chown} != 0 || ${exit_code_chmod} != 0 )); then
+		echo "[warn] Unable to chown/chmod /config/openvpn/, assuming SMB mountpoint" | ts '%Y-%m-%d %H:%M:%.S'
+	fi
+
+	# wildcard search for openvpn config files (match on first result)
+	export VPN_CONFIG=$(find /config/openvpn -maxdepth 1 -name "*.ovpn" -print -quit)
+
+	# if ovpn file not found in /config/openvpn and the provider is not pia then exit
+	if [[ -z "${VPN_CONFIG}" ]]; then
+		echo "[crit] Missing OpenVPN configuration file in /config/openvpn/ (no files with an ovpn extension exist), please create and then restart this container, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
+	fi
+
+	echo "[info] VPN config file (ovpn extension) is located at ${VPN_CONFIG}" | ts '%Y-%m-%d %H:%M:%.S'
+
+	# convert CRLF (windows) to LF (unix) for ovpn
+	/usr/bin/dos2unix "${VPN_CONFIG}" 1> /dev/null
+
+	# parse values from ovpn file
+	export vpn_remote_line=$(cat "${VPN_CONFIG}" | grep -Po '(?<=^remote\s)[^\n\r]+')
+	if [[ ! -z "${vpn_remote_line}" ]]; then
+		echo "[info] VPN remote line defined as '${vpn_remote_line}'" | ts '%Y-%m-%d %H:%M:%.S'
+	else
+		echo "[crit] VPN configuration file /config/openvpn/${VPN_CONFIG} does not contain 'remote' line, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
+	fi
+
+	export VPN_REMOTE=$(echo "${vpn_remote_line}" | grep -Po '^[^\s\r\n]+')
+	if [[ ! -z "${VPN_REMOTE}" ]]; then
+		echo "[info] VPN_REMOTE defined as '${VPN_REMOTE}'" | ts '%Y-%m-%d %H:%M:%.S'
+	else
+		echo "[crit] VPN_REMOTE not found in /config/openvpn/${VPN_CONFIG}, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
+	fi
+
+	export VPN_PORT=$(echo "${vpn_remote_line}" | grep -Po '[\d]{2,5}+$')
+	if [[ ! -z "${VPN_PORT}" ]]; then
+		echo "[info] VPN_PORT defined as '${VPN_PORT}'" | ts '%Y-%m-%d %H:%M:%.S'
+	else
+		echo "[crit] VPN_PORT not found in /config/openvpn/${VPN_CONFIG}, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
+	fi
+
+	export VPN_PROTOCOL=$(cat "${VPN_CONFIG}" | grep -Po '(?<=^proto\s)[^\r\n]+')
+	if [[ ! -z "${VPN_PROTOCOL}" ]]; then
+		echo "[info] VPN_PROTOCOL defined as '${VPN_PROTOCOL}'" | ts '%Y-%m-%d %H:%M:%.S'
+		# required for use in iptables
+		if [[ "${VPN_PROTOCOL}" == "tcp-client" ]]; then
+			export VPN_PROTOCOL="tcp"
+		fi
+	else
+		echo "[warn] VPN_PROTOCOL not found in /config/openvpn/${VPN_CONFIG}, assuming udp" | ts '%Y-%m-%d %H:%M:%.S'
+		export VPN_PROTOCOL="udp"
+	fi
+
+	export VPN_DEVICE_TYPE=$(cat "${VPN_CONFIG}" | grep -Po '(?<=^dev\s)[^\r\n]+')
+	if [[ ! -z "${VPN_DEVICE_TYPE}" ]]; then
+		echo "[info] VPN_DEVICE_TYPE defined as '${VPN_DEVICE_TYPE}'" | ts '%Y-%m-%d %H:%M:%.S'
+	else
+		echo "[crit] VPN_DEVICE_TYPE not found in /config/openvpn/${VPN_CONFIG}, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
+	fi
+
+	# get values from env vars as defined by user
 	export VPN_PROV=$(echo "${VPN_PROV}" | sed -e 's/^[ \t]*//')
 	if [[ ! -z "${VPN_PROV}" ]]; then
 		echo "[info] VPN_PROV defined as '${VPN_PROV}'" | ts '%Y-%m-%d %H:%M:%.S'
 	else
 		echo "[crit] VPN_PROV not defined,(via -e VPN_PROV), exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
-	fi
-
-	export VPN_REMOTE=$(echo "${VPN_REMOTE}" | sed -e 's/^[ \t]*//')
-	if [[ ! -z "${VPN_REMOTE}" ]]; then
-		echo "[info] VPN_REMOTE defined as '${VPN_REMOTE}'" | ts '%Y-%m-%d %H:%M:%.S'
-	else
-		echo "[crit] VPN_REMOTE not defined (via -e VPN_REMOTE), exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
-	fi
-
-	export VPN_PORT=$(echo "${VPN_PORT}" | sed -e 's/^[ \t]*//')
-	if [[ ! -z "${VPN_PORT}" ]]; then
-		echo "[info] VPN_PORT defined as '${VPN_PORT}'" | ts '%Y-%m-%d %H:%M:%.S'
-	else
-		echo "[crit] VPN_PORT not defined (via -e VPN_PORT), exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
-	fi
-
-	export VPN_PROTOCOL=$(echo "${VPN_PROTOCOL}" | sed -e 's/^[ \t]*//')
-	if [[ ! -z "${VPN_PROTOCOL}" ]]; then
-		echo "[info] VPN_PROTOCOL defined as '${VPN_PROTOCOL}'" | ts '%Y-%m-%d %H:%M:%.S'
-	else
-		echo "[crit] VPN_PROTOCOL not defined (via -e VPN_PROTOCOL), exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
 	fi
 
 	export LAN_NETWORK=$(echo "${LAN_NETWORK}" | sed -e 's/^[ \t]*//')
@@ -159,12 +209,12 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 		fi
 	fi
 
-	export VPN_DEVICE_TYPE=$(echo "${VPN_DEVICE_TYPE}" | sed -e 's/^[ \t]*//')
-	if [[ ! -z "${VPN_DEVICE_TYPE}" ]]; then
-		echo "[info] VPN_DEVICE_TYPE defined as '${VPN_DEVICE_TYPE}'" | ts '%Y-%m-%d %H:%M:%.S'
+	export VPN_INCOMING_PORT=$(echo "${VPN_INCOMING_PORT}" | sed -e 's/^[ \t]*//')
+	if [[ ! -z "${VPN_INCOMING_PORT}" ]]; then
+		echo "[info] VPN_INCOMING_PORT defined as '${VPN_INCOMING_PORT}'" | ts '%Y-%m-%d %H:%M:%.S'
 	else
-		echo "[warn] VPN_DEVICE_TYPE not defined (via -e VPN_DEVICE_TYPE), defaulting to 'tun'" | ts '%Y-%m-%d %H:%M:%.S'
-		export VPN_DEVICE_TYPE="tun"
+		echo "[warn] VPN_INCOMING_PORT not defined (via -e VPN_INCOMING_PORT), downloads may be slow" | ts '%Y-%m-%d %H:%M:%.S'
+		export VPN_INCOMING_PORT=""
 	fi
 
 	export VPN_OPTIONS=$(echo "${VPN_OPTIONS}" | sed -e 's/^[ \t]*//')
@@ -176,14 +226,6 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	fi
 
 	if [[ $VPN_PROV == "pia" ]]; then
-
-		export STRONG_CERTS=$(echo "${STRONG_CERTS}" | sed -e 's/^[ \t]*//')
-		if [[ ! -z "${STRONG_CERTS}" ]]; then
-			echo "[info] STRONG_CERTS defined as '${STRONG_CERTS}'" | ts '%Y-%m-%d %H:%M:%.S'
-		else
-			echo "[warn] STRONG_CERTS not defined (via -e STRONG_CERTS), defaulting to 'no'" | ts '%Y-%m-%d %H:%M:%.S'
-			export STRONG_CERTS="no"
-		fi
 
 		export STRICT_PORT_FORWARD=$(echo "${STRICT_PORT_FORWARD}" | sed -e 's/^[ \t]*//')
 		if [[ ! -z "${STRICT_PORT_FORWARD}" ]]; then
@@ -199,7 +241,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	if [[ ! -z "${ENABLE_PRIVOXY}" ]]; then
 		echo "[info] ENABLE_PRIVOXY defined as '${ENABLE_PRIVOXY}'" | ts '%Y-%m-%d %H:%M:%.S'
 	else
-		echo "[info] ENABLE_PRIVOXY not defined (via -e ENABLE_PRIVOXY), defaulting to 'no'" | ts '%Y-%m-%d %H:%M:%.S'
+		echo "[warn] ENABLE_PRIVOXY not defined (via -e ENABLE_PRIVOXY), defaulting to 'no'" | ts '%Y-%m-%d %H:%M:%.S'
 		export ENABLE_PRIVOXY="no"
 	fi
 
@@ -209,7 +251,7 @@ fi
 
 EOF
 
-# replace permissions placeholder string with contents of file (here doc)
+# replace env vars placeholder string with contents of file (here doc)
 sed -i '/# ENVVARS_PLACEHOLDER/{
     s/# ENVVARS_PLACEHOLDER//g
     r /tmp/envvars_heredoc
