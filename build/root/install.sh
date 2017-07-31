@@ -134,21 +134,22 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	if [[ ! -z "${vpn_remote_line}" ]]; then
 		echo "[info] VPN remote line defined as '${vpn_remote_line}'" | ts '%Y-%m-%d %H:%M:%.S'
 	else
-		echo "[crit] VPN configuration file /config/openvpn/${VPN_CONFIG} does not contain 'remote' line, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
+		echo "[crit] VPN configuration file ${VPN_CONFIG} does not contain 'remote' line, showing contents of file before exit..." | ts '%Y-%m-%d %H:%M:%.S'
+		cat "${VPN_CONFIG}" && exit 1
 	fi
 
 	export VPN_REMOTE=$(echo "${vpn_remote_line}" | grep -Po '^[^\s\r\n]+')
 	if [[ ! -z "${VPN_REMOTE}" ]]; then
 		echo "[info] VPN_REMOTE defined as '${VPN_REMOTE}'" | ts '%Y-%m-%d %H:%M:%.S'
 	else
-		echo "[crit] VPN_REMOTE not found in /config/openvpn/${VPN_CONFIG}, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
+		echo "[crit] VPN_REMOTE not found in ${VPN_CONFIG}, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
 	fi
 
 	export VPN_PORT=$(echo "${vpn_remote_line}" | grep -Po '[\d]{2,5}+$')
 	if [[ ! -z "${VPN_PORT}" ]]; then
 		echo "[info] VPN_PORT defined as '${VPN_PORT}'" | ts '%Y-%m-%d %H:%M:%.S'
 	else
-		echo "[crit] VPN_PORT not found in /config/openvpn/${VPN_CONFIG}, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
+		echo "[crit] VPN_PORT not found in ${VPN_CONFIG}, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
 	fi
 
 	export VPN_PROTOCOL=$(cat "${VPN_CONFIG}" | grep -Po '(?<=^proto\s)[^\r\n]+')
@@ -159,7 +160,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 			export VPN_PROTOCOL="tcp"
 		fi
 	else
-		echo "[warn] VPN_PROTOCOL not found in /config/openvpn/${VPN_CONFIG}, assuming udp" | ts '%Y-%m-%d %H:%M:%.S'
+		echo "[warn] VPN_PROTOCOL not found in ${VPN_CONFIG}, assuming udp" | ts '%Y-%m-%d %H:%M:%.S'
 		export VPN_PROTOCOL="udp"
 	fi
 
@@ -167,7 +168,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	if [[ ! -z "${VPN_DEVICE_TYPE}" ]]; then
 		echo "[info] VPN_DEVICE_TYPE defined as '${VPN_DEVICE_TYPE}'" | ts '%Y-%m-%d %H:%M:%.S'
 	else
-		echo "[crit] VPN_DEVICE_TYPE not found in /config/openvpn/${VPN_CONFIG}, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
+		echo "[crit] VPN_DEVICE_TYPE not found in ${VPN_CONFIG}, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
 	fi
 
 	# get values from env vars as defined by user
