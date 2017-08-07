@@ -155,13 +155,19 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	export VPN_PROTOCOL=$(cat "${VPN_CONFIG}" | grep -P -o -m 1 '(?<=^proto\s)[^\r\n]+')
 	if [[ ! -z "${VPN_PROTOCOL}" ]]; then
 		echo "[info] VPN_PROTOCOL defined as '${VPN_PROTOCOL}'" | ts '%Y-%m-%d %H:%M:%.S'
-		# required for use in iptables
-		if [[ "${VPN_PROTOCOL}" == "tcp-client" ]]; then
-			export VPN_PROTOCOL="tcp"
-		fi
 	else
-		echo "[warn] VPN_PROTOCOL not found in ${VPN_CONFIG}, assuming udp" | ts '%Y-%m-%d %H:%M:%.S'
-		export VPN_PROTOCOL="udp"
+		export VPN_PROTOCOL=$(echo "${vpn_remote_line}" | grep -P -o -m 1 'udp|tcp-client|tcp$')
+		if [[ ! -z "${VPN_PROTOCOL}" ]]; then
+			echo "[info] VPN_PROTOCOL defined as '${VPN_PROTOCOL}'" | ts '%Y-%m-%d %H:%M:%.S'
+		else
+			echo "[warn] VPN_PROTOCOL not found in ${VPN_CONFIG}, assuming udp" | ts '%Y-%m-%d %H:%M:%.S'
+			export VPN_PROTOCOL="udp"
+		fi
+	fi
+
+	# required for use in iptables
+	if [[ "${VPN_PROTOCOL}" == "tcp-client" ]]; then
+		export VPN_PROTOCOL="tcp"
 	fi
 
 	export VPN_DEVICE_TYPE=$(cat "${VPN_CONFIG}" | grep -P -o -m 1 '(?<=^dev\s)[^\r\n]+')
