@@ -145,7 +145,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 		echo "[crit] VPN_REMOTE not found in ${VPN_CONFIG}, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
 	fi
 
-	export VPN_PORT=$(echo "${vpn_remote_line}" | grep -P -o -m 1 '[\d]{2,5}+$')
+	export VPN_PORT=$(echo "${vpn_remote_line}" | grep -P -o -m 1 '(?<=\s)\d{2,5}(?=\s)?+')
 	if [[ ! -z "${VPN_PORT}" ]]; then
 		echo "[info] VPN_PORT defined as '${VPN_PORT}'" | ts '%Y-%m-%d %H:%M:%.S'
 	else
