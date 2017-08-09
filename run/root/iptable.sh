@@ -109,9 +109,6 @@ for lan_network_item in "${lan_network_list[@]}"; do
 
 done
 
-# accept input dns lookup
-iptables -A INPUT -p udp --sport 53 -j ACCEPT
-
 # accept input icmp (ping)
 iptables -A INPUT -p icmp --icmp-type echo-reply -j ACCEPT
 
@@ -161,9 +158,6 @@ for lan_network_item in "${lan_network_list[@]}"; do
 	fi
 
 done
-
-# accept output for dns lookup
-iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
 
 # accept output for icmp (ping)
 iptables -A OUTPUT -p icmp --icmp-type echo-request -j ACCEPT
