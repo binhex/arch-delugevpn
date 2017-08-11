@@ -119,12 +119,12 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	# wildcard search for openvpn config files (match on first result)
 	export VPN_CONFIG=$(find /config/openvpn -maxdepth 1 -name "*.ovpn" -print -quit)
 
-	# if ovpn file not found in /config/openvpn and the provider is not pia then exit
+	# if ovpn file not found in /config/openvpn then exit
 	if [[ -z "${VPN_CONFIG}" ]]; then
-		echo "[crit] Missing OpenVPN configuration file in /config/openvpn/ (no files with an ovpn extension exist), please create and then restart this container, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
+		echo "[crit] No OpenVPN config file located in /config/openvpn/ (ovpn extension), please download from your VPN provider and then restart this container, exiting..." | ts '%Y-%m-%d %H:%M:%.S' && exit 1
 	fi
 
-	echo "[info] VPN config file (ovpn extension) is located at ${VPN_CONFIG}" | ts '%Y-%m-%d %H:%M:%.S'
+	echo "[info] OpenVPN config file (ovpn extension) is located at ${VPN_CONFIG}" | ts '%Y-%m-%d %H:%M:%.S'
 
 	# convert CRLF (windows) to LF (unix) for ovpn
 	/usr/bin/dos2unix "${VPN_CONFIG}" 1> /dev/null
