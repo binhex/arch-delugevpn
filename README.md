@@ -54,7 +54,7 @@ Please replace all user variables in the above command defined by <> with the co
 
 **PIA provider**
 
-PIA users will need to supply VPN_USER and VPN_PASS, optionally define VPN_REMOTE (list of gateways https://www.privateinternetaccess.com/pages/client-support) if you wish to use another remote gateway other than the Netherlands.
+PIA users will need to supply VPN_USER and VPN_PASS, optionally define VPN_REMOTE (list of gateways https://www.privateinternetaccess.com/pages/client-support) if you wish to use another remote gateway other than the Netherlands. The STRICT_PORT_FORWARD environment variable is used to define whether to force connection only to endpoints that support port forwarding when connecting to PIA (does not affect other providers). The included scripts will configure Deluge with the forwarded port provided by PIA.
 
 **PIA example**
 ```
@@ -127,8 +127,6 @@ User ID (PUID) and Group ID (PGID) can be found by issuing the following command
 ```
 id <username>
 ```
-
-The STRICT_PORT_FORWARD environment variable is used to define whether to force connection only to endpoints that support port forwarding when connecting to PIA (does not affect other providers).
 ___
 If you appreciate my work, then please consider buying me a beer  :D
 
