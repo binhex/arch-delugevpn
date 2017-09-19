@@ -13,9 +13,9 @@ echo "[info] Checking for failed torrents in Deluge"
 #date >>$logfile
 #echo "${#myarray[@]} torrents in error state">>$logfile
 
-if [[ ${#myarray[@]} -eq $zero ]]; then
-  echo "[info] ${#myarray[@]} torrents in error state.";
-  else "[warn] ${#myarray[@]} torrents in error state, rechecking torrents.";
+if [[ ${#myarray[@]} -eq $zero ]];
+  then echo "[info] ${#myarray[@]} torrents in error state.";
+  else echo "[warn] ${#myarray[@]} torrents in error state, rechecking torrents.";
 fi
 
 for torrents in "${myarray[@]}"
