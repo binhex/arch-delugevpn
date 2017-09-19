@@ -10,9 +10,9 @@ Deluge is a full-featured ​BitTorrent client for Linux, OS X, Unix and Windows
 
 **Build notes**
 
-Latest stable Deluge release from Arch Linux repo.
-Latest stable OpenVPN release from Arch Linux repo.
-Latest stable Privoxy release from Arch Linux repo.
+Latest stable Deluge release from Arch Linux repo.  
+Latest stable OpenVPN release from Arch Linux repo.  
+Latest stable Privoxy release from Arch Linux repo.  
 
 **Usage**
 ```
