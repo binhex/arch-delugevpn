@@ -7,16 +7,13 @@ set -e
 ####
 
 # download build scripts from github
-curly.sh -rc 6 -rw 10 -of /tmp/scripts-master.zip -url https://github.com/binhex/scripts/archive/master.zip
+curl --connect-timeout 5 --max-time 600 --retry 5 --retry-delay 0 --retry-max-time 60 -o /tmp/scripts-master.zip -L https://github.com/binhex/scripts/archive/master.zip
 
 # unzip build scripts
 unzip /tmp/scripts-master.zip -d /tmp
 
 # move shell scripts to /root
 mv /tmp/scripts-master/shell/arch/docker/*.sh /root/
-
-# temp hack until base is rebuilt - move curly to /usr/local/bin to overwrite older ver
-mv /root/curly.sh /usr/local/bin/
 
 # custom scripts
 ####
