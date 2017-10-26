@@ -25,7 +25,7 @@ source /root/custom.sh
 ####
 
 # define pacman packages
-pacman_packages="pygtk python2-service-identity python2-mako python2-notify gnu-netcat ipcalc"
+pacman_packages="pygtk python2-service-identity python2-mako python2-notify gnu-netcat ipcalc python2-pip"
 
 # install compiled packages using pacman
 if [[ ! -z "${pacman_packages}" ]]; then
@@ -49,6 +49,15 @@ aur_packages=""
 
 # call aur install script (arch user repo)
 source /root/aur.sh
+
+# pip packages
+####
+pip_packages="flexget"
+
+# install pip packages
+if [[ ! -z "${pip_packages}" ]]; then
+    yes | pip2 install ${pip_packages}
+fi
 
 # container perms
 ####
