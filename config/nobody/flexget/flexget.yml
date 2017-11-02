@@ -1,0 +1,9 @@
+tasks:
+  default task:
+    deluge:
+      username: flexgetuser
+      password: flexgetpassword
+schedules:
+  - tasks: '*'
+    interval:
+      minutes: 15

@@ -3,16 +3,19 @@
 [Deluge website](http://deluge-torrent.org/)  
 [OpenVPN website](https://openvpn.net/)  
 [Privoxy website](http://www.privoxy.org/)
+[Flexget website](http://flexget.com/)
 
 **Description**
 
 Deluge is a full-featured ​BitTorrent client for Linux, OS X, Unix and Windows. It uses ​libtorrent in its backend and features multiple user-interfaces including: GTK+, web and console. It has been designed using the client server model with a daemon process that handles all the bittorrent activity. The Deluge daemon is able to run on headless machines with the user-interfaces being able to connect remotely from any platform. This Docker includes OpenVPN to ensure a secure and private connection to the Internet, including use of iptables to prevent IP leakage when the tunnel is down. It also includes Privoxy to allow unfiltered access to index sites, to use Privoxy please point your application at `http://<host ip>:8118`.
+Flexget is added to be able to watch for new content in RSS-feeds and download automatically with Deluge.
 
 **Build notes**
 
 Latest stable Deluge release from Arch Linux repo.
 Latest stable OpenVPN release from Arch Linux repo.
 Latest stable Privoxy release from Arch Linux repo.
+Latest stable flexget release from pip repo.
 
 **Usage**
 ```
@@ -51,6 +54,10 @@ Please replace all user variables in the above command defined by <> with the co
 **Access Privoxy**
 
 `http://<host ip>:8118`
+
+**Flexget config**
+
+Config for flexget, `flexget.yml` is created in volume for config files. Should be reloaded by default every 5 minutes. Easiest way to reload is to restart container or run `docker exec  <contaier_id> /usr/sbin/flexget -c /config/flexget.yml daemon reload-config`.
 
 **PIA provider**
 
