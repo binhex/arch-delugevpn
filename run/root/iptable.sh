@@ -77,8 +77,11 @@ echo "[info] Docker network defined as ${docker_network_cidr}"
 # input iptable rules
 ###
 
-# set policy to drop for input
+# set policy to drop ipv4 for input
 iptables -P INPUT DROP
+
+# set policy to drop ipv6 for input
+ip6tables -P INPUT DROP
 
 # accept input to tunnel adapter
 iptables -A INPUT -i "${VPN_DEVICE_TYPE}0" -j ACCEPT
@@ -118,8 +121,11 @@ iptables -A INPUT -i lo -j ACCEPT
 # output iptable rules
 ###
 
-# set policy to drop for output
+# set policy to drop ipv4 for output
 iptables -P OUTPUT DROP
+
+# set policy to drop ipv6 for output
+ip6tables -P OUTPUT DROP
 
 # accept output from tunnel adapter
 iptables -A OUTPUT -o "${VPN_DEVICE_TYPE}0" -j ACCEPT
