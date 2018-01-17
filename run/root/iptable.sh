@@ -84,7 +84,7 @@ iptables -P INPUT DROP
 ip6tables -P INPUT DROP 1>&- 2>&-
 
 # accept input to tunnel adapter
-iptables -A INPUT -i "${VPN_DEVICE_TYPE}0" -j ACCEPT
+iptables -A INPUT -i "${VPN_DEVICE_TYPE}" -j ACCEPT
 
 # accept input to/from docker containers (172.x range is internal dhcp)
 iptables -A INPUT -s "${docker_network_cidr}" -d "${docker_network_cidr}" -j ACCEPT
@@ -128,7 +128,7 @@ iptables -P OUTPUT DROP
 ip6tables -P OUTPUT DROP 1>&- 2>&-
 
 # accept output from tunnel adapter
-iptables -A OUTPUT -o "${VPN_DEVICE_TYPE}0" -j ACCEPT
+iptables -A OUTPUT -o "${VPN_DEVICE_TYPE}" -j ACCEPT
 
 # accept output to/from docker containers (172.x range is internal dhcp)
 iptables -A OUTPUT -s "${docker_network_cidr}" -d "${docker_network_cidr}" -j ACCEPT
