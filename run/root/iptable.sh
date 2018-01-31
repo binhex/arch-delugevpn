@@ -31,9 +31,9 @@ fi
 
 # check we have iptable_mangle, if so setup fwmark
 lsmod | grep iptable_mangle
-mangle_module_exit_code=$?
+iptable_mangle_exit_code=$?
 
-if [[ $mangle_module_exit_code == 0 ]]; then
+if [[ $iptable_mangle_exit_code == 0 ]]; then
 
 	echo "[info] iptable_mangle support detected, adding fwmark for tables"
 
