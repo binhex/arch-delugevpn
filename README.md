@@ -41,9 +41,7 @@ docker run -d \
     -e PGID=<GID for user> \
     binhex/arch-delugevpn
 ```
-```
-```
-
+&nbsp;
 Please replace all user variables in the above command defined by <> with the correct values.
 
 **Access Deluge**
@@ -86,9 +84,7 @@ docker run -d \
     -e PGID=0 \
     binhex/arch-delugevpn
 ```
-```
-```
-
+&nbsp;
 **AirVPN provider**
 
 AirVPN users will need to generate a unique OpenVPN configuration file by using the following link https://airvpn.org/generator/
@@ -123,9 +119,7 @@ docker run -d \
     -e PGID=0 \
     binhex/arch-delugevpn
 ```
-```
-```
-
+&nbsp;
 **Notes**
 
 Please note this Docker image does not include the required OpenVPN configuration file and certificates. These will typically be downloaded from your VPN providers website (look for OpenVPN configuration files), and generally are zipped.
