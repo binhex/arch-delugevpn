@@ -41,10 +41,14 @@ docker run -d \
     -e PGID=<GID for user> \
     binhex/arch-delugevpn
 ```
+```
+```
 
 Please replace all user variables in the above command defined by <> with the correct values.
 
 **Access Deluge**
+
+Default password for the webui is "deluge"
 
 `http://<host ip>:8112`
 
@@ -82,6 +86,8 @@ docker run -d \
     -e PGID=0 \
     binhex/arch-delugevpn
 ```
+```
+```
 
 **AirVPN provider**
 
@@ -117,18 +123,24 @@ docker run -d \
     -e PGID=0 \
     binhex/arch-delugevpn
 ```
+```
+```
 
 **Notes**
 
-Default password for the webui is "deluge"
+Please note this Docker image does not include the required OpenVPN configuration file and certificates. These will typically be downloaded from your VPN providers website (look for OpenVPN configuration files), and generally are zipped.
+
+PIA users - The URL to download the OpenVPN configuration files and certs is:-
+
+`https://www.privateinternetaccess.com/openvpn/openvpn.zip`
+
+Once you have downloaded the zip (normally a zip as they contain multiple ovpn files) then extract it to /config/openvpn/ folder (if that folder doesn't exist then start and stop the docker container to force the creation of the folder).
+
+If there are multiple ovpn files then please delete the ones you don't want to use (normally filename follows location of the endpoint) leaving just a single ovpn file and the certificates referenced in the ovpn file (certificates will normally have a crt and/or pem extension).
 
 User ID (PUID) and Group ID (PGID) can be found by issuing the following command for the user you want to run the container as:-
 
-```
-id <username>
-```
-
-The STRICT_PORT_FORWARD environment variable is used to define whether to force connection only to endpoints that support port forwarding when connecting to PIA (does not affect other providers).
+`id <username>`
 ___
 If you appreciate my work, then please consider buying me a beer  :D
 
