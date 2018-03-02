@@ -25,7 +25,8 @@ if [[ "${VPN_ENABLED}" == "no" ]]; then
 	# run Deluge (non daemonized, blocking)
 	echo "[info] Attempting to start Deluge..."
 	/usr/bin/deluged -d -c /config -L info -l /config/deluged.log
-
+	source /home/nobody/recheck.sh
+	
 else
 
 	echo "[info] VPN is enabled, checking VPN tunnel local ip is valid"
@@ -146,7 +147,7 @@ else
 					/usr/bin/deluge-console -c /config "config --set listen_interface ${vpn_ip}"
 
 					echo "[info] Deluge reconfigured for ip change"
-
+					
 				fi
 
 			else
@@ -175,7 +176,8 @@ else
 				fi
 
 				echo "[info] Deluge started"
-
+				source /home/nobody/recheck.sh
+				
 			fi
 
 			# set deluge ip and port to current vpn ip and port (used when checking for changes on next run)
