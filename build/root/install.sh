@@ -38,21 +38,44 @@ aur_packages=""
 # call aur install script (arch user repo)
 source /root/aur.sh
 
-# container perms
+# tweaks
 ####
-
-# create file with contets of here doc
-cat <<'EOF' > /tmp/permissions_heredoc
-echo "[info] Setting permissions on files/folders inside container..." | ts '%Y-%m-%d %H:%M:%.S'
 
 # create path to store deluge python eggs
 mkdir -p /home/nobody/.cache/Python-Eggs
 
-chown -R "${PUID}":"${PGID}" /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /home/nobody
-chmod -R 775 /usr/bin/deluged /usr/bin/deluge-web /usr/bin/privoxy /etc/privoxy /home/nobody
-
 # remove permissions for group and other from the Python-Eggs folder
 chmod -R 700 /home/nobody/.cache/Python-Eggs
+
+# container perms
+####
+
+# define comma separated list of paths 
+install_paths="/etc/privoxy,/home/nobody"
+
+# split comma separated string into list for install paths
+IFS=',' read -ra install_paths_list <<< "${install_paths}"
+
+# process install paths in the list
+for i in "${install_paths_list[@]}"; do
+
+	# confirm path(s) exist, if not then exit
+	if [[ ! -d "${i}" ]]; then
+		echo "[crit] Path '${i}' does not exist, exiting build process..." ; exit 1
+	fi
+
+done
+
+# convert comma separated string of install paths to space separated, required for chmod/chown processing
+install_paths=$(echo "${install_paths}" | tr ',' ' ')
+
+# create file with contents of here doc, note EOF is NOT quoted to allow us to expand current variable 'install_paths'
+# we use escaping to prevent variable expansion for PUID and PGID, as we want these expanded at runtime of init.sh
+# note - do NOT double quote variable for install_paths otherwise this will wrap space separated paths as a single string
+cat <<EOF > /tmp/permissions_heredoc
+# set permissions inside container
+chown -R "\${PUID}":"\${PGID}" ${install_paths}
+chmod -R 775 ${install_paths}
 
 EOF
 
