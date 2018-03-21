@@ -148,6 +148,9 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 		# remove all remote lines as we cannot cope with multi remote lines
 		sed -i '/^remote\s.*/d' "${VPN_CONFIG}"
 
+		# if remote line contains comments then remove
+		vpn_remote_line=$(echo "${vpn_remote_line}" | sed -i '/\s?\#\s?.*$/d')
+
 		# if remote line contains old format 'tcp' then replace with newer 'tcp-client' format
 		vpn_remote_line=$(echo "${vpn_remote_line}" | sed "s/tcp$/tcp-client/g")
 
