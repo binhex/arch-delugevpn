@@ -157,12 +157,12 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	/usr/bin/dos2unix "${VPN_CONFIG}" 1> /dev/null
 
 	# get first matching 'remote' line in ovpn
-	vpn_remote_line=$(cat "${VPN_CONFIG}" | grep -P -o -m 1 '^remote\s.*')
+	vpn_remote_line=$(cat "${VPN_CONFIG}" | grep -P -o -m 1 '^(\s+)?remote\s.*')
 
 	if [ -n "${vpn_remote_line}" ]; then
 
 		# remove all remote lines as we cannot cope with multi remote lines
-		sed -i '/^remote\s.*/d' "${VPN_CONFIG}"
+		sed -i -E '/^(\s+)?remote\s.*/d' "${VPN_CONFIG}"
 
 		# if remote line contains comments then remove
 		vpn_remote_line=$(echo "${vpn_remote_line}" | sed -r 's~\s?+#.*$~~g')
