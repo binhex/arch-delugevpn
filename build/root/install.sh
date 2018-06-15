@@ -77,8 +77,8 @@ chmod -R 775 ${install_paths}
 cat <<EOF > /tmp/permissions_heredoc
 
 # get previous puid/pgid (if first run then will be empty string)
-previous_puid=$(cat "/tmp/puid" 2>/dev/null)
-previous_pgid=$(cat "/tmp/pgid" 2>/dev/null)
+previous_puid=\$(cat "/tmp/puid" 2>/dev/null || true)
+previous_pgid=\$(cat "/tmp/pgid" 2>/dev/null || true)
 
 # if first run (no puid or pgid files in /tmp) or the PUID or PGID env vars are different 
 # from the previous run then re-apply chown with current PUID and PGID values.
