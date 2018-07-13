@@ -3,12 +3,6 @@
 # exit script if return code != 0
 set -e
 
-# custom scripts
-####
-
-# call custom install script
-source /root/custom.sh
-
 # pacman packages
 ####
 
@@ -24,7 +18,7 @@ fi
 ####
 
 # define arch official repo (aor) packages
-aor_packages="deluge"
+aor_packages=""
 
 # call aor script (arch official repo)
 source /root/aor.sh
@@ -37,6 +31,15 @@ aur_packages=""
 
 # call aur install script (arch user repo)
 source /root/aur.sh
+
+# archive packages
+####
+
+# define archive packages
+arc_packages="boost-libs~1.60.0-5-x86_64 boost~1.60.0-5-x86_64 libtorrent-rasterbar~1:1.0.9-1-x86_64 deluge~1.3.15-1-any"
+
+# call arc script (arch archive repo)
+source /root/arc.sh
 
 # tweaks
 ####
