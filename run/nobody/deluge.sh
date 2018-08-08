@@ -12,6 +12,9 @@ else
 
 fi
 
+# if pid file exists then remove (generated from previous run)
+rm -f /config/deluged.pid
+
 # if vpn set to "no" then don't run openvpn
 if [[ "${VPN_ENABLED}" == "no" ]]; then
 
@@ -158,6 +161,9 @@ else
 			else
 
 				echo "[info] Attempting to start Deluge..."
+
+				# if pid file exists then remove (generated from previous run)
+				rm -f /config/deluged.pid
 
 				# set listen interface ip address for deluge using python script
 				/home/nobody/config_deluge.py "${vpn_ip}"
