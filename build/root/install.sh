@@ -7,7 +7,7 @@ set -e
 ####
 
 # define pacman packages
-pacman_packages="pygtk python2-service-identity python2-mako python2-notify gnu-netcat ipcalc"
+pacman_packages="pygtk python2-service-identity python2-mako python2-notify python2-pillow gnu-netcat ipcalc"
 
 # install compiled packages using pacman
 if [[ ! -z "${pacman_packages}" ]]; then
