@@ -75,6 +75,9 @@ install_paths=$(echo "${install_paths}" | tr ',' ' ')
 # set permissions for container during build - Do NOT double quote variable for install_paths otherwise this will wrap space separated paths as a single string
 chmod -R 775 ${install_paths}
 
+# set permissions for python eggs to be a more restrictive 755, this prevents the warning message thrown by deluge on startup
+mkdir -p /home/nobody/.cache/Python-Eggs ; chmod -R 755 /home/nobody/.cache/Python-Eggs
+
 # create file with contents of here doc, note EOF is NOT quoted to allow us to expand current variable 'install_paths'
 # we use escaping to prevent variable expansion for PUID and PGID, as we want these expanded at runtime of init.sh
 cat <<EOF > /tmp/permissions_heredoc
