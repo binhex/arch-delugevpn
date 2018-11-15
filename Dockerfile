@@ -51,6 +51,9 @@ EXPOSE 58846
 EXPOSE 58946
 EXPOSE 58946/udp
 
+# set default environment variable values
+ENV DELUGE_LOG_LEVEL info
+
 # set permissions
 #################
 

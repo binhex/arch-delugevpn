@@ -27,7 +27,7 @@ if [[ "${VPN_ENABLED}" == "no" ]]; then
 
 	# run deluge daemon (daemonized, non-blocking)
 	echo "[info] Attempting to start Deluge..."
-	/usr/bin/deluged -c /config -L info -l /config/deluged.log
+	/usr/bin/deluged -c /config -L ${DELUGE_LOG_LEVEL} -l /config/deluged.log
 
 	# run script to check we don't have any torrents in an error state
 	/home/nobody/torrentcheck.sh
@@ -169,7 +169,7 @@ else
 				/home/nobody/config_deluge.py "${vpn_ip}"
 
 				# run deluge daemon (daemonized, non-blocking)
-				/usr/bin/deluged -c /config -L info -l /config/deluged.log
+				/usr/bin/deluged -c /config -L ${DELUGE_LOG_LEVEL} -l /config/deluged.log
 
 				if [[ "${VPN_PROV}" == "pia" || -n "${VPN_INCOMING_PORT}" ]]; then
 

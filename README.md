@@ -39,6 +39,7 @@ docker run -d \
     -e UMASK=<umask for created files> \
     -e PUID=<UID for user> \
     -e PGID=<GID for user> \
+    -e DELUGE_LOG_LEVEL=<none|critical|error|warning|(info)|debug> \
     binhex/arch-delugevpn
 ```
 &nbsp;
