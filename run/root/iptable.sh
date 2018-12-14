@@ -64,10 +64,10 @@ if [[ $iptable_mangle_exit_code == 0 ]]; then
 
 	echo "[info] iptable_mangle support detected, adding fwmark for tables"
 
-	# setup route for deluge webui using set-mark to route traffic for port 8112 to lan interface
-	echo "8112    webui" >> /etc/iproute2/rt_tables
-	ip rule add fwmark 1 table webui
-	ip route add default via $DEFAULT_GATEWAY table webui
+	# setup route for deluge-web using set-mark to route traffic for port 8112 to lan interface
+	echo "8112    Web UI" >> /etc/iproute2/rt_tables
+	ip rule add fwmark 1 table Web UI
+	ip route add default via $DEFAULT_GATEWAY table Web UI
 
 fi
 
@@ -89,7 +89,7 @@ iptables -A INPUT -s "${docker_network_cidr}" -d "${docker_network_cidr}" -j ACC
 # accept input to vpn gateway
 iptables -A INPUT -i "${docker_interface}" -p $VPN_PROTOCOL --sport $VPN_PORT -j ACCEPT
 
-# accept input to deluge webui port 8112
+# accept input to deluge Web UI port 8112
 iptables -A INPUT -i "${docker_interface}" -p tcp --dport 8112 -j ACCEPT
 iptables -A INPUT -i "${docker_interface}" -p tcp --sport 8112 -j ACCEPT
 
@@ -136,13 +136,13 @@ iptables -A OUTPUT -o "${docker_interface}" -p $VPN_PROTOCOL --dport $VPN_PORT -
 # if iptable mangle is available (kernel module) then use mark
 if [[ $iptable_mangle_exit_code == 0 ]]; then
 
-	# accept output from deluge webui port 8112 - used for external access
+	# accept output from deluge-web port 8112 - used for external access
 	iptables -t mangle -A OUTPUT -p tcp --dport 8112 -j MARK --set-mark 1
 	iptables -t mangle -A OUTPUT -p tcp --sport 8112 -j MARK --set-mark 1
 
 fi
 
-# accept output from deluge webui port 8112 - used for lan access
+# accept output from deluge-web port 8112 - used for lan access
 iptables -A OUTPUT -o "${docker_interface}" -p tcp --dport 8112 -j ACCEPT
 iptables -A OUTPUT -o "${docker_interface}" -p tcp --sport 8112 -j ACCEPT
 

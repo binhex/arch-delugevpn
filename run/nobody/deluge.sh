@@ -49,7 +49,7 @@ if [[ "${deluge_running}" == "false" ]]; then
 
 fi
 
-# change incoming port using the deluge conaole
+# change incoming port using the deluge console
 if [[ "${VPN_PROV}" == "pia" && -n "${VPN_INCOMING_PORT}" ]]; then
 
 	# enable bind incoming port to specific port (disable random)
@@ -67,10 +67,12 @@ fi
 /home/nobody/torrentcheck.sh
 
 if ! pgrep -x "deluge-web" > /dev/null; then
-	echo "[info] Starting Deluge webui..."
+	echo "[info] Starting Deluge Web UI..."
 
-	# run deluge webui
+	# run deluge-web
 	/usr/bin/deluge-web -c /config
+
+	echo "[info] Deluge Web UI started"
 fi
 
 # set deluge ip to current vpn ip (used when checking for changes on next run)
