@@ -13,9 +13,6 @@ if [[ ! -f /config/core.conf ]]; then
 	cp /home/nobody/deluge/core.conf /config/
 fi
 
-echo "[info] Removing deluge pid file (if it exists)..."
-rm -f /config/deluged.pid
-
 # force unix line endings conversion in case user edited core.conf with notepad
 dos2unix /config/core.conf
 
@@ -28,6 +25,7 @@ while true; do
 
 	# reset triggers to negative values
 	deluge_running="false"
+	deluge_web_running="false"
 	ip_change="false"
 	port_change="false"
 
@@ -49,17 +47,25 @@ while true; do
 
 			fi
 
-			# check if deluge is running, if not then skip shutdown of process
-			if ! pgrep -x "deluged" > /dev/null; then
+			# check if deluged is running
+			if ! pgrep -fa "deluged" > /dev/null; then
 
 				echo "[info] Deluge not running"
 
 			else
 
-				echo "[info] Deluge running"
-
-				# mark as deluge as running
 				deluge_running="true"
+
+			fi
+
+			# check if deluge-web is running
+			if ! pgrep -fa "deluge-web" > /dev/null; then
+
+				echo "[info] Deluge Web UI not running"
+
+			else
+
+				deluge_web_running="true"
 
 			fi
 
@@ -111,9 +117,9 @@ while true; do
 
 			fi
 
-			if [[ "${port_change}" == "true" || "${ip_change}" == "true" || "${deluge_running}" == "false" ]]; then
+			if [[ "${port_change}" == "true" || "${ip_change}" == "true" || "${deluge_running}" == "false" || "${deluge_web_running}" == "false" ]]; then
 
-				# run script to start deluge, it can also perform shutdown of deluge if its already running (required for port/ip change)
+				# run script to start deluge
 				source /home/nobody/deluge.sh
 
 			fi
@@ -126,10 +132,29 @@ while true; do
 
 	else
 
-		# check if deluge is running, if not then start via deluge.sh
-		if ! pgrep -x "deluged" > /dev/null; then
+		# check if deluged is running
+		if ! pgrep -fa "deluged" > /dev/null; then
 
 			echo "[info] Deluge not running"
+
+		else
+
+			deluge_running="true"
+
+		fi
+
+		# check if deluge-web is running
+		if ! pgrep -fa "deluge-web" > /dev/null; then
+
+			echo "[info] Deluge Web UI not running"
+
+		else
+
+			deluge_web_running="true"
+
+		fi
+
+		if [[ "${deluge_running}" == "false" || "${deluge_web_running}" == "false" ]]; then
 
 			# run script to start deluge
 			source /home/nobody/deluge.sh

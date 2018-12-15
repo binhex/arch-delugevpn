@@ -4,6 +4,9 @@ if [[ "${deluge_running}" == "false" ]]; then
 
 	echo "[info] Attempting to start Deluge..."
 
+	echo "[info] Removing deluge pid file (if it exists)..."
+	rm -f /config/deluged.pid
+
 	# set listen interface ip address for deluge using python script
 	/home/nobody/config_deluge.py "${deluge_ip}"
 
@@ -14,7 +17,7 @@ if [[ "${deluge_running}" == "false" ]]; then
 	retry_count=30
 	while true; do
 
-		if ! pgrep -x "deluged" > /dev/null; then
+		if ! pgrep -fa "deluged" > /dev/null; then
 
 			retry_count=$((retry_count-1))
 			if [ "${retry_count}" -eq "0" ]; then
@@ -47,6 +50,11 @@ if [[ "${deluge_running}" == "false" ]]; then
 		sleep 0.1
 	done
 
+else
+
+	# set listen interface ip address for deluge
+	/usr/bin/deluge-console -c /config "config --set listen_interface ${vpn_ip}"
+
 fi
 
 # change incoming port using the deluge console
@@ -66,13 +74,14 @@ fi
 # run script to check we don't have any torrents in an error state
 /home/nobody/torrentcheck.sh
 
-if ! pgrep -x "deluge-web" > /dev/null; then
+if [[ "${deluge_web_running}" == "false" ]]; then
+
 	echo "[info] Starting Deluge Web UI..."
 
 	# run deluge-web
-	/usr/bin/deluge-web -c /config
-
+	nohup /usr/bin/deluge-web -c /config &
 	echo "[info] Deluge Web UI started"
+
 fi
 
 # set deluge ip to current vpn ip (used when checking for changes on next run)
