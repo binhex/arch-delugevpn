@@ -64,10 +64,10 @@ if [[ $iptable_mangle_exit_code == 0 ]]; then
 
 	echo "[info] iptable_mangle support detected, adding fwmark for tables"
 
-	# setup route for deluge-web using set-mark to route traffic for port 8112 to lan interface
-	echo "8112    Web UI" >> /etc/iproute2/rt_tables
-	ip rule add fwmark 1 table Web UI
-	ip route add default via $DEFAULT_GATEWAY table Web UI
+	# setup route for deluge webui using set-mark to route traffic for port 8112 to eth0
+	echo "8112    webui" >> /etc/iproute2/rt_tables
+	ip rule add fwmark 1 table webui
+	ip route add default via $DEFAULT_GATEWAY table webui
 
 fi
 
