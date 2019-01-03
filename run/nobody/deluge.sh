@@ -11,7 +11,7 @@ if [[ "${deluge_running}" == "false" ]]; then
 	/home/nobody/config_deluge.py "${deluge_ip}"
 
 	# run deluge daemon (daemonized, non-blocking)
-	/usr/bin/deluged -c /config -L info -l /config/deluged.log
+	/usr/bin/deluged -c /config -L "${DELUGE_DAEMON_LOG_LEVEL}" -l /config/deluged.log
 
 	# make sure process deluged DOES exist
 	retry_count=30
@@ -79,7 +79,7 @@ if [[ "${deluge_web_running}" == "false" ]]; then
 	echo "[info] Starting Deluge Web UI..."
 
 	# run deluge-web
-	nohup /usr/bin/deluge-web -c /config &
+	nohup /usr/bin/deluge-web -c /config -L "${DELUGE_WEB_LOG_LEVEL}" -l /config/deluge-web.log &
 	echo "[info] Deluge Web UI started"
 
 fi
