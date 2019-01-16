@@ -42,15 +42,6 @@ arc_packages="boost-libs~1.60.0-5-x86_64 boost~1.60.0-5-x86_64 libtorrent-raster
 # call arc script (arch archive repo)
 source /root/arc.sh
 
-# aor packages
-####
-
-# define arch official repo (aor) packages
-aor_packages=""
-
-# call aor script (arch official repo)
-source /root/aor.sh
-
 # aur packages
 ####
 
