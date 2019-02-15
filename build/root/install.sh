@@ -22,7 +22,7 @@ mv /tmp/scripts-master/shell/arch/docker/*.sh /root/
 source /root/upd.sh
 
 # define pacman packages
-pacman_packages="pygtk python2-service-identity python2-mako python2-notify python2-pillow gnu-netcat ipcalc deluge"
+pacman_packages="pygtk python2-service-identity python2-mako python2-notify python2-pillow deluge"
 
 # install compiled packages using pacman
 if [[ ! -z "${pacman_packages}" ]]; then
