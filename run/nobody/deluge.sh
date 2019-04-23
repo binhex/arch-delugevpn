@@ -22,8 +22,10 @@ if [[ "${deluge_running}" == "false" ]]; then
 			retry_count=$((retry_count-1))
 			if [ "${retry_count}" -eq "0" ]; then
 
-				echo "[warn] Wait for Deluge process to start aborted"
-				break
+				echo "[warn] Wait for Deluge process to start aborted, too many retries"
+				echo "[warn] Showing output from command before exit..."
+				timeout 10 /usr/bin/deluged -c /config -L "${DELUGE_DAEMON_LOG_LEVEL}" -l /config/deluged.log
+				cat /config/deluged.log ; exit 1
 
 			else
 
@@ -49,6 +51,8 @@ if [[ "${deluge_running}" == "false" ]]; then
 	while [[ $(netstat -lnt | awk "\$6 == \"LISTEN\" && \$4 ~ \".58846\"") == "" ]]; do
 		sleep 0.1
 	done
+
+	echo "[info] Deluge process listening on port 58846"
 
 else
 
