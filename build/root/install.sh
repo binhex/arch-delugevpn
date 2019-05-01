@@ -29,15 +29,6 @@ if [[ ! -z "${pacman_packages}" ]]; then
 	pacman -S --needed $pacman_packages --noconfirm
 fi
 
-# archive packages
-####
-
-# define archive packages
-arc_packages="boost-libs~1.60.0-5-x86_64 boost~1.60.0-5-x86_64 libtorrent-rasterbar~1:1.0.9-1-x86_64"
-
-# call arc script (arch archive repo)
-source /root/arc.sh
-
 # aur packages
 ####
 
