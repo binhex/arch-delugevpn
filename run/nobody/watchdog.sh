@@ -26,6 +26,7 @@ while true; do
 	# reset triggers to negative values
 	deluge_running="false"
 	deluge_web_running="false"
+	privoxy_running="false"
 	ip_change="false"
 	port_change="false"
 
@@ -66,6 +67,18 @@ while true; do
 			else
 
 				deluge_web_running="true"
+
+			fi
+
+			# check if privoxy is running, if not then skip shutdown of process
+			if ! pgrep -fa "privoxy" > /dev/null; then
+
+				echo "[info] Privoxy not running"
+
+			else
+
+				# mark as privoxy as running
+				privoxy_running="true"
 
 			fi
 
@@ -124,6 +137,13 @@ while true; do
 
 			fi
 
+			if [[ "${privoxy_running}" == "false" ]]; then
+
+				# run script to start privoxy
+				source /home/nobody/privoxy.sh
+
+			fi
+
 		else
 
 			echo "[warn] VPN IP not detected, VPN tunnel maybe down"
@@ -151,6 +171,16 @@ while true; do
 		else
 
 			deluge_web_running="true"
+
+		fi
+
+		# check if privoxy is running, if not then start via privoxy.sh
+		if ! pgrep -fa "privoxy" > /dev/null; then
+
+			echo "[info] Privoxy not running"
+
+			# run script to start privoxy
+			source /home/nobody/privoxy.sh
 
 		fi
 
