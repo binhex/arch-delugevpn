@@ -70,15 +70,19 @@ while true; do
 
 			fi
 
-			# check if privoxy is running, if not then skip shutdown of process
-			if ! pgrep -fa "privoxy" > /dev/null; then
+			if [[ "${ENABLE_PRIVOXY}" == "yes" ]]; then
 
-				echo "[info] Privoxy not running"
+				# check if privoxy is running, if not then skip shutdown of process
+				if ! pgrep -fa "privoxy" > /dev/null; then
 
-			else
+					echo "[info] Privoxy not running"
 
-				# mark as privoxy as running
-				privoxy_running="true"
+				else
+
+					# mark as privoxy as running
+					privoxy_running="true"
+
+				fi
 
 			fi
 
@@ -137,10 +141,14 @@ while true; do
 
 			fi
 
-			if [[ "${privoxy_running}" == "false" ]]; then
+			if [[ "${ENABLE_PRIVOXY}" == "yes" ]]; then
 
-				# run script to start privoxy
-				source /home/nobody/privoxy.sh
+				if [[ "${privoxy_running}" == "false" ]]; then
+
+					# run script to start privoxy
+					source /home/nobody/privoxy.sh
+
+				fi
 
 			fi
 
@@ -174,13 +182,17 @@ while true; do
 
 		fi
 
-		# check if privoxy is running, if not then start via privoxy.sh
-		if ! pgrep -fa "privoxy" > /dev/null; then
+		if [[ "${ENABLE_PRIVOXY}" == "yes" ]]; then
 
-			echo "[info] Privoxy not running"
+			# check if privoxy is running, if not then start via privoxy.sh
+			if ! pgrep -fa "privoxy" > /dev/null; then
 
-			# run script to start privoxy
-			source /home/nobody/privoxy.sh
+				echo "[info] Privoxy not running"
+
+				# run script to start privoxy
+				source /home/nobody/privoxy.sh
+
+			fi
 
 		fi
 
