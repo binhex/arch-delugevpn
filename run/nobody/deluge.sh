@@ -8,7 +8,7 @@ if [[ "${deluge_running}" == "false" ]]; then
 	rm -f /config/deluged.pid
 
 	# set listen interface ip address for deluge using python script
-	/home/nobody/config_deluge.py "${deluge_ip}"
+	/home/nobody/config_deluge.py "${vpn_ip}"
 
 	# run deluge daemon (daemonized, non-blocking)
 	/usr/bin/deluged -c /config -L "${DELUGE_DAEMON_LOG_LEVEL}" -l /config/deluged.log
