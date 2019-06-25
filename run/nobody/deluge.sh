@@ -8,10 +8,20 @@ if [[ "${deluge_running}" == "false" ]]; then
 	rm -f /config/deluged.pid
 
 	# set listen interface ip address for deluge using python script
-	/home/nobody/config_deluge.py "listen_interface" "${vpn_ip}"
+	/home/nobody/config_deluge.py "/config/core.conf" "listen_interface" "${vpn_ip}"
 
 	# set outgoing interface name for deluge using python script
-	/home/nobody/config_deluge.py "outgoing_interface" "${VPN_DEVICE_TYPE}"
+	/home/nobody/config_deluge.py "/config/core.conf" "outgoing_interface" "${VPN_DEVICE_TYPE}"
+
+	if [ -f  "/config/hostlist.conf" ]; then
+
+		# get host id for daemon, used to auto login web ui (see next step)
+		host_id=$(cat /config/hostlist.conf | grep -E -o -m 1 '[a-z0-9]{40,256}')
+
+		# set web ui to auto login using host id for locally running daemon
+		/home/nobody/config_deluge.py "/config/web.conf" "default_daemon" "${host_id}"
+
+	fi
 
 	# run deluge daemon (daemonized, non-blocking)
 	/usr/bin/deluged -c /config -L "${DELUGE_DAEMON_LOG_LEVEL}" -l /config/deluged.log
