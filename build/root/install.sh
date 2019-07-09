@@ -313,8 +313,6 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 		export ENABLE_PRIVOXY="no"
 	fi
 
-	export RUN_UP_SCRIPT="yes"
-
 fi
 
 EOF
