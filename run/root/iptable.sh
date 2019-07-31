@@ -102,6 +102,11 @@ for lan_network_item in "${lan_network_list[@]}"; do
 	# accept input to deluge daemon port - used for lan access
 	iptables -A INPUT -i "${docker_interface}" -s "${lan_network_item}" -p tcp --dport 58846 -j ACCEPT
 
+	# accept input for web traffic on the lan - used for the execute plugin 
+	iptables -A INPUT -i "${docker_interface}" -s "${lan_network_item}" -p tcp --sport 80 -m state --state RELATED,ESTABLISHED -j ACCEPT
+	iptables -A INPUT -i "${docker_interface}" -s "${lan_network_item}" -p tcp --sport 443 -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+
 	# accept input to privoxy if enabled
 	if [[ $ENABLE_PRIVOXY == "yes" ]]; then
 		iptables -A INPUT -i "${docker_interface}" -p tcp -s "${lan_network_item}" -d "${docker_network_cidr}" -j ACCEPT
@@ -160,6 +165,10 @@ for lan_network_item in "${lan_network_list[@]}"; do
 
 	# accept output to deluge daemon port - used for lan access
 	iptables -A OUTPUT -o "${docker_interface}" -d "${lan_network_item}" -p tcp --sport 58846 -j ACCEPT
+
+	# accept output for web traffic on the lan - used for the execute plugin 
+	iptables -A OUTPUT -o "${docker_interface}" -d "${lan_network_item}" -p tcp --dport 80 -j ACCEPT
+	iptables -A OUTPUT -o "${docker_interface}" -d "${lan_network_item}" -p tcp --dport 443 -j ACCEPT
 
 	# accept output from privoxy if enabled - used for lan access
 	if [[ $ENABLE_PRIVOXY == "yes" ]]; then
