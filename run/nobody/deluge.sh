@@ -16,7 +16,7 @@ if [[ "${deluge_running}" == "false" ]]; then
 	if [ -f  "/config/hostlist.conf" ]; then
 
 		# get host id for daemon, used to auto login web ui (see next step)
-		host_id=$(cat /config/hostlist.conf | grep -E -o -m 1 '[a-z0-9]{40,256}')
+		host_id=$(cat /config/hostlist.conf | grep -E -o -m 1 '[a-z0-9]{32,256}')
 
 		# set web ui to auto login using host id for locally running daemon
 		/home/nobody/config_deluge.py "/config/web.conf" "default_daemon" "${host_id}"
