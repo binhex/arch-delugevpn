@@ -313,6 +313,8 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 		export ENABLE_PRIVOXY="no"
 	fi
 
+	export APPLICATION="deluge"
+
 fi
 
 EOF
