@@ -152,3 +152,6 @@ rm /tmp/envvars_heredoc
 
 # cleanup
 cleanup.sh
+
+# install patch
+pacman -S --needed patch --noconfirm

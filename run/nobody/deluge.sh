@@ -2,6 +2,9 @@
 
 if [[ "${deluge_running}" == "false" ]]; then
 
+	# run webui-autologin-patch
+	/home/nobody/webui-autologin-patch.sh
+
 	echo "[info] Attempting to start Deluge..."
 
 	echo "[info] Removing deluge pid file (if it exists)..."
