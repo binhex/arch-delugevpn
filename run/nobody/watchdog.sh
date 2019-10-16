@@ -14,7 +14,7 @@ if [[ ! -f /config/core.conf ]]; then
 fi
 
 # force unix line endings conversion in case user edited core.conf with notepad
-/usr/bin/dos2unix "/config/core.conf"
+/usr/local/bin/dos2unix.sh "/config/core.conf"
 
 # set default values for port and ip
 deluge_port="6890"
