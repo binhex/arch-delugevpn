@@ -22,7 +22,7 @@ mv /tmp/scripts-master/shell/arch/docker/*.sh /usr/local/bin/
 source upd.sh
 
 # define pacman packages
-pacman_packages="libtorrent-rasterbar openssl python-chardet python-dbus python-distro python-geoip python-idna python-mako python-pillow python-pyopenssl python-rencode python-service-identity python-setproctitle python-six python-twisted python-xdg python-zope-interface xdg-utils libappindicator-gtk3 deluge"
+pacman_packages="libtorrent-rasterbar openssl python-chardet python-dbus python-distro python-geoip python-idna python-mako python-pillow python-pyopenssl python-rencode python-service-identity python-setproctitle python-six python-future python-twisted python-xdg python-zope-interface xdg-utils libappindicator-gtk3 deluge"
 
 # install compiled packages using pacman
 if [[ ! -z "${pacman_packages}" ]]; then
