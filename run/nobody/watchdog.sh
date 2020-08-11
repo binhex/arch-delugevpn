@@ -37,7 +37,6 @@ while true; do
 	deluge_web_running="false"
 	privoxy_running="false"
 	ip_change="false"
-	vpn_port_change="false"
 	deluge_port_change="false"
 
 	if [[ "${VPN_ENABLED}" == "yes" ]]; then
@@ -140,13 +139,6 @@ while true; do
 
 				# run script to start deluge
 				source /home/nobody/deluge.sh
-
-			fi
-
-			# if port is detected as closed then create empty file to trigger restart of openvpn process (restart code in /root/openvpn.sh)
-			if [[ "${vpn_port_change}" == "true" ]];then
-
-				touch "/tmp/portclosed"
 
 			fi
 
