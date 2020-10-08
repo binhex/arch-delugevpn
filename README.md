@@ -131,7 +131,7 @@ docker run -d \
 ```
 &nbsp;
 
-**Notes - OpenVPN**  
+**OpenVPN**  
 Please note this Docker image does not include the required OpenVPN configuration file and certificates. These will typically be downloaded from your VPN providers website (look for OpenVPN configuration files), and generally are zipped.
 
 PIA users - The URL to download the OpenVPN configuration files and certs is:-
@@ -142,7 +142,7 @@ Once you have downloaded the zip (normally a zip as they contain multiple ovpn f
 
 If there are multiple ovpn files then please delete the ones you don't want to use (normally filename follows location of the endpoint) leaving just a single ovpn file and the certificates referenced in the ovpn file (certificates will normally have a crt and/or pem extension).
 
-**Notes - WireGuard**  
+**WireGuard**  
 Due to the enhanced security and kernel integration, WireGuard will require the container to be defined with privileged permissions, so please ensure you change the following
 from:-
 ```
@@ -153,7 +153,7 @@ to
     --privileged=true \
 ```
 
-**Notes - Various**  
+**Notes**  
 Due to Google and OpenDNS supporting EDNS Client Subnet it is recommended NOT to use either of these NS providers.
 The list of default NS providers in the above example(s) is as follows:-
 
