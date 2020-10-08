@@ -1,8 +1,9 @@
 **Application**
 
 [Deluge website](http://deluge-torrent.org/)  
+[Privoxy website](http://www.privoxy.org/)  
 [OpenVPN website](https://openvpn.net/)  
-[Privoxy website](http://www.privoxy.org/)
+[WireGuard](https://www.wireguard.com/)
 
 **Description**
 
@@ -10,9 +11,10 @@ Deluge is a full-featured ​BitTorrent client for Linux, OS X, Unix and Windows
 
 **Build notes**
 
-Latest stable Deluge release from Arch Linux repo.
-Latest stable OpenVPN release from Arch Linux repo.
-Latest stable Privoxy release from Arch Linux repo.
+Latest stable Deluge release from Arch Linux repo.  
+Latest stable Privoxy release from Arch Linux repo.  
+Latest stable OpenVPN release from Arch Linux repo.  
+Latest stable WireGuard release from Arch Linux repo.
 
 **Usage**
 ```
@@ -30,6 +32,7 @@ docker run -d \
     -e VPN_USER=<vpn username> \
     -e VPN_PASS=<vpn password> \
     -e VPN_PROV=<pia|airvpn|custom> \
+    -e VPN_CLIENT=<openvpn|wireguard> \
     -e VPN_OPTIONS=<additional openvpn cli options> \
     -e STRICT_PORT_FORWARD=<yes|no> \
     -e ENABLE_PRIVOXY=<yes|no> \
@@ -73,6 +76,7 @@ docker run -d \
     -e VPN_USER=myusername \
     -e VPN_PASS=mypassword \
     -e VPN_PROV=pia \
+    -e VPN_CLIENT=openvpn \
     -e STRICT_PORT_FORWARD=yes \
     -e ENABLE_PRIVOXY=yes \
     -e LAN_NETWORK=192.168.1.0/24 \
@@ -112,6 +116,7 @@ docker run -d \
     -v /etc/localtime:/etc/localtime:ro \
     -e VPN_ENABLED=yes \
     -e VPN_PROV=airvpn \
+    -e VPN_CLIENT=openvpn \
     -e ENABLE_PRIVOXY=yes \
     -e LAN_NETWORK=192.168.1.0/24 \
     -e NAME_SERVERS=209.222.18.222,84.200.69.80,37.235.1.174,1.1.1.1,209.222.18.218,37.235.1.177,84.200.70.40,1.0.0.1 \
@@ -127,6 +132,8 @@ docker run -d \
 &nbsp;
 **Notes**
 
+OpenVPN
+=======
 Please note this Docker image does not include the required OpenVPN configuration file and certificates. These will typically be downloaded from your VPN providers website (look for OpenVPN configuration files), and generally are zipped.
 
 PIA users - The URL to download the OpenVPN configuration files and certs is:-
@@ -137,6 +144,19 @@ Once you have downloaded the zip (normally a zip as they contain multiple ovpn f
 
 If there are multiple ovpn files then please delete the ones you don't want to use (normally filename follows location of the endpoint) leaving just a single ovpn file and the certificates referenced in the ovpn file (certificates will normally have a crt and/or pem extension).
 
+WireGuard
+=========
+Due to the enhanced security and kernel integration, WireGuard will require the container to be defined with privileged permissions, so please ensure you change the following from:-
+```
+    --cap-add=NET_ADMIN \
+```
+to
+```
+    --privileged=true \
+```
+
+Various
+=======
 Due to Google and OpenDNS supporting EDNS Client Subnet it is recommended NOT to use either of these NS providers.
 The list of default NS providers in the above example(s) is as follows:-
 
