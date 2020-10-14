@@ -154,6 +154,10 @@ iptables -A INPUT -p icmp --icmp-type echo-reply -j ACCEPT
 # accept input to local loopback
 iptables -A INPUT -i lo -j ACCEPT
 
+# deny webui and daemon ports on tunnel adapter
+iptables -A INPUT -i "${VPN_DEVICE_TYPE}" -p tcp --dport 8112 -j DROP
+iptables -A INPUT -i "${VPN_DEVICE_TYPE}" -p tcp --dport 58846 -j DROP
+
 # accept input to tunnel adapter
 iptables -A INPUT -i "${VPN_DEVICE_TYPE}" -j ACCEPT
 
@@ -253,6 +257,10 @@ iptables -A OUTPUT -p icmp --icmp-type echo-request -j ACCEPT
 
 # accept output from local loopback adapter
 iptables -A OUTPUT -o lo -j ACCEPT
+
+# deny webui and daemon ports on tunnel adapter
+iptables -A OUTPUT -o "${VPN_DEVICE_TYPE}" -p tcp --sport 8112 -j DROP
+iptables -A OUTPUT -o "${VPN_DEVICE_TYPE}" -p tcp --sport 58846 -j DROP
 
 # accept output from tunnel adapter
 iptables -A OUTPUT -o "${VPN_DEVICE_TYPE}" -j ACCEPT
