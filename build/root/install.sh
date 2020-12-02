@@ -83,7 +83,7 @@ mkdir -p /home/nobody/.cache/Python-Eggs ; chmod -R 755 /home/nobody/.cache/Pyth
 
 # disable built-in Deluge Plugin 'stats', as its currently broken in Deluge 2.x and causes log spam
 # see here for details https://dev.deluge-torrent.org/ticket/3310
-chmod 000 "/usr/lib/python3.8/site-packages/deluge/plugins/Stats-0.4-py3.8.egg"
+chmod 000 /usr/lib/python3*/site-packages/deluge/plugins/Stats*.egg
 
 # create file with contents of here doc, note EOF is NOT quoted to allow us to expand current variable 'install_paths'
 # we use escaping to prevent variable expansion for PUID and PGID, as we want these expanded at runtime of init.sh
