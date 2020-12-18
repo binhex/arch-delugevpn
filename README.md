@@ -40,8 +40,8 @@ docker run -d \
     -e ENABLE_PRIVOXY=<yes|no> \
     -e LAN_NETWORK=<lan ipv4 network>/<cidr notation> \
     -e NAME_SERVERS=<name server ip(s)> \
-    -e DELUGE_DAEMON_LOG_LEVEL=<critical|error|warning|info|debug> \
-    -e DELUGE_WEB_LOG_LEVEL=<critical|error|warning|info|debug> \
+    -e DELUGE_DAEMON_LOG_LEVEL=<info|warning|error|none|debug|trace|garbage> \
+    -e DELUGE_WEB_LOG_LEVEL=<info|warning|error|none|debug|trace|garbage> \
     -e ADDITIONAL_PORTS=<port number(s)> \
     -e DEBUG=<true|false> \
     -e UMASK=<umask for created files> \
