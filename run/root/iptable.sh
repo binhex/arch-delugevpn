@@ -25,11 +25,23 @@ fi
 docker_network_cidr=$(ipcalc "${docker_ip}" "${docker_mask}" | grep -P -o -m 1 "(?<=Network:)\s+[^\s]+")
 echo "[info] Docker network defined as ${docker_network_cidr}"
 
-# ip route
-###
-
 # split comma separated string into list from LAN_NETWORK env variable
 IFS=',' read -ra lan_network_list <<< "${LAN_NETWORK}"
+
+# split comma separated string into array from VPN_REMOTE_PORT env var
+IFS=',' read -ra vpn_remote_port_list <<< "${VPN_REMOTE_PORT}"
+
+# split comma separated string into array for tcp and udp protocols (both required)
+IFS=',' read -ra vpn_remote_endpoint_protocol_list <<< "tcp,udp"
+
+# split comma separated string into list from ADDITIONAL_PORTS env variable
+IFS=',' read -ra additional_port_list <<< "${ADDITIONAL_PORTS}"
+
+# split comma separated string into array for tcp and udp protocols (both required)
+IFS=',' read -ra additional_port_protocol_list <<< "tcp,udp"
+
+# ip route
+###
 
 # process lan networks in the list
 for lan_network_item in "${lan_network_list[@]}"; do
@@ -69,12 +81,6 @@ if [[ "${iptable_mangle_exit_code}" == 0 ]]; then
 
 fi
 
-# split comma separated string into array for tcp and udp protocols (both required)
-IFS=',' read -ra vpn_remote_protocol_list <<< "tcp,udp"
-
-# split comma separated string into array from VPN_REMOTE_PORT env var
-IFS=',' read -ra vpn_remote_port_list <<< "${VPN_REMOTE_PORT}"
-
 # input iptable rules
 ###
 
@@ -90,7 +96,7 @@ iptables -A INPUT -s "${docker_network_cidr}" -d "${docker_network_cidr}" -j ACC
 # iterate over array and add all remote vpn ports and protocols
 for vpn_remote_port_item in "${vpn_remote_port_list[@]}"; do
 
-	for vpn_remote_protocol_item in "${vpn_remote_protocol_list[@]}"; do
+	for vpn_remote_protocol_item in "${vpn_remote_endpoint_protocol_list[@]}"; do
 
 		# note grep -e is required to indicate no flags follow to prevent -A from being incorrectly picked up
 		rule_exists=$(iptables -S | grep -e "-A INPUT -i "${docker_interface}" -p "${vpn_remote_protocol_item}" -m "${vpn_remote_protocol_item}" --sport "${vpn_remote_port_item}" -j ACCEPT")
@@ -110,9 +116,6 @@ iptables -A INPUT -i "${docker_interface}" -p tcp --sport 8112 -j ACCEPT
 # additional port list for scripts or container linking
 if [[ ! -z "${ADDITIONAL_PORTS}" ]]; then
 
-	# split comma separated string into list from ADDITIONAL_PORTS env variable
-	IFS=',' read -ra additional_port_list <<< "${ADDITIONAL_PORTS}"
-
 	# process additional ports in the list
 	for additional_port_item in "${additional_port_list[@]}"; do
 
@@ -121,9 +124,13 @@ if [[ ! -z "${ADDITIONAL_PORTS}" ]]; then
 
 		echo "[info] Adding additional incoming port ${additional_port_item} for ${docker_interface}"
 
-		# accept input to additional port for "${docker_interface}"
-		iptables -A INPUT -i "${docker_interface}" -p tcp --dport "${additional_port_item}" -j ACCEPT
-		iptables -A INPUT -i "${docker_interface}" -p tcp --sport "${additional_port_item}" -j ACCEPT
+		for additional_port_protocol_item in "${additional_port_protocol_list[@]}"; do
+
+			# accept input to additional port for "${docker_interface}"
+			iptables -A INPUT -i "${docker_interface}" -p "${additional_port_protocol_item}" --dport "${additional_port_item}" -j ACCEPT
+			iptables -A INPUT -i "${docker_interface}" -p "${additional_port_protocol_item}" --sport "${additional_port_item}" -j ACCEPT
+
+		done
 
 	done
 
@@ -178,7 +185,7 @@ iptables -A OUTPUT -s "${docker_network_cidr}" -d "${docker_network_cidr}" -j AC
 # iterate over array and add all remote vpn ports and protocols
 for vpn_remote_port_item in "${vpn_remote_port_list[@]}"; do
 
-	for vpn_remote_protocol_item in "${vpn_remote_protocol_list[@]}"; do
+	for vpn_remote_protocol_item in "${vpn_remote_endpoint_protocol_list[@]}"; do
 
 		# note grep -e is required to indicate no flags follow to prevent -A from being incorrectly picked up
 		rule_exists=$(iptables -S | grep -e "-A OUTPUT -o "${docker_interface}" -p "${vpn_remote_protocol_item}" -m "${vpn_remote_protocol_item}" --dport "${vpn_remote_port_item}" -j ACCEPT")
@@ -207,9 +214,6 @@ iptables -A OUTPUT -o "${docker_interface}" -p tcp --sport 8112 -j ACCEPT
 # additional port list for scripts or container linking
 if [[ ! -z "${ADDITIONAL_PORTS}" ]]; then
 
-	# split comma separated string into list from ADDITIONAL_PORTS env variable
-	IFS=',' read -ra additional_port_list <<< "${ADDITIONAL_PORTS}"
-
 	# process additional ports in the list
 	for additional_port_item in "${additional_port_list[@]}"; do
 
@@ -218,9 +222,13 @@ if [[ ! -z "${ADDITIONAL_PORTS}" ]]; then
 
 		echo "[info] Adding additional outgoing port ${additional_port_item} for ${docker_interface}"
 
-		# accept output to additional port for lan interface
-		iptables -A OUTPUT -o "${docker_interface}" -p tcp --dport "${additional_port_item}" -j ACCEPT
-		iptables -A OUTPUT -o "${docker_interface}" -p tcp --sport "${additional_port_item}" -j ACCEPT
+		for additional_port_protocol_item in "${additional_port_protocol_list[@]}"; do
+
+			# accept output to additional port for lan interface
+			iptables -A OUTPUT -o "${docker_interface}" -p "${additional_port_protocol_item}" --dport "${additional_port_item}" -j ACCEPT
+			iptables -A OUTPUT -o "${docker_interface}" -p "${additional_port_protocol_item}" --sport "${additional_port_item}" -j ACCEPT
+
+		done
 
 	done
 

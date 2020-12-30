@@ -40,8 +40,8 @@ docker run -d \
     -e ENABLE_PRIVOXY=<yes|no> \
     -e LAN_NETWORK=<lan ipv4 network>/<cidr notation> \
     -e NAME_SERVERS=<name server ip(s)> \
-    -e DELUGE_DAEMON_LOG_LEVEL=<critical|error|warning|info|debug> \
-    -e DELUGE_WEB_LOG_LEVEL=<critical|error|warning|info|debug> \
+    -e DELUGE_DAEMON_LOG_LEVEL=<info|warning|error|none|debug|trace|garbage> \
+    -e DELUGE_WEB_LOG_LEVEL=<info|warning|error|none|debug|trace|garbage> \
     -e ADDITIONAL_PORTS=<port number(s)> \
     -e DEBUG=<true|false> \
     -e UMASK=<umask for created files> \
@@ -138,7 +138,7 @@ Please note this Docker image does not include the required OpenVPN configuratio
 
 PIA users - The URL to download the OpenVPN configuration files and certs is:-
 
-https://www.privateinternetaccess.com/openvpn/openvpn-nextgen.zip
+https://www.privateinternetaccess.com/openvpn/openvpn.zip
 
 Once you have downloaded the zip (normally a zip as they contain multiple ovpn files) then extract it to /config/openvpn/ folder (if that folder doesn't exist then start and stop the docker container to force the creation of the folder).
 
