@@ -161,6 +161,10 @@ PIA users - The WireGuard configuration file will be auto generated and will be 
 
 Other users - Please download your WireGuard configuration file from your VPN provider, start and stop the container to generate the folder ```/config/wireguard/``` and then place your WireGuard configuration file in there.
 
+**Kubernetes**
+
+See the [examples/k8s](examples/k8s) folder.
+
 **Notes**  
 Due to Google and OpenDNS supporting EDNS Client Subnet it is recommended NOT to use either of these NS providers.
 The list of default NS providers in the above example(s) is as follows:-
