@@ -53,6 +53,9 @@ mkdir -p /home/nobody/.cache/Python-Eggs
 # remove permissions for group and other from the Python-Eggs folder
 chmod -R 700 /home/nobody/.cache/Python-Eggs
 
+# change peerid to appear to be 2.0.3 stable - note this does not work for all/any private trackers at present
+sed -i -e "s~peer_id = substitute_chr(peer_id, 6, release_chr)~peer_id = \'--DE203s--\'\n        release_chr = \'s\'~g" '/usr/lib/python3.8/site-packages/deluge/core/core.py'
+
 # container perms
 ####
 
