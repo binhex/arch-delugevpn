@@ -58,7 +58,7 @@ while true; do
 			fi
 
 			# check if deluged is running
-			if ! pgrep -fa "deluged" > /dev/null; then
+			if ! pgrep -x "deluged" > /dev/null; then
 
 				echo "[info] Deluge not running"
 
@@ -69,7 +69,7 @@ while true; do
 			fi
 
 			# check if deluge-web is running
-			if ! pgrep -fa "deluge-web" > /dev/null; then
+			if ! pgrep -x "deluge-web" > /dev/null; then
 
 				echo "[info] Deluge Web UI not running"
 
@@ -82,7 +82,7 @@ while true; do
 			if [[ "${ENABLE_PRIVOXY}" == "yes" ]]; then
 
 				# check if privoxy is running, if not then skip shutdown of process
-				if ! pgrep -fa "/usr/bin/privoxy" > /dev/null; then
+				if ! pgrep -x "/usr/bin/privoxy" > /dev/null; then
 
 					echo "[info] Privoxy not running"
 
@@ -162,7 +162,7 @@ while true; do
 	else
 
 		# check if deluged is running
-		if ! pgrep -fa "deluged" > /dev/null; then
+		if ! pgrep -x "deluged" > /dev/null; then
 
 			echo "[info] Deluge not running"
 
@@ -173,7 +173,7 @@ while true; do
 		fi
 
 		# check if deluge-web is running
-		if ! pgrep -fa "deluge-web" > /dev/null; then
+		if ! pgrep -x "deluge-web" > /dev/null; then
 
 			echo "[info] Deluge Web UI not running"
 
@@ -186,7 +186,7 @@ while true; do
 		if [[ "${ENABLE_PRIVOXY}" == "yes" ]]; then
 
 			# check if privoxy is running, if not then start via privoxy.sh
-			if ! pgrep -fa "/usr/bin/privoxy" > /dev/null; then
+			if ! pgrep -x "/usr/bin/privoxy" > /dev/null; then
 
 				echo "[info] Privoxy not running"
 
