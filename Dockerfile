@@ -56,3 +56,6 @@ EXPOSE 58946/udp
 
 # run script to set uid, gid and permissions
 CMD ["/bin/bash", "/usr/local/bin/init.sh"]
+
+# healthcheck
+HEALTHCHECK CMD curl -sL --fail localhost:8112 && curl -sL --fail google.com || exit 1
