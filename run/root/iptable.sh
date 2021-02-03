@@ -10,13 +10,13 @@ default_gateway=$(ip route show default | awk '/default/ {print $3}')
 echo "[info] Default route for container is ${default_gateway}"
 
 # identify ip for docker bridge interface
-docker_ip=$(ifconfig "${docker_interface}" | grep -P -o -m 1 '(?<=inet\s)[^\s]+')
+docker_ip=$(ifconfig "${docker_interface}" | grep -P -o -m 1 '(?<=inet\s)[^\s]+' | sed 's/addr://')
 if [[ "${DEBUG}" == "true" ]]; then
 	echo "[debug] Docker IP defined as ${docker_ip}"
 fi
 
 # identify netmask for docker bridge interface
-docker_mask=$(ifconfig "${docker_interface}" | grep -P -o -m 1 '(?<=netmask\s)[^\s]+')
+docker_mask=$(ifconfig "${docker_interface}" | grep -P -o -m 1 '(?<=[mM]ask[\s:])[^\s]+')
 if [[ "${DEBUG}" == "true" ]]; then
 	echo "[debug] Docker netmask defined as ${docker_mask}"
 fi
