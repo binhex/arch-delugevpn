@@ -29,7 +29,7 @@ These files are included to guide those wishing to populate a VPN Provider's .co
 
 For the sake simplicity, [creds.yaml](creds.yaml) is a straight forward example for creating a secret.
 
-#####To store your VPN .conf file as a secret as well:
+##### To store your VPN .conf file as a secret as well:
 
 The example `deployment.yaml` secret file was populated using the
 [--from-file](https://kubernetes.io/docs/tasks/inject-data-application/distribute-credentials-secure/#create-a-secret-directly-with-kubectl) arg.
@@ -38,7 +38,7 @@ to match the file named in the example, the command looks like this:
 
 `kubectl create secret generic wireguard-conf --from-file=wg0.conf=wg.conf`
 
-###Deploy:
+### Deploy:
 **With configMaps and secrets**
 
 Edit each respective file with the appropriate credentials and desired Environment Variables.
@@ -58,7 +58,7 @@ Edit each respective file with the appropriate credentials and desired Environme
 
 ### Notes:
 
-####Networking:
+#### Networking:
 
 **LAN_NETWORK settings**
 
@@ -80,13 +80,13 @@ IP address, proxy, or ingress. If you're new to Kubernetes
  [docs](https://kubernetes.io/docs/tasks/administer-cluster/access-cluster-services/#ways-to-connect) are always a good
 starting point. 
 
-####Volumes:
+#### Volumes:
 Because this image adds configuration to `/conf` your `volumeMount` for `/conf` and `/conf/wireguard` should be 
 attached to a single `volume`using a `subPath` under the same root folder.
 
 `/data` can be mapped to a separate `PersistentVolumeClaim` 
 
-####VPN conf file as a secret into your deployment:
+#### VPN conf file as a secret into your deployment:
 1. a `subPath` will also need to be used in the
 `volume` hash 
 2. Your `secret` volume must contain the `items` array with the correct values.
