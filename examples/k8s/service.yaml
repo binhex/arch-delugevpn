@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: arch-delugevpn
+spec:
+  selector:
+    app: arch-delugevpn
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 9376
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 9377
+  ports:
+  - name: deluge-ui
+    port: 8112
+    protocol: TCP
+    targetPort: 8112
+  - name: privoxy 
+    port: 8118
+    protocol: TCP
+    targetPort: 8118
+  - name: vpn-port 
+    port: 58846
+    protocol: TCP
+    targetPort: 58846
+  - name: additional-vpn-port
+    port: 58946
+    protocol: TCP
+    targetPort: 58946
