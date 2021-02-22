@@ -10,9 +10,6 @@ ADD build/*.conf /etc/supervisor/conf.d/
 # add bash scripts to install app
 ADD build/root/*.sh /root/
 
-# add bash script to setup iptables
-ADD run/root/*.sh /root/
-
 # add bash script to run deluge
 ADD run/nobody/*.sh /home/nobody/
 
