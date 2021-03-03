@@ -42,7 +42,8 @@ docker run -d \
     -e NAME_SERVERS=<name server ip(s)> \
     -e DELUGE_DAEMON_LOG_LEVEL=<info|warning|error|none|debug|trace|garbage> \
     -e DELUGE_WEB_LOG_LEVEL=<info|warning|error|none|debug|trace|garbage> \
-    -e ADDITIONAL_PORTS=<port number(s)> \
+    -e VPN_INPUT_PORTS=<port number(s)> \
+    -e VPN_OUTPUT_PORTS=<port number(s)> \
     -e DEBUG=<true|false> \
     -e UMASK=<umask for created files> \
     -e PUID=<UID for user> \
@@ -85,7 +86,8 @@ docker run -d \
     -e NAME_SERVERS=209.222.18.222,84.200.69.80,37.235.1.174,1.1.1.1,209.222.18.218,37.235.1.177,84.200.70.40,1.0.0.1 \
     -e DELUGE_DAEMON_LOG_LEVEL=info \
     -e DELUGE_WEB_LOG_LEVEL=info \
-    -e ADDITIONAL_PORTS=1234 \
+    -e VPN_INPUT_PORTS=1234 \
+    -e VPN_OUTPUT_PORTS=5678 \
     -e DEBUG=false \
     -e UMASK=000 \
     -e PUID=0 \
@@ -125,13 +127,17 @@ docker run -d \
     -e DELUGE_DAEMON_LOG_LEVEL=info \
     -e DELUGE_WEB_LOG_LEVEL=info \
     -e DEBUG=false \
-    -e ADDITIONAL_PORTS=1234 \
+    -e VPN_INPUT_PORTS=1234 \
+    -e VPN_OUTPUT_PORTS=5678 \
     -e UMASK=000 \
     -e PUID=0 \
     -e PGID=0 \
     binhex/arch-delugevpn
 ```
 &nbsp;
+
+**IMPORTANT**  
+Please note 'VPN_INPUT_PORTS' is **NOT** to define the incoming port for the VPN, this environment variable is used to define port(s) you want to allow in to the VPN network when network binding multiple containers together, configuring this incorrectly with the VPN incoming port COULD leak to IP leakage, you have been warned.
 
 **OpenVPN**  
 Please note this Docker image does not include the required OpenVPN configuration file and certificates. These will typically be downloaded from your VPN providers website (look for OpenVPN configuration files), and generally are zipped.
