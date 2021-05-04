@@ -150,6 +150,8 @@ Once you have downloaded the zip (normally a zip as they contain multiple ovpn f
 
 If there are multiple ovpn files then please delete the ones you don't want to use (normally filename follows location of the endpoint) leaving just a single ovpn file and the certificates referenced in the ovpn file (certificates will normally have a crt and/or pem extension).
 
+When choosing your endpoint ovpn, double check that the endpoint can support port forwarding.  If your site does not support port forwarding, you'll see a warning in your logs. "[warn] PIA endpoint 'xxxx.privacy.network' is not in the list of endpoints that support port forwarding, DL/UL speeds maybe slow." and "[warn] Unable to successfully download PIA json payload from URL 'https://<gw address>:19999/getSignature' using token 'PP....' " and the connection will fail.  Choose a different end point.
+
 **WireGuard**  
 If you wish to use WireGuard (defined via 'VPN_CLIENT' env var value ) then due to the enhanced security and kernel integration WireGuard will require the container to be defined with privileged permissions and sysctl support, so please ensure you change the following docker options:-    
 
