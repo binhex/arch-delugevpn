@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arch-delugevpn
+  labels:
+    app: arch-delugevpn
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: arch-delugevpn
+  template:
+    metadata:
+      labels:
+        app: arch-delugevpn
+    spec:
+      containers:
+      - name: arch-delugevpn
+        env:
+        - name: VPN_ENABLED
+          value: "yes"
+        - name: VPN_USER
+          value: "xxxxxx"
+        - name: VPN_PASS
+          value: "xxxxxx"
+        - name: VPN_PROV
+          value: "custom"
+        - name: VPN_CLIENT
+          value: "wireguard"
+        - name: NAME_SERVERS
+          value: "209.222.18.222,84.200.69.80,37.235.1.174,1.1.1.1,209.222.18.218,37.235.1.177,84.200.70.40,1.0.0.1"
+        - name: DELUGE_DAEMON_LOG_LEVEL
+          value: "info"
+        - name: PUID
+          value: "0"
+        - name: PGID
+          value: "0"
+        - name: LAN_NETWORK
+          value: "10.96.0.0/16"
+          # CNI subnet
+        image: binhex/arch-delugevpn
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - NET_ADMIN
+        imagePullPolicy: IfNotPresent
+        ports:
+         - containerPort: 8080
+         - containerPort: 8112
+         - containerPort: 8118
+         - containerPort: 58846
+         - containerPort: 58946
+        volumeMounts:
+        - mountPath: /data
+          name: your-data-volume
+        - mountPath: /config
+          name: your-config-volume
+      volumes:
+       - name: your-data-volume

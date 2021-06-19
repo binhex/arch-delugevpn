@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arch-delugevpn
+  labels:
+    app: arch-delugevpn
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: arch-delugevpn
+  template:
+    metadata:
+      labels:
+        app: arch-delugevpn
+    spec:
+      containers:
+      - name: wre
+        envFrom:
+          - secretRef:
+              name: vpn-secret
+          - configMapRef:
+              name: vpn-config
+        image: binhex/arch-delugevpn
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - NET_ADMIN
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 8080
+          - containerPort: 8112
+          - containerPort: 8118
+          - containerPort: 58846
+          - containerPort: 58946
+        volumeMounts:
+          - mountPath: /data
+            name: vpn-deployment-volume
+            subPath: foo/data
+          - mountPath: /config
+            subPath: foo/config
+            name: vpn-deployment-volume
+          - mountPath: /config/wireguard/
+            subPath: foo/config/wireguard/
+            name: vpn-deployment-volume
+          - mountPath: /config/wireguard/wg0.conf
+            subPath: wg0.conf
+            name: wireguard-conf
+      volumes:
+        - name: vpn-deployment-volume
+          persistentVolumeClaim:
+            claimName: example1
+        - name: wireguard-conf
+          secret:
+            secretName: wireguard-conf
+            items:
+              - key: wg0.conf
+                path: wg0.conf
+            defaultMode: 0666

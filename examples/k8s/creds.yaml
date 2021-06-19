@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vpn-secret
+type: Opaque
+stringData:
+  VPN_USER: 'example'
+  VPN_PASS: 'examplepassword'

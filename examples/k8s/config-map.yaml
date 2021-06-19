@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vpn-config
+data:
+  VPN_ENABLED: "yes"
+  VPN_PROV: "custom"
+  VPN_CLIENT: "wireguard"
+  NAME_SERVERS: "209.222.18.222,84.200.69.80,37.235.1.174,1.1.1.1,209.222.18.218,37.235.1.177,84.200.70.40,1.0.0.1"
+  DELUGE_DAEMON_LOG_LEVEL: "info"
+  PUID: "0"
+  GUID: "0"
+  LAN_NETWORK: "10.96.0.0/16"
+  ENABLE_PRIVOXY: "yes"
