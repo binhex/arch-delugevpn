@@ -3,6 +3,9 @@
 # exit script if return code != 0
 set -e
 
+# release tag name from build arg, stripped of build ver using string manipulation
+release_tag_name="${1//-[0-9][0-9]/}"
+
 # note do NOT download build scripts - inherited from int script with envvars common defined
 
 # detect image arch
@@ -59,7 +62,7 @@ sed -i -e "s~peer_id = substitute_chr(peer_id, 6, release_chr)~peer_id = \'-DE20
 # container perms
 ####
 
-# define comma separated list of paths 
+# define comma separated list of paths
 install_paths="/etc/privoxy,/home/nobody"
 
 # split comma separated string into list for install paths
@@ -96,7 +99,7 @@ cat <<EOF > /tmp/permissions_heredoc
 previous_puid=\$(cat "/root/puid" 2>/dev/null || true)
 previous_pgid=\$(cat "/root/pgid" 2>/dev/null || true)
 
-# if first run (no puid or pgid files in /tmp) or the PUID or PGID env vars are different 
+# if first run (no puid or pgid files in /tmp) or the PUID or PGID env vars are different
 # from the previous run then re-apply chown with current PUID and PGID values.
 if [[ ! -f "/root/puid" || ! -f "/root/pgid" || "\${previous_puid}" != "\${PUID}" || "\${previous_pgid}" != "\${PGID}" ]]; then
 
