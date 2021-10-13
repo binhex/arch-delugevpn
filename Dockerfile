@@ -11,6 +11,9 @@ ADD build/*.conf /etc/supervisor/conf.d/
 # add bash scripts to install app
 ADD build/root/*.sh /root/
 
+# get release tag name from build arg
+ARG release_tag_name
+
 # add bash script to run deluge
 ADD run/nobody/*.sh /home/nobody/
 
@@ -25,7 +28,7 @@ ADD config/nobody/ /home/nobody/
 
 # make executable and run bash scripts to install app
 RUN chmod +x /root/*.sh /home/nobody/*.sh /home/nobody/*.py && \
-	/bin/bash /root/install.sh
+	/bin/bash /root/install.sh "${release_tag_name}"
 
 # docker settings
 #################
