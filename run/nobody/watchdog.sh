@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/dumb-init /bin/bash
 
 # if deluge-web config file doesnt exist then copy stock config file
 if [[ ! -f /config/web.conf ]]; then

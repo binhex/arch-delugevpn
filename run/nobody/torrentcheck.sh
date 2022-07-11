@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/dumb-init /bin/bash
 
 # This script ensures that we recheck any torrents that are in an error state when we
 # start Deluge. This script must be run as the user running the Deluge daemon (deluged).
