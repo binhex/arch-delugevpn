@@ -42,7 +42,7 @@ docker run -d \
     -e NAME_SERVERS=<name server ip(s)> \
     -e DELUGE_DAEMON_LOG_LEVEL=<info|warning|error|none|debug|trace|garbage> \
     -e DELUGE_WEB_LOG_LEVEL=<info|warning|error|none|debug|trace|garbage> \
-	-e DELUGE_ENABLE_WEBUI_PASSWORD=<yes|no> \
+    -e DELUGE_ENABLE_WEBUI_PASSWORD=<yes|no> \
     -e VPN_INPUT_PORTS=<port number(s)> \
     -e VPN_OUTPUT_PORTS=<port number(s)> \
     -e DEBUG=<true|false> \
@@ -87,7 +87,7 @@ docker run -d \
     -e NAME_SERVERS=84.200.69.80,37.235.1.174,1.1.1.1,37.235.1.177,84.200.70.40,1.0.0.1 \
     -e DELUGE_DAEMON_LOG_LEVEL=info \
     -e DELUGE_WEB_LOG_LEVEL=info \
-	-e DELUGE_ENABLE_WEBUI_PASSWORD=yes \
+    -e DELUGE_ENABLE_WEBUI_PASSWORD=yes \
     -e VPN_INPUT_PORTS=1234 \
     -e VPN_OUTPUT_PORTS=5678 \
     -e DEBUG=false \
@@ -128,7 +128,7 @@ docker run -d \
     -e NAME_SERVERS=84.200.69.80,37.235.1.174,1.1.1.1,37.235.1.177,84.200.70.40,1.0.0.1 \
     -e DELUGE_DAEMON_LOG_LEVEL=info \
     -e DELUGE_WEB_LOG_LEVEL=info \
-	-e DELUGE_ENABLE_WEBUI_PASSWORD=yes \
+    -e DELUGE_ENABLE_WEBUI_PASSWORD=yes \
     -e DEBUG=false \
     -e VPN_INPUT_PORTS=1234 \
     -e VPN_OUTPUT_PORTS=5678 \
