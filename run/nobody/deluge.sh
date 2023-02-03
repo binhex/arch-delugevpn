@@ -23,6 +23,26 @@ if [[ "${deluge_running}" == "false" ]]; then
 
 	fi
 
+	if [[ "${DELUGE_ENABLE_WEBUI_PASSWORD}" == "no" ]]; then
+
+		echo "[info] Disabling Deluge Web UI password prompt..."
+
+		# disable deluge web ui prompt for password - note password must be blank to take effect
+		sed -i -E 's~onShow:function\(\)\{this\.passwordField\.focus\(true,300\);\}~onShow:function(){this.onLogin();}~g' /usr/lib/python*/site-packages/deluge/ui/web/js/deluge-all.js
+
+		# permit any password for deluge web ui, required in order to disable deluge web ui prompt for password
+		sed -i -E "s~return s\.hexdigest\(\) == config\['pwd_sha1'\]~return True # disable password auth~g" /usr/lib/python*/site-packages/deluge/ui/web/auth.py
+
+	else
+
+		# re-enable deluge web ui prompt for password
+		sed -i -E 's~onShow:function\(\)\{this\.onLogin\(\);\}~onShow:function(){this.passwordField.focus(true,300);}~g' /usr/lib/python*/site-packages/deluge/ui/web/js/deluge-all.js
+
+		# re-enable deluge web ui check for password
+		sed -i -E "s~return True # disable password auth~return s.hexdigest() == config['pwd_sha1']~g" /usr/lib/python*/site-packages/deluge/ui/web/auth.py
+
+	fi
+
 	# run deluge daemon (daemonized, non-blocking)
 	/usr/bin/deluged -c /config -L "${DELUGE_DAEMON_LOG_LEVEL}" -l /config/deluged.log
 

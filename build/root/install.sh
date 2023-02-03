@@ -63,7 +63,7 @@ sed -i -e "s~peer_id = substitute_chr(peer_id, 6, release_chr)~peer_id = \'-DE21
 ####
 
 # define comma separated list of paths
-install_paths="/etc/privoxy,/home/nobody"
+install_paths="/etc/privoxy,/home/nobody,/usr/lib/python*/site-packages/deluge"
 
 # split comma separated string into list for install paths
 IFS=',' read -ra install_paths_list <<< "${install_paths}"
@@ -71,8 +71,8 @@ IFS=',' read -ra install_paths_list <<< "${install_paths}"
 # process install paths in the list
 for i in "${install_paths_list[@]}"; do
 
-	# confirm path(s) exist, if not then exit
-	if [[ ! -d "${i}" ]]; then
+	# confirm path(s) exist, if not then exit, do not quote to permit wildcards
+	if [ ! -d ${i} ]; then
 		echo "[crit] Path '${i}' does not exist, exiting build process..." ; exit 1
 	fi
 
@@ -140,6 +140,14 @@ if [[ ! -z "${DELUGE_WEB_LOG_LEVEL}" ]]; then
 else
 	echo "[info] DELUGE_WEB_LOG_LEVEL not defined,(via -e DELUGE_WEB_LOG_LEVEL), defaulting to 'info'" | ts '%Y-%m-%d %H:%M:%.S'
 	export DELUGE_WEB_LOG_LEVEL="info"
+fi
+
+export DELUGE_ENABLE_WEBUI_PASSWORD=$(echo "${DELUGE_ENABLE_WEBUI_PASSWORD}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
+if [[ ! -z "${DELUGE_ENABLE_WEBUI_PASSWORD}" ]]; then
+	echo "[info] DELUGE_ENABLE_WEBUI_PASSWORD defined as '${DELUGE_ENABLE_WEBUI_PASSWORD}'" | ts '%Y-%m-%d %H:%M:%.S'
+else
+	echo "[info] DELUGE_ENABLE_WEBUI_PASSWORD not defined,(via -e DELUGE_ENABLE_WEBUI_PASSWORD), defaulting to 'yes'" | ts '%Y-%m-%d %H:%M:%.S'
+	export DELUGE_ENABLE_WEBUI_PASSWORD="yes"
 fi
 
 export APPLICATION="deluge"
