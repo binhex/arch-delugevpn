@@ -31,7 +31,7 @@ fi
 source upd.sh
 
 # define pacman packages
-pacman_packages="libtorrent-rasterbar openssl python-chardet python-dbus python-distro python-geoip python-idna python-mako python-pillow python-pyopenssl python-rencode python-service-identity python-setproctitle python-six python-future python-requests python-twisted python-xdg python-zope-interface xdg-utils libappindicator-gtk3 deluge"
+pacman_packages="deluge"
 
 # install compiled packages using pacman
 if [[ ! -z "${pacman_packages}" ]]; then
@@ -46,6 +46,23 @@ aur_packages="7-zip-bin"
 
 # call aur install script (arch user repo)
 source aur.sh
+
+# custom
+####
+
+# this downgrades libtorrent from the troublesome v2 to v1
+# see here for details:- https://forums.unraid.net/bug-reports/stable-releases/crashes-since-updating-to-v611x-for-qbittorrent-and-deluge-users-r2153/?do=findComment&comment=21671
+package_name_list="libtorrent-rasterbar.tar.zst boost-libs.tar.zst boost.tar.zst"
+
+for package_name in ${package_name_list}; do
+
+	# download package
+	rcurl.sh -o "/tmp/${package_name}" "https://github.com/binhex/packages/raw/master/compiled/${OS_ARCH}/${package_name}"
+
+	# install package
+	pacman -U "/tmp/${package_name}" --noconfirm
+
+done
 
 # tweaks
 ####
