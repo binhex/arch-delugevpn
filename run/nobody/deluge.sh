@@ -97,7 +97,7 @@ else
 fi
 
 # change incoming port using the deluge console
-if [[ "${VPN_PROV}" == "pia" && -n "${VPN_INCOMING_PORT}" ]]; then
+if [[ "${VPN_PROV}" == "pia" || "${VPN_PROV}" == "protonvpn" ]] && [[ -n "${VPN_INCOMING_PORT}" ]]; then
 
 	# enable bind incoming port to specific port (disable random)
 	/usr/bin/deluge-console -c /config "config --set random_port False"
