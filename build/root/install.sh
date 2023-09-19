@@ -11,18 +11,8 @@ RELEASETAG="${1//-[0-9][0-9]/}"
 # detect image arch
 ####
 
-OS_ARCH=$(cat /etc/os-release | grep -P -o -m 1 "(?=^ID\=).*" | grep -P -o -m 1 "[a-z]+$")
-if [[ ! -z "${OS_ARCH}" ]]; then
-	if [[ "${OS_ARCH}" == "arch" ]]; then
-		OS_ARCH="x86-64"
-	else
-		OS_ARCH="aarch64"
-	fi
-	echo "[info] OS_ARCH defined as '${OS_ARCH}'"
-else
-	echo "[warn] Unable to identify OS_ARCH, defaulting to 'x86-64'"
-	OS_ARCH="x86-64"
-fi
+# get target arch from Dockerfile argument
+TARGETARCH="${2}"
 
 # pacman packages
 ####
