@@ -21,31 +21,22 @@ fi
 
 # note do NOT download build scripts - inherited from int script with envvars common defined
 
-# # custom
-# ####
-
-# # this downgrades libtorrent from the troublesome v2 to v1
-# # see here for details:- https://forums.unraid.net/bug-reports/stable-releases/crashes-since-updating-to-v611x-for-qbittorrent-and-deluge-users-r2153/?do=findComment&comment=21671
-# package_name_list="libtorrent-rasterbar.tar.zst boost-libs.tar.zst boost.tar.zst"
-
-# for package_name in ${package_name_list}; do
-
-# 	# download package
-# 	rcurl.sh -o "/tmp/${package_name}" "https://github.com/binhex/packages/raw/master/compiled/${TARGETARCH}/${package_name}"
-
-# 	# install package
-# 	pacman -U "/tmp/${package_name}" --noconfirm
-
-# done
-
-# aur packages
+# custom
 ####
 
-# define aur packages
-aur_packages="libtorrent-rasterbar-1 7-zip-bin"
+# this downgrades libtorrent from the troublesome v2 to v1
+# see here for details:- https://forums.unraid.net/bug-reports/stable-releases/crashes-since-updating-to-v611x-for-qbittorrent-and-deluge-users-r2153/?do=findComment&comment=21671
+package_name_list="libtorrent-rasterbar.tar.zst boost-libs.tar.zst boost.tar.zst"
 
-# call aur install script (arch user repo)
-source aur.sh
+for package_name in ${package_name_list}; do
+
+	# download package
+	rcurl.sh -o "/tmp/${package_name}" "https://github.com/binhex/packages/raw/master/compiled/${TARGETARCH}/${package_name}"
+
+	# install package
+	pacman -U "/tmp/${package_name}" --noconfirm
+
+done
 
 # pacman packages
 ####
