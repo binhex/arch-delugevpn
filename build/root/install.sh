@@ -26,15 +26,21 @@ fi
 
 # this downgrades libtorrent from the troublesome v2 to v1
 # see here for details:- https://forums.unraid.net/bug-reports/stable-releases/crashes-since-updating-to-v611x-for-qbittorrent-and-deluge-users-r2153/?do=findComment&comment=21671
-package_name_list="libtorrent-rasterbar.tar.zst boost-libs.tar.zst boost.tar.zst"
+package_name_list="libtorrent-rasterbar.tar boost-libs.tar boost.tar"
+
+if [[ "${TARGETARCH}" == "amd64" ]]; then
+	archive_extension="zst"
+elif [[ "${TARGETARCH}" == "arm64" ]]; then
+	archive_extension="xz"
+fi
 
 for package_name in ${package_name_list}; do
 
 	# download package
-	rcurl.sh -o "/tmp/${package_name}" "https://github.com/binhex/packages/raw/master/compiled/${TARGETARCH}/${package_name}"
+	rcurl.sh -o "/tmp/${package_name}.${archive_extension}" "https://github.com/binhex/packages/raw/master/compiled/${TARGETARCH}/${package_name}.${archive_extension}"
 
 	# install package
-	pacman -U "/tmp/${package_name}" --noconfirm
+	pacman -U "/tmp/${package_name}.${archive_extension}" --noconfirm
 
 done
 
