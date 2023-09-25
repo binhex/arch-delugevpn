@@ -44,6 +44,9 @@ for package_name in ${package_name_list}; do
 
 done
 
+# add filesystem and libtorrentv1 packages to pacman ignore list to prevent buildx issues with
+sed -i -e 's~#IgnorePkg.*~IgnorePkg = filesystem libtorrent-rasterbar boost-libs boost~g' '/etc/pacman.conf'
+
 # pacman packages
 ####
 
