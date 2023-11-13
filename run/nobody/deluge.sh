@@ -1,5 +1,8 @@
 #!/usr/bin/dumb-init /bin/bash
 
+# source in script to wait for child processes to exit
+source /usr/local/bin/waitproc.sh
+
 if [[ "${deluge_running}" == "false" ]]; then
 
 	echo "[info] Attempting to start Deluge..."
@@ -43,8 +46,8 @@ if [[ "${deluge_running}" == "false" ]]; then
 
 	fi
 
-	# run deluge daemon (daemonized, non-blocking)
-	/usr/bin/deluged -c /config -L "${DELUGE_DAEMON_LOG_LEVEL}" -l /config/deluged.log
+	# run process non daemonised but backgrounded so we can control sigterm
+	nohup /usr/bin/deluged -d -c /config -L "${DELUGE_DAEMON_LOG_LEVEL}" -l /config/deluged.log &
 
 	# make sure process deluged DOES exist
 	retry_count=12
@@ -117,7 +120,7 @@ if [[ "${deluge_web_running}" == "false" ]]; then
 
 	echo "[info] Starting Deluge Web UI..."
 
-	# run deluge-web
+	# run process non daemonised but backgrounded so we can control sigterm
 	nohup /usr/bin/deluge-web -c /config -L "${DELUGE_WEB_LOG_LEVEL}" -l /config/deluge-web.log &
 	echo "[info] Deluge Web UI started"
 
