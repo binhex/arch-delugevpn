@@ -121,7 +121,7 @@ if [[ "${deluge_web_running}" == "false" ]]; then
 	echo "[info] Starting Deluge Web UI..."
 
 	# run process non daemonised but backgrounded so we can control sigterm
-	nohup /usr/bin/deluge-web -c /config -L "${DELUGE_WEB_LOG_LEVEL}" -l /config/deluge-web.log &
+	nohup /usr/bin/deluge-web -d -c /config -L "${DELUGE_WEB_LOG_LEVEL}" -l /config/deluge-web.log &
 	echo "[info] Deluge Web UI started"
 
 fi
