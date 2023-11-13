@@ -6,7 +6,7 @@
 # identify any torrents with state error and save these torrent id's as an array
 torrent_id_error_array=( $(deluge-console -c /config "info -v" | grep -B 1 'State: Error' | xargs | grep -P -o -m 1 '(?<=ID:\s)[^\s]+' | xargs) )
 
-if [[ -n ${torrent_id_error_array[@]} ]]; then
+if [[ -n ${torrent_id_error_array[*]} ]]; then
 
 	echo "[warn] Torrents with state 'Error' found"
 
