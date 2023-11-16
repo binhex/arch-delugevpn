@@ -19,33 +19,34 @@ if [[ -z "${TARGETARCH}" ]]; then
 	exit 1
 fi
 
-# note do NOT download build scripts - inherited from int script with envvars common defined
-
-# custom
+# build scripts
 ####
 
-# this downgrades libtorrent from the troublesome v2 to v1
-# see here for details:- https://forums.unraid.net/bug-reports/stable-releases/crashes-since-updating-to-v611x-for-qbittorrent-and-deluge-users-r2153/?do=findComment&comment=21671
-package_name_list="libtorrent-rasterbar.tar boost-libs.tar boost.tar"
+# download build scripts from github
+curl --connect-timeout 5 --max-time 600 --retry 5 --retry-delay 0 --retry-max-time 60 -o /tmp/scripts-master.zip -L https://github.com/binhex/scripts/archive/master.zip
 
-if [[ "${TARGETARCH}" == "amd64" ]]; then
-	archive_extension="zst"
-elif [[ "${TARGETARCH}" == "arm64" ]]; then
-	archive_extension="xz"
-fi
+# unzip build scripts
+unzip /tmp/scripts-master.zip -d /tmp
 
-for package_name in ${package_name_list}; do
+# move shell scripts to /root
+mv /tmp/scripts-master/shell/arch/docker/*.sh /usr/local/bin/
 
-	# download package
-	rcurl.sh -o "/tmp/${package_name}.${archive_extension}" "https://github.com/binhex/packages/raw/master/compiled/${TARGETARCH}/${package_name}.${archive_extension}"
+# aur packages
+####
 
-	# install package
-	pacman -U "/tmp/${package_name}.${archive_extension}" --noconfirm
+# define aur packages
+# note we are currently using the aur package ' libtorrent-rasterbar-1_2-git' as opposed to
+# the stable aur package 'libtorrent-rasterbar-1' because we require 'python-bindings=ON',
+# failure to enable python-bindings will result in deluge reporting
+# 'ModuleNotFoundError: No module named 'libtorrent''
+aur_packages="7-zip-bin libtorrent-rasterbar-1_2-git"
 
-done
+# call aur install script (arch user repo)
+source aur.sh
 
-# add filesystem and libtorrentv1 packages to pacman ignore list to prevent buildx issues with
-sed -i -e 's~IgnorePkg.*~IgnorePkg = filesystem libtorrent-rasterbar boost-libs boost~g' '/etc/pacman.conf'
+# ignore aor package 'libtorrent-rasterbar' to prevent upgrade to libtorrent v2 as libtorrent
+# v2 causes numerous issues, including crashing on unraid due to kernel bug
+sed -i -e 's~IgnorePkg.*~IgnorePkg = filesystem libtorrent-rasterbar~g' '/etc/pacman.conf'
 
 # pacman packages
 ####
