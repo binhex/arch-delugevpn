@@ -107,7 +107,7 @@ jobs:
             context: .
             platforms: linux/amd64,linux/arm64
             push: true
-            tags: ${{ env.REPO_LC }}:latest, ${{ env.REPO_LC }}:${{ steps.identify_github_release_tag_name.outputs.tag }}, ghcr.io/${{ github.repository }}:latest, ghcr.io/${{ github.repository }}:${{ steps.identify_github_release_tag_name.outputs.tag }}
+            tags: ${{ env.REPO_LC }}:latest, ${{ env.REPO_LC }}:${{ steps.identify_github_release_tag_name.outputs.tag }}, ghcr.io/${{ env.REPO_LC }}:latest, ghcr.io/${{ env.REPO_LC }}:${{ steps.identify_github_release_tag_name.outputs.tag }}
             build-args: |
               RELEASETAG=${{ steps.identify_github_release_tag_name.outputs.tag }}
           attempt_limit: 3
