@@ -11,6 +11,11 @@ jobs:
   gcr-dockerhub-build-publish:
     runs-on: ubuntu-latest
     steps:
+      - name: set lower case repository name
+        run: |
+          echo "REPO_LC=${REPO,,}" >>${GITHUB_ENV}
+        env:
+          REPO: '${{ github.repository_owner }}'
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up QEMU for multi-arch support
@@ -72,7 +77,7 @@ jobs:
           with: |
             context: .
             load: true
-            tags: ghcr.io/${{ github.repository }}:${{ steps.generate_temporary_tag_name.outputs.test_tag }}
+            tags: ghcr.io/${{ REPO_LC }}:${{ steps.generate_temporary_tag_name.outputs.test_tag }}
             build-args: |
               RELEASETAG=${{ github.event.inputs.tags }}
           attempt_limit: 3
