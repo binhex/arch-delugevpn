@@ -72,7 +72,7 @@ jobs:
           with: |
             context: .
             load: true
-            tags: ghcr.io/${{ github.repository }}:${{ steps.generate_temporary_tag_name.outputs.test_tag }}
+            tags: ghcr.io/${{ github.repository,, }}:${{ steps.generate_temporary_tag_name.outputs.test_tag }}
             build-args: |
               RELEASETAG=${{ github.event.inputs.tags }}
           attempt_limit: 3
