@@ -3,6 +3,18 @@
 # source in script to wait for child processes to exit
 source /usr/local/bin/waitproc.sh
 
+# set location for python eggs
+python_egg_cache="/config/python-eggs"
+
+if [[ ! -d "${python_egg_cache}" ]]; then
+	echo "[info] Creating Deluge Python Egg cache folder..."
+	mkdir -p "${python_egg_cache}"
+	chmod -R 755 "${python_egg_cache}"
+fi
+
+# export location of python egg cache
+export PYTHON_EGG_CACHE="${python_egg_cache}"
+
 if [[ "${deluge_running}" == "false" ]]; then
 
 	echo "[info] Attempting to start Deluge..."
@@ -19,7 +31,7 @@ if [[ "${deluge_running}" == "false" ]]; then
 	if [ -f  "/config/hostlist.conf" ]; then
 
 		# get host id for daemon, used to auto login web ui (see next step)
-		host_id=$(cat /config/hostlist.conf | grep -E -o -m 1 '[a-z0-9]{32,256}')
+		host_id=$(grep -E -o -m 1 '[a-z0-9]{32,256}' < /config/hostlist.conf)
 
 		# set web ui to auto login using host id for locally running daemon
 		/home/nobody/config_deluge.py "/config/web.conf" "default_daemon" "${host_id}"
