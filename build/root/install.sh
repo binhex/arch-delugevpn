@@ -43,10 +43,26 @@ fi
 ####
 
 # define aur packages
-aur_packages="7-zip-bin"
+aur_packages=""
 
 # call aur install script (arch user repo)
 source aur.sh
+
+# custom
+####
+
+# required as there is no arm64 package for 7zip at present 2025-04-13
+if [[ "${TARGETARCH}" == "arm64" ]]; then
+	curl -o /tmp/7zip.tar.xz -L https://www.7-zip.org/a/7z2409-linux-arm64.tar.xz
+else
+	curl -o /tmp/7zip.tar.xz -L https://www.7-zip.org/a/7z2409-linux-x64.tar.xz
+fi
+
+# extract, remove tar file and move to /usr/bin
+tar -xvf /tmp/7zip.tar.xz -C /tmp
+rm /tmp/7zip.tar.xz
+mv /tmp/7zzs /usr/bin/7z
+chmod +x /usr/bin/7z
 
 # tweaks
 ####
