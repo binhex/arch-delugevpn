@@ -64,6 +64,11 @@ rm /tmp/7zip.tar.xz
 mv /tmp/7zzs /usr/bin/7z
 chmod +x /usr/bin/7z
 
+
+curl -o /tmp/openssl.pkg.tar.zst -L https://archive.archlinux.org/packages/o/openssl/openssl-3.4.0-1-x86_64.pkg.tar.zst
+pacman -U --noconfirm /tmp/openssl.pkg.tar.zst
+rm /tmp/openssl.pkg.tar.zst
+
 # tweaks
 ####
 
