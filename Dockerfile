@@ -2,6 +2,9 @@ FROM binhex/arch-int-vpn:latest
 LABEL org.opencontainers.image.authors="binhex"
 LABEL org.opencontainers.image.source="https://github.com/binhex/arch-delugevpn"
 
+# app name from buildx arg
+ARG APPNAME
+
 # release tag name from buildx arg
 ARG RELEASETAG
 
@@ -31,7 +34,7 @@ ADD config/nobody/ /home/nobody/
 
 # make executable and run bash scripts to install app
 RUN chmod +x /root/*.sh /home/nobody/*.sh /home/nobody/*.py && \
-	/bin/bash /root/install.sh "${RELEASETAG}" "${TARGETARCH}"
+	/bin/bash /root/install.sh "${APPNAME}" "${RELEASETAG}" "${TARGETARCH}"
 
 # set permissions
 #################
