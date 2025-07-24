@@ -75,6 +75,8 @@ docker run -d \
     -e VPN_INPUT_PORTS=<port number(s)> \
     -e VPN_OUTPUT_PORTS=<port number(s)> \
     -e DEBUG=<true|false> \
+    -e HEALTHCHECK_COMMAND=<command> \
+    -e HEALTHCHECK_ACTION=<action> \
     -e UMASK=<umask for created files> \
     -e PUID=<UID for user> \
     -e PGID=<GID for user> \
