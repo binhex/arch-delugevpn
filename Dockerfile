@@ -20,6 +20,9 @@ ADD build/*.conf /etc/supervisor/conf.d/
 # add bash scripts to install app
 ADD build/root/*.sh /root/
 
+# add bash script to keep custom theme files updated
+ADD run/root/*.sh /home/root/
+
 # add bash script to run deluge
 ADD run/nobody/*.sh /home/nobody/
 
