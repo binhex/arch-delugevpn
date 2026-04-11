@@ -59,9 +59,9 @@ fi
 
 # required as there is no arm64 package for 7zip at present 2025-04-13
 if [[ "${TARGETARCH}" == "arm64" ]]; then
-	curl -o /tmp/7zip.tar.xz -L https://www.7-zip.org/a/7z2409-linux-arm64.tar.xz
+	curl -o /tmp/7zip.tar.xz -L https://www.7-zip.org/a/7z2600-linux-arm64.tar.xz
 else
-	curl -o /tmp/7zip.tar.xz -L https://www.7-zip.org/a/7z2409-linux-x64.tar.xz
+	curl -o /tmp/7zip.tar.xz -L https://www.7-zip.org/a/7z2600-linux-x64.tar.xz
 fi
 
 # extract, remove tar file and move to /usr/bin
