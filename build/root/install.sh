@@ -59,9 +59,9 @@ fi
 
 # required as there is no arm64 package for 7zip at present 2025-04-13
 if [[ "${TARGETARCH}" == "arm64" ]]; then
-	curl -o /tmp/7zip.tar.xz -L https://www.7-zip.org/a/7z2409-linux-arm64.tar.xz
+	curl -o /tmp/7zip.tar.xz -L https://www.7-zip.org/a/7z2600-linux-arm64.tar.xz
 else
-	curl -o /tmp/7zip.tar.xz -L https://www.7-zip.org/a/7z2409-linux-x64.tar.xz
+	curl -o /tmp/7zip.tar.xz -L https://www.7-zip.org/a/7z2600-linux-x64.tar.xz
 fi
 
 # extract, remove tar file and move to /usr/bin
@@ -79,14 +79,17 @@ mkdir -p /home/nobody/.cache/Python-Eggs
 # remove permissions for group and other from the Python-Eggs folder
 chmod -R 700 /home/nobody/.cache/Python-Eggs
 
+# resolve python site-packages path (glob doesn't expand inside [[ -d ]] checks)
+python_sitepkgs="$(python3 -c 'import site; print(site.getsitepackages()[0])')"
+
 # change peerid to appear to be 2.1.1 stable - note this does not work for all/any private trackers at present
-sed -i -e "s~peer_id = substitute_chr(peer_id, 6, release_chr)~peer_id = \'-DE220s-\'\n        release_chr = \'s\'~g" /usr/lib/python3*/site-packages/deluge/core/core.py
+sed -i -e "s~peer_id = substitute_chr(peer_id, 6, release_chr)~peer_id = \'-DE220s-\'\n        release_chr = \'s\'~g" "${python_sitepkgs}/deluge/core/core.py"
 
 # container perms
 ####
 
 # define comma separated list of paths
-install_paths="/etc/privoxy,/home/nobody,/usr/lib/python*/site-packages/deluge"
+install_paths="/etc/privoxy,/home/nobody,${python_sitepkgs}/deluge"
 
 # split comma separated string into list for install paths
 IFS=',' read -ra install_paths_list <<< "${install_paths}"
