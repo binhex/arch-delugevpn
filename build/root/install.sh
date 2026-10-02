@@ -29,10 +29,10 @@ fi
 # the stable aur package 'libtorrent-rasterbar-1' because we require 'python-bindings=ON',
 # failure to enable python-bindings will result in deluge reporting
 # 'ModuleNotFoundError: No module named 'libtorrent''
-aur_packages="7-zip-bin libtorrent-rasterbar-1_2-git"
+aur_packages="libtorrent-rasterbar-1_2-git"
 
 # call aur install script (arch user repo)
-source aur.sh
+aur.sh --aur-package "${aur_packages}"
 
 # ignore aor package 'libtorrent-rasterbar' to prevent upgrade to libtorrent v2 as libtorrent
 # v2 causes numerous issues, including crashing on unraid due to kernel bug
@@ -51,6 +51,22 @@ pacman_packages="deluge"
 if [[ ! -z "${pacman_packages}" ]]; then
 	pacman -S --needed $pacman_packages --noconfirm
 fi
+
+# custom
+####
+
+# required as there is no arm64 package for 7zip at present 2025-04-13
+if [[ "${TARGETARCH}" == "arm64" ]]; then
+	curl -o /tmp/7zip.tar.xz -L https://www.7-zip.org/a/7z2600-linux-arm64.tar.xz
+else
+	curl -o /tmp/7zip.tar.xz -L https://www.7-zip.org/a/7z2600-linux-x64.tar.xz
+fi
+
+# extract, remove tar file and move to /usr/bin
+tar -xvf /tmp/7zip.tar.xz -C /tmp
+rm /tmp/7zip.tar.xz
+mv /tmp/7zzs /usr/bin/7z
+chmod +x /usr/bin/7z
 
 # tweaks
 ####
