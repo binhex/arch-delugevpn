@@ -54,6 +54,22 @@ if [[ -n "${pacman_packages}" ]]; then
 	pacman -S --needed $pacman_packages --noconfirm
 fi
 
+# deluge loads its plugins through pkg_resources, which setuptools removed in v82
+# (Feb 2026) - install the standalone redistribution (source: pypa/setuptools) into
+# the system python used by deluge until upstream migrates to importlib
+if ! python3 -c 'import pkg_resources' &>/dev/null; then
+	pacman -S --needed uv --noconfirm
+	cat <<'EOF' > /tmp/pkg_resources_requirements.txt
+standard-pkg-resources==1.0.0 --hash=sha256:4cb8701c863000f60637495427121c0da697b395c9088dff7e864bc741a3f2e8
+EOF
+	site_packages=$(python3 -c 'import site; print(site.getsitepackages()[0])')
+	uv pip install --no-cache --no-deps --require-hashes --python "$(command -v python3)" \
+		--target "${site_packages}" -r /tmp/pkg_resources_requirements.txt
+	rm -f /tmp/pkg_resources_requirements.txt "${site_packages}/.lock"
+	pacman -Rns uv --noconfirm
+	python3 -c 'import pkg_resources' || { echo "[crit] Failed to install pkg_resources, exiting build process..." ; exit 1; }
+fi
+
 # custom
 ####
 
