@@ -32,6 +32,14 @@ refresh.sh
 # 'ModuleNotFoundError: No module named 'libtorrent''
 aur_packages="libtorrent-rasterbar-1_2-git"
 
+# the base image's aur.sh disables debug packages with a non-idempotent sed, so an
+# image that already ships '!debug' (aarch64) ends up with the invalid '!!debug'
+# option, which makes makepkg lint fail and breaks paru resolution of split package
+# dependencies - normalise the value so the sed still produces a valid '!debug'
+if grep -qF 's/\bdebug\b/!debug/g' "$(command -v aur.sh)"; then
+	sed -i '/^OPTIONS=/s/!*debug\b/debug/g' '/etc/makepkg.conf'
+fi
+
 # call aur install script (arch user repo)
 aur.sh --aur-package "${aur_packages}"
 
