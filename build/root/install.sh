@@ -19,7 +19,8 @@ if [[ -z "${TARGETARCH}" ]]; then
 	exit 1
 fi
 
-# note do NOT download build scripts - inherited from int script with envvars common defined
+# ensure we have the latest build scripts
+refresh.sh
 
 # aur packages
 ####
