@@ -94,8 +94,8 @@ IFS=',' read -ra install_paths_list <<< "${install_paths}"
 # process install paths in the list
 for i in "${install_paths_list[@]}"; do
 
-	# confirm path(s) exist, if not then exit
-	if [[ ! -d "${i}" ]]; then
+	# confirm path(s) exist, if not then exit, do not quote to permit wildcards
+	if [ ! -d ${i} ]; then
 		echo "[crit] Path '${i}' does not exist, exiting build process..." ; exit 1
 	fi
 
