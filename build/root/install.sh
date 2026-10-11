@@ -98,6 +98,27 @@ chmod -R 700 /home/nobody/.cache/Python-Eggs
 # change peerid to appear to be 2.1.1 stable - note this does not work for all/any private trackers at present
 sed -i -e "s~peer_id = substitute_chr(peer_id, 6, release_chr)~peer_id = \'-DE220s-\'\n        release_chr = \'s\'~g" /usr/lib/python3*/site-packages/deluge/core/core.py
 
+# deluge plugin webui patch - begin
+# Arch's deluge package backports the importlib plugin loader (upstream commit dab761f3) but
+# not the matching web ui lookup, so plugins register as 'WebPlugin.<snake case name>' while
+# deluge/ui/web/pluginmanager.py still asks for 'WebPlugin.<original name>' - mixed case
+# plugins (Label, Scheduler, Blocklist, Extractor, AutoAdd, YaRSS2) then log 'contains no
+# WebUI code' and lose their web ui, normalise the three lookups to match the registration
+# DELUGE_SITE_PACKAGES is only overridden by tests/test-deluge-webui-plugin-patch.sh
+deluge_site_packages="${DELUGE_SITE_PACKAGES:-/usr/lib/python3*/site-packages}"
+deluge_web_pluginmanager="${deluge_site_packages}/deluge/ui/web/pluginmanager.py"
+deluge_web_lookup_raw="component.get('WebPlugin.' + name)"
+deluge_web_lookup_normalised="component.get('WebPlugin.' + name.lower().replace('-', '_').replace(' ', '_'))"
+if compgen -G "${deluge_web_pluginmanager}" > /dev/null; then
+	# shellcheck disable=SC2086
+	if grep -qF "${deluge_web_lookup_raw}" ${deluge_web_pluginmanager}; then
+		# shellcheck disable=SC2086
+		sed -i "s~component\.get('WebPlugin\.' + name)~${deluge_web_lookup_normalised}~g" ${deluge_web_pluginmanager}
+		echo "[info] Patched deluge WebUI plugin name lookup for mixed case plugins"
+	fi
+fi
+# deluge plugin webui patch - end
+
 # container perms
 ####
 
