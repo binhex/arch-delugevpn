@@ -1,5 +1,8 @@
 name: workflow-test
 
+permissions:
+  contents: read
+
 # Repo-local regression tests. Independent of the template-managed docker workflows, so it
 # stays in place across template refreshes.
 #
@@ -46,7 +49,10 @@ jobs:
             other_branch=master
           fi
           echo "comparing ${GITHUB_REF_NAME} against ${other_branch}"
-          git fetch --depth=1 origin "${other_branch}"
+          if ! git fetch --depth=1 origin "${other_branch}"; then
+            echo "::error::could not fetch ${other_branch}"
+            exit 1
+          fi
           if ! git show "FETCH_HEAD:build/root/install.sh" > /tmp/other-install.sh; then
             echo "::error::build/root/install.sh missing on ${other_branch}"
             exit 1
@@ -88,6 +94,10 @@ jobs:
           fi
           if ! git show "FETCH_HEAD:.github/workflows/workflow-test.yml" > /tmp/other-workflow.yml; then
             echo "::error::workflow-test.yml missing on ${other_branch}"
+            exit 1
+          fi
+          if [[ ! -s /tmp/other-workflow.yml || ! -s .github/workflows/workflow-test.yml ]]; then
+            echo "::error::workflow-test.yml is empty on ${GITHUB_REF_NAME} or ${other_branch}"
             exit 1
           fi
           if ! diff -u /tmp/other-workflow.yml .github/workflows/workflow-test.yml; then

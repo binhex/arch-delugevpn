@@ -124,7 +124,6 @@ deluge_site_packages="${DELUGE_SITE_PACKAGES:-/usr/lib/python3*/site-packages}"
 deluge_web_pluginmanager="${deluge_site_packages}/deluge/ui/web/pluginmanager.py"
 deluge_web_lookup_raw="component.get('WebPlugin.' + name)"
 deluge_web_lookup_normalised="component.get('WebPlugin.' + name.lower().replace('-', '_').replace(' ', '_'))"
-deluge_web_lookup_fixed="component.get('WebPlugin.' + _plugin_rpc_name(name))"
 mapfile -t deluge_web_files < <(compgen -G "${deluge_web_pluginmanager}" 2> /dev/null || true)
 if [[ "${#deluge_web_files[@]}" -eq 0 ]]; then
 	echo "[warn] deluge WebUI plugin manager not found at '${deluge_web_pluginmanager}', patch not applied"
@@ -139,7 +138,7 @@ else
 		# names. this is a heuristic on the class that does the registering, scoped to the
 		# WebPluginBase body, not a proof: an unrecognised shape is reported and left
 		# unpatched, never guessed
-		deluge_web_class=$(awk '/^class WebPluginBase/{f=1} f&&/^class /&&!/WebPluginBase/{exit} f' \
+		deluge_web_class=$(awk '/^class WebPluginBase[ (:]/{f=1} f&&/^[^[:space:]]/&&!/^class WebPluginBase[ (:]/{exit} f' \
 			"${deluge_web_pluginbase}" 2> /dev/null || true)
 		deluge_web_normalising=0
 		deluge_web_reason='plugin registration shape not recognised'
@@ -147,10 +146,10 @@ else
 			deluge_web_registrations=$(grep -oE "'WebPlugin\.' \+ [A-Za-z_.]+" <<< "${deluge_web_class}" || true)
 			if [[ -z "${deluge_web_registrations}" ]]; then
 				deluge_web_reason='plugin registration shape not recognised'
-			elif grep -qE "= *_plugin_rpc_name\(|'WebPlugin\.' \+ _plugin_rpc_name\(" <<< "${deluge_web_class}"; then
-				deluge_web_normalising=1
 			elif grep -qE "'WebPlugin\.' \+ plugin_name$" <<< "${deluge_web_registrations}"; then
 				deluge_web_reason='registration uses the raw plugin name'
+			elif grep -qE "= *_plugin_rpc_name\(|'WebPlugin\.' \+ _plugin_rpc_name\(" <<< "${deluge_web_class}"; then
+				deluge_web_normalising=1
 			elif grep -qF '_plugin_rpc_name' "${deluge_web_pluginbase}" 2> /dev/null; then
 				deluge_web_reason='the _plugin_rpc_name helper is defined but not used for the registration'
 			else
@@ -171,26 +170,58 @@ else
 				exit 1
 			fi
 		fi
-		# one comment stripped view for all four counts, so the numerator and the denominator
-		# can never disagree about a commented out lookup. both quoting styles are counted so
-		# an unpatched double quoted lookup is never counted as done. counts are per line,
-		# matching deluge's one lookup per line layout
-		deluge_web_code=$(mktemp)
-		grep -vE '^[[:space:]]*#' "${deluge_web_file}" > "${deluge_web_code}" 2> /dev/null || true
-		deluge_web_lookups=$(grep -cE "component\.get\('WebPlugin\." "${deluge_web_code}" || true)
+		# count the real component.get(... WebPlugin ...) calls by parsing the file, so that
+		# comments, docstrings and string literals cannot distort the comparison, all lookups
+		# are counted even when several share a line, and only a fully normalised lookup is
+		# counted as done
+		deluge_web_counts=$(python3 - "${deluge_web_file}" <<'PY'
+import ast
+import sys
+
+NORMALISED = "name.lower().replace('-', '_').replace(' ', '_')"
+HELPER_CALL = '_plugin_rpc_name(name)'
+
+
+def lookup_segments(source, tree):
+    for node in ast.walk(tree):
+        handler = getattr(node, 'func', None)
+        if not isinstance(handler, ast.Attribute) or handler.attr != 'get':
+            continue
+        owner = handler.value
+        if not isinstance(owner, ast.Name) or owner.id != 'component':
+            continue
+        for argument in node.args:
+            segment = ast.get_source_segment(source, argument) or ''
+            if 'WebPlugin.' in segment:
+                yield segment
+                break
+
+
+def counts(path):
+    try:
+        with open(path, encoding='utf-8') as handle:
+            source = handle.read()
+        tree = ast.parse(source)
+    except (OSError, SyntaxError):
+        return 0, 0
+    total = 0
+    normalised = 0
+    for segment in lookup_segments(source, tree):
+        total += 1
+        text = segment.replace('"', "'")
+        if NORMALISED in text or HELPER_CALL in text:
+            normalised += 1
+    return total, normalised
+
+
+total_count, normalised_count = counts(sys.argv[1])
+print(f'{total_count} {normalised_count}')
+PY
+)
+		deluge_web_lookups=${deluge_web_counts%% *}
+		deluge_web_ok=${deluge_web_counts##* }
 		deluge_web_lookups=${deluge_web_lookups:-0}
-		deluge_web_lookups_double=$(grep -cE 'component\.get\("WebPlugin\.' "${deluge_web_code}" || true)
-		deluge_web_lookups_double=${deluge_web_lookups_double:-0}
-		deluge_web_lookups=$((deluge_web_lookups + deluge_web_lookups_double))
-		deluge_web_ok=$(grep -cF "${deluge_web_lookup_normalised}" "${deluge_web_code}" || true)
 		deluge_web_ok=${deluge_web_ok:-0}
-		deluge_web_ok_fixed=$(grep -cF "${deluge_web_lookup_fixed}" "${deluge_web_code}" || true)
-		deluge_web_ok_fixed=${deluge_web_ok_fixed:-0}
-		deluge_web_ok_double=$(grep -cE 'WebPlugin\." \+ name\.lower\(\)\.replace\(|WebPlugin\." \+ _plugin_rpc_name\(' \
-			"${deluge_web_code}" || true)
-		deluge_web_ok_double=${deluge_web_ok_double:-0}
-		deluge_web_ok=$((deluge_web_ok + deluge_web_ok_fixed + deluge_web_ok_double))
-		rm -f "${deluge_web_code}"
 		if [[ "${deluge_web_lookups}" == "0" ]]; then
 			echo "[warn] no lookup matching '${deluge_web_lookup_raw}' in '${deluge_web_file}', patch not applied"
 		elif [[ "${deluge_web_ok}" != "${deluge_web_lookups}" && "${deluge_web_patched}" == "1" ]]; then
