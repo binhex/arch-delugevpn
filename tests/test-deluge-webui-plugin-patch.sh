@@ -7,9 +7,19 @@
 # built-in plugin (Label, Scheduler, Blocklist, Extractor, AutoAdd, YaRSS2) then logs
 # 'contains no WebUI code' and loses its web UI. install.sh normalises the three lookups.
 #
+# This file is mirrored on the libtorrentv1 branch - the workflow-test job diffs the two
+# copies, so keep them in sync.
+#
 # Usage: tests/test-deluge-webui-plugin-patch.sh [path/to/install.sh]
 
 set -uo pipefail
+
+for required_tool in awk bash diff find grep python3 sha256sum; do
+	if ! command -v "${required_tool}" > /dev/null 2>&1; then
+		echo "required tool not available: ${required_tool}" >&2
+		exit 2
+	fi
+done
 
 repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 install_sh=${1:-"${repo_root}/build/root/install.sh"}
@@ -27,12 +37,13 @@ pass() { echo "PASS: $1"; }
 fail() { echo "FAIL: $1" >&2; failures=$((failures + 1)); }
 
 # Write a minimal replica of the three WebPlugin lookups in deluge/ui/web/pluginmanager.py
-# (deluge 2.2.0 lines 63, 91 and 140).
-write_fixture() { # $1 = target file, $2 = broken|upstream-fixed
-	local target=$1 state=$2 expr
+# (deluge 2.2.0 lines 63, 91 and 140). $2 selects the lookup shape under test.
+write_fixture() { # $1 = target file, $2 = broken|upstream-fixed|unrecognised
+	local target=$1 state=$2 lookup
 	case "${state}" in
-	broken) expr='name' ;;
-	upstream-fixed) expr='_plugin_rpc_name(name)' ;;
+	broken) lookup="'WebPlugin.' + name" ;;
+	upstream-fixed) lookup="'WebPlugin.' + _plugin_rpc_name(name)" ;;
+	unrecognised) lookup="'WebPlugin.%s' % name" ;;
 	*)
 		echo "unknown fixture state '${state}'" >&2
 		exit 2
@@ -45,7 +56,7 @@ write_fixture() { # $1 = target file, $2 = broken|upstream-fixed
 
 def disable_plugin(self, name):
     try:
-        plugin = component.get('WebPlugin.' + ${expr})
+        plugin = component.get(${lookup})
     except KeyError:
         log.debug('%s plugin contains no WebUI code, ignoring WebUI disable call.', name)
         return
@@ -53,7 +64,7 @@ def disable_plugin(self, name):
 
 def enable_plugin(self, name):
     try:
-        plugin = component.get('WebPlugin.' + ${expr})
+        plugin = component.get(${lookup})
     except KeyError:
         log.info('%s plugin contains no WebUI code, ignoring WebUI enable call.', name)
         return
@@ -61,15 +72,17 @@ def enable_plugin(self, name):
 
 def get_plugin_resources(self, name):
     try:
-        plugin = component.get('WebPlugin.' + ${expr})
+        plugin = component.get(${lookup})
     except KeyError:
         log.info('Plugin has no web ui')
         return
 EOF
 }
 
-# Resolve every web plugin lookup in a pluginmanager.py replica for the mixed case plugin
-# name 'Label' and fail unless it matches the component key WebPluginBase registers.
+# Resolve every web plugin lookup in a pluginmanager.py replica and fail unless it matches
+# the component key WebPluginBase registers. The expected keys below are hard coded literals,
+# deliberately NOT derived from the formula the shipped patch uses - a wrong normalisation
+# contract must fail here rather than agree with itself.
 write_behaviour_checker() { # $1 = target script
 	cat > "$1" <<'EOF'
 import re
@@ -80,6 +93,21 @@ def _plugin_rpc_name(plugin_name):
     return plugin_name.lower().replace('-', '_').replace(' ', '_')
 
 
+# 'Label' is why this bug bites; the punctuation cases pin the replace() chain.
+SAMPLES = [
+    ('Label', 'WebPlugin.label'),
+    ('Auto Add', 'WebPlugin.auto_add'),
+    ('YaRSS2', 'WebPlugin.yarss2'),
+    ('Blocklist', 'WebPlugin.blocklist'),
+]
+
+# Only these lookup expressions may be evaluated - no arbitrary code from the target file.
+ALLOWED = [
+    'name',
+    "name.lower().replace('-', '_').replace(' ', '_')",
+    '_plugin_rpc_name(name)',
+]
+
 path = sys.argv[1]
 with open(path, encoding='utf-8') as handle:
     text = handle.read()
@@ -89,17 +117,25 @@ if len(expressions) != 3:
     print(f'expected 3 web plugin lookups, found {len(expressions)}')
     sys.exit(2)
 
-# 'Label' is why this bug bites: WebPluginBase registers the normalised name.
-registry = {'WebPlugin.label': object()}
-resolved = [
-    'WebPlugin.' + str(eval(expression, {'name': 'Label', '_plugin_rpc_name': _plugin_rpc_name}))
-    for expression in expressions
-]
+unexpected = [expression for expression in expressions if expression not in ALLOWED]
+if unexpected:
+    print(f'unexpected lookup expression(s): {unexpected!r}')
+    sys.exit(2)
 
-print('resolved: ' + ', '.join(resolved))
-missing = [key for key in resolved if key not in registry]
-if missing:
-    print('not registered: ' + ', '.join(missing))
+mismatches = []
+for expression in expressions:
+    for plugin_name, expected in SAMPLES:
+        resolved = 'WebPlugin.' + str(
+            eval(expression, {'name': plugin_name, '_plugin_rpc_name': _plugin_rpc_name})
+        )
+        if resolved != expected:
+            mismatches.append(f'{plugin_name}: expected {expected}, resolved {resolved}')
+
+print(f'checked {len(expressions)} lookups x {len(SAMPLES)} plugin names')
+if mismatches:
+    print('mismatches:')
+    for mismatch in mismatches:
+        print('  ' + mismatch)
     sys.exit(1)
 sys.exit(0)
 EOF
@@ -113,6 +149,12 @@ fi
 block="${work_dir}/patch-block.sh"
 awk -v b="${BEGIN_MARKER}" -v e="${END_MARKER}" '$0 == b, $0 == e' "${install_sh}" > "${block}"
 
+# install.sh runs under 'set -e', so run the extracted block the same way and always keep
+# its exit status - a block that starts failing must not silently PASS here.
+run_block() { # $1 = deluge site-packages root, $2 = output file
+	DELUGE_SITE_PACKAGES="$1" bash -e "${block}" > "$2" 2>&1
+}
+
 if [[ ! -s "${block}" ]]; then
 	fail "install.sh has no deluge plugin webui patch block (expected '${BEGIN_MARKER}' ... '${END_MARKER}')"
 else
@@ -123,10 +165,12 @@ else
 	write_fixture "${target}" broken
 	cp "${target}" "${work_dir}/broken.orig"
 
-	if DELUGE_SITE_PACKAGES="${site_packages}" bash "${block}" > "${work_dir}/patch.out" 2>&1; then
+	run_block "${site_packages}" "${work_dir}/patch.out"
+	patch_rc=$?
+	if [[ "${patch_rc}" -eq 0 ]]; then
 		pass "patch block runs against a deluge site-packages tree"
 	else
-		fail "patch block exited non-zero: $(cat "${work_dir}/patch.out")"
+		fail "patch block exited ${patch_rc}: $(cat "${work_dir}/patch.out")"
 	fi
 
 	remaining_raw=$(grep -cF "${RAW_LOOKUP}" "${target}" || true)
@@ -144,35 +188,59 @@ else
 		fail "expected exactly 3 changed lines, got ${changed}"
 	fi
 
-	before=$(sha256sum "${target}")
-	DELUGE_SITE_PACKAGES="${site_packages}" bash "${block}" > /dev/null 2>&1
-	after=$(sha256sum "${target}")
-	if [[ "${before}" == "${after}" ]]; then
-		pass "patch is idempotent"
+	# counts alone would stay green if sed mangled the line, so parse the patched file
+	if python3 -c 'import ast, sys; ast.parse(open(sys.argv[1], encoding="utf-8").read())' "${target}" 2> "${work_dir}/ast.out"; then
+		pass "patched file still parses as python"
 	else
-		fail "second patch run changed the file"
+		fail "patched file failed to parse: $(cat "${work_dir}/ast.out")"
+	fi
+
+	before=$(sha256sum "${target}")
+	run_block "${site_packages}" "${work_dir}/repeat.out"
+	repeat_rc=$?
+	after=$(sha256sum "${target}")
+	if [[ "${repeat_rc}" -eq 0 && "${before}" == "${after}" ]]; then
+		pass "patch is idempotent (second run exits 0 and changes nothing)"
+	else
+		fail "second patch run: exit=${repeat_rc}, changed=$([[ "${before}" == "${after}" ]] && echo no || echo yes)"
 	fi
 
 	fixed_site_packages="${work_dir}/fixed-site-packages"
 	fixed_target="${fixed_site_packages}/deluge/ui/web/pluginmanager.py"
 	write_fixture "${fixed_target}" upstream-fixed
 	cp "${fixed_target}" "${work_dir}/upstream-fixed.orig"
-	DELUGE_SITE_PACKAGES="${fixed_site_packages}" bash "${block}" > /dev/null 2>&1
-	if diff -q "${work_dir}/upstream-fixed.orig" "${fixed_target}" > /dev/null; then
+	run_block "${fixed_site_packages}" "${work_dir}/fixed.out"
+	fixed_rc=$?
+	if [[ "${fixed_rc}" -eq 0 ]] && diff -q "${work_dir}/upstream-fixed.orig" "${fixed_target}" > /dev/null; then
 		pass "an already-fixed upstream file is left untouched"
 	else
-		fail "an already-fixed upstream file was modified"
+		fail "already-fixed file: exit=${fixed_rc}, modified=$([[ ! -s "${work_dir}/fixed.out" ]] && echo no || echo check)"
 	fi
 
 	empty_site_packages="${work_dir}/empty-site-packages"
 	mkdir -p "${empty_site_packages}"
-	DELUGE_SITE_PACKAGES="${empty_site_packages}" bash "${block}" > "${work_dir}/empty.out" 2>&1
+	run_block "${empty_site_packages}" "${work_dir}/empty.out"
 	empty_rc=$?
 	created=$(find "${empty_site_packages}" -mindepth 1 -print -quit)
 	if [[ "${empty_rc}" -eq 0 && -z "${created}" ]]; then
 		pass "absent deluge tree is a safe no-op (exit 0, nothing created)"
 	else
 		fail "absent deluge tree: exit=${empty_rc}, created='${created}', output=$(cat "${work_dir}/empty.out")"
+	fi
+
+	# an unrecognised layout must be reported, not silently treated as already patched
+	unexpected_site_packages="${work_dir}/unexpected-site-packages"
+	unexpected_target="${unexpected_site_packages}/deluge/ui/web/pluginmanager.py"
+	write_fixture "${unexpected_target}" unrecognised
+	cp "${unexpected_target}" "${work_dir}/unexpected.orig"
+	run_block "${unexpected_site_packages}" "${work_dir}/unexpected.out"
+	unexpected_rc=$?
+	if [[ "${unexpected_rc}" -eq 0 ]] \
+		&& diff -q "${work_dir}/unexpected.orig" "${unexpected_target}" > /dev/null \
+		&& grep -q 'patch not applied' "${work_dir}/unexpected.out"; then
+		pass "unrecognised lookup layout warns and is left untouched"
+	else
+		fail "unrecognised layout: exit=${unexpected_rc}, output=$(cat "${work_dir}/unexpected.out")"
 	fi
 
 	checker="${work_dir}/check_lookup.py"
@@ -183,7 +251,7 @@ else
 		pass "behaviour check fails on the unpatched file (the assertion is meaningful)"
 	fi
 	if python3 "${checker}" "${target}" > "${work_dir}/behaviour.out" 2>&1; then
-		pass "mixed case plugin 'Label' resolves to the registered web plugin key"
+		pass "mixed case plugin names resolve to the registered web plugin keys"
 	else
 		fail "behaviour check failed on the patched file: $(cat "${work_dir}/behaviour.out")"
 	fi
