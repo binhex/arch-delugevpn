@@ -14,6 +14,8 @@
 # Usage: tests/test-deluge-webui-plugin-patch.sh [path/to/install.sh]
 
 set -uo pipefail
+# fixed umask so a demoted user can always read the extracted block and the fixtures
+umask 022
 
 for required_tool in awk bash diff find grep id python3 sha256sum; do
 	if ! command -v "${required_tool}" > /dev/null 2>&1; then
@@ -36,8 +38,10 @@ chmod 755 "${work_dir}"
 trap 'rm -rf "${work_dir}"' EXIT
 
 failures=0
+skipped=0
 pass() { echo "PASS: $1"; }
 fail() { echo "FAIL: $1" >&2; failures=$((failures + 1)); }
+skip() { echo "SKIP: $1" >&2; skipped=$((skipped + 1)); }
 
 # Write a replica deluge site-packages tree: three WebPlugin lookups in the web plugin
 # manager (deluge 2.2.0 lines 63, 91 and 140) plus the plugin base that decides whether the
@@ -357,6 +361,22 @@ else
 		fail "helper-but-legacy loader: exit=${helper_rc}, output=$(cat "${work_dir}/helper.out")"
 	fi
 
+	# a missing plugin base must be reported as such, not as a loader property
+	no_base_site_packages="${work_dir}/no-pluginbase-site-packages"
+	no_base_target="${no_base_site_packages}/deluge/ui/web/pluginmanager.py"
+	write_fixture "${no_base_site_packages}" broken
+	rm -f "${no_base_site_packages}/deluge/plugins/pluginbase.py"
+	cp "${no_base_target}" "${work_dir}/no-pluginbase.orig"
+	run_block "${no_base_site_packages}" "${work_dir}/no-pluginbase.out"
+	no_base_rc=$?
+	if [[ "${no_base_rc}" -eq 0 ]] \
+		&& diff -q "${work_dir}/no-pluginbase.orig" "${no_base_target}" > /dev/null \
+		&& grep -q 'not found, leaving' "${work_dir}/no-pluginbase.out"; then
+		pass "a missing plugin base is reported and left unchanged"
+	else
+		fail "missing plugin base: exit=${no_base_rc}, output=$(cat "${work_dir}/no-pluginbase.out")"
+	fi
+
 	# the shipped default is a glob, so exercise the multi match path
 	multi_root="${work_dir}/multi"
 	write_fixture "${multi_root}/python3.13" broken
@@ -398,12 +418,12 @@ else
 	readonly_rc=skip
 	chmod 555 "${readonly_dir}"
 	if [[ "$(id -u)" -eq 0 ]]; then
-		if command -v runuser > /dev/null 2>&1; then
+		if command -v runuser > /dev/null 2>&1 && id -u nobody > /dev/null 2>&1; then
 			runuser -u nobody -- env DELUGE_SITE_PACKAGES="${readonly_site_packages}" \
 				bash -e "${block}" > "${work_dir}/readonly.out" 2>&1
 			readonly_rc=$?
 		else
-			echo "SKIP: root without runuser cannot be denied write access" >&2
+			skip "root without both runuser and a nobody user cannot be denied write access"
 		fi
 	else
 		run_block "${readonly_site_packages}" "${work_dir}/readonly.out"
@@ -455,5 +475,8 @@ if [[ "${failures}" -eq 0 ]]; then
 	echo "All checks passed."
 else
 	echo "${failures} check(s) failed." >&2
+fi
+if [[ "${skipped}" -gt 0 ]]; then
+	echo "${skipped} check(s) skipped in this environment." >&2
 fi
 exit "${failures}"

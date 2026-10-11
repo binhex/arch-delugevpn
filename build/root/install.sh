@@ -113,7 +113,7 @@ sed -i -e "s~peer_id = substitute_chr(peer_id, 6, release_chr)~peer_id = \'-DE21
 # their web ui, normalise the three lookups to match the registration. this mirrors the
 # backport's '_plugin_rpc_name()' helper (lower case, dash and space to underscore) and is
 # only applied when the installed loader normalises component names. ascii names only: the
-# backport ascii folds the plugin name before normalising, this does not
+# backport ascii folds the plugin name before normalising, this does not ascii fold
 # NOTE: the same block ships on the libtorrentv1 branch - keep both copies in sync, the
 # workflow-test job diffs them
 deluge_site_packages="${DELUGE_SITE_PACKAGES:-/usr/lib/python3*/site-packages}"
@@ -121,15 +121,20 @@ deluge_web_pluginmanager="${deluge_site_packages}/deluge/ui/web/pluginmanager.py
 deluge_web_lookup_raw="component.get('WebPlugin.' + name)"
 deluge_web_lookup_normalised="component.get('WebPlugin.' + name.lower().replace('-', '_').replace(' ', '_'))"
 deluge_web_lookup_fixed="component.get('WebPlugin.' + _plugin_rpc_name(name))"
-mapfile -t deluge_web_files < <(compgen -G "${deluge_web_pluginmanager}" || true)
+mapfile -t deluge_web_files < <(compgen -G "${deluge_web_pluginmanager}" 2> /dev/null || true)
 if [[ "${#deluge_web_files[@]}" -eq 0 ]]; then
 	echo "[warn] deluge WebUI plugin manager not found at '${deluge_web_pluginmanager}', patch not applied"
 else
 	for deluge_web_file in "${deluge_web_files[@]}"; do
 		deluge_web_pluginbase="${deluge_web_file%deluge/ui/web/pluginmanager.py}deluge/plugins/pluginbase.py"
+		if [[ ! -f "${deluge_web_pluginbase}" ]]; then
+			echo "[warn] '${deluge_web_pluginbase}' not found, leaving '${deluge_web_file}' unchanged"
+			continue
+		fi
 		# the rewrite below is only correct when the installed loader normalises component
 		# names, so require the backport's helper and a registration that does not use the
-		# raw plugin name. deliberately conservative: an unrecognised loader is left alone
+		# raw plugin name. only the known single quoted one line registration shape is
+		# recognised, anything else is warned about and left unpatched, never mispatched
 		deluge_web_registration=''
 		deluge_web_registration=$(grep -oE "'WebPlugin\.' \+ [A-Za-z_.]+" "${deluge_web_pluginbase}" \
 			2> /dev/null | head -1 || true)
