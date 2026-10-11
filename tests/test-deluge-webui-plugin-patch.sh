@@ -64,6 +64,15 @@ write_fixture() { # $1 = site-packages root, $2 = lookup shape, $3 = loader
 	commented)
 		lookups=("'WebPlugin.' + name" "'WebPlugin.' + name" "'WebPlugin.' + name")
 		;;
+	shared-line)
+		lookups=("'WebPlugin.' + name" "'WebPlugin.' + name" "'WebPlugin.' + name")
+		;;
+	unparseable)
+		lookups=("'WebPlugin.' + name" "'WebPlugin.' + name" "'WebPlugin.' + name")
+		;;
+	unparseable-no-lookup)
+		lookups=("'WebPlugin.' + name" "'WebPlugin.' + name" "'WebPlugin.' + name")
+		;;
 	upstream-fixed)
 		lookups=(
 			"'WebPlugin.' + _plugin_rpc_name(name)"
@@ -120,7 +129,10 @@ write_fixture() { # $1 = site-packages root, $2 = lookup shape, $3 = loader
 		;;
 	esac
 	mkdir -p -- "$(dirname -- "${pluginmanager}")" "$(dirname -- "${pluginbase}")"
-	if [[ "${state}" == "no-lookup" ]]; then
+	if [[ "${state}" == "unparseable-no-lookup" ]]; then
+		# no lookup at all, and the file cannot be parsed
+		printf 'def broken(:\n' > "${pluginmanager}"
+	elif [[ "${state}" == "no-lookup" ]]; then
 		# a web plugin manager that no longer holds any WebPlugin lookup at all
 		cat > "${pluginmanager}" <<'EOF'
 def enable_plugin(self, name):
@@ -160,6 +172,15 @@ EOF
 			printf '# commented out lookup: %s\n' "component.get('WebPlugin.' + name)"
 			printf '        # indented comment, one sed cannot rewrite: %s\n' "component.get('WebPlugin.%s' % name)"
 		} >> "${pluginmanager}"
+	fi
+	if [[ "${state}" == "unparseable" ]]; then
+		# the lookups are present but the file cannot be parsed
+		printf 'def broken(:\n' >> "${pluginmanager}"
+	fi
+	if [[ "${state}" == "shared-line" ]]; then
+		# two lookups on one line, which a per line counter would count once
+		printf 'def shared_line(self, name):\n    a = component.get(%s); b = component.get(%s)\n' \
+			"'WebPlugin.' + name" "'WebPlugin.%s' % name" >> "${pluginmanager}"
 	fi
 	case "${loader}" in
 	importlib)
@@ -252,10 +273,19 @@ class WebPluginBase:
         super().__init__('WebPlugin.' + name)
 EOF
 		;;
-	*)
-		echo "unknown fixture loader '${loader}'" >&2
-		exit 2
+	inline-helper)
+		# the helper is called inline in the registration
+		cat > "${pluginbase}" <<'EOF'
+def _plugin_rpc_name(plugin_name):
+    return plugin_name.lower().replace('-', '_').replace(' ', '_')
+
+
+class WebPluginBase:
+    def __init__(self, plugin_name):
+        super().__init__('WebPlugin.' + _plugin_rpc_name(plugin_name))
+EOF
 		;;
+	*)
 	esac
 }
 
@@ -577,6 +607,41 @@ else
 		fail "commented lookups: exit=${commented_rc}, normalised=${commented_ok}, output=$(cat "${work_dir}/commented.out")"
 	fi
 
+	# two lookups on one line must both be counted
+	shared_site_packages="${work_dir}/shared-line-site-packages"
+	shared_target="${shared_site_packages}/deluge/ui/web/pluginmanager.py"
+	write_fixture "${shared_site_packages}" shared-line
+	run_block "${shared_site_packages}" "${work_dir}/shared.out"
+	shared_rc=$?
+	shared_ok=$(grep -cF "${NORMALISED_LOOKUP}" "${shared_target}" || true)
+	if [[ "${shared_rc}" -ne 0 && "${shared_ok}" == "4" ]] && grep -q 'only 4/5 normalised' "${work_dir}/shared.out"; then
+		pass "two lookups on one line are both counted and the shortfall aborts"
+	else
+		fail "shared line: exit=${shared_rc}, normalised=${shared_ok}, output=$(cat "${work_dir}/shared.out")"
+	fi
+
+	# a file that cannot be parsed after patching must abort rather than claim success
+	unparseable_site_packages="${work_dir}/unparseable-site-packages"
+	write_fixture "${unparseable_site_packages}" unparseable
+	run_block "${unparseable_site_packages}" "${work_dir}/unparseable.out"
+	unparseable_rc=$?
+	if [[ "${unparseable_rc}" -ne 0 ]] && grep -q 'could not parse' "${work_dir}/unparseable.out"; then
+		pass "an unparseable file that was patched aborts the build"
+	else
+		fail "unparseable patched: exit=${unparseable_rc}, output=$(cat "${work_dir}/unparseable.out")"
+	fi
+
+	# an unparseable file with no lookup warns and continues rather than claiming a patch
+	unparseable_clean_site_packages="${work_dir}/unparseable-clean-site-packages"
+	write_fixture "${unparseable_clean_site_packages}" unparseable-no-lookup
+	run_block "${unparseable_clean_site_packages}" "${work_dir}/unparseable-clean.out"
+	unparseable_clean_rc=$?
+	if [[ "${unparseable_clean_rc}" -eq 0 ]] && grep -q 'could not parse' "${work_dir}/unparseable-clean.out"; then
+		pass "an unparseable file without a raw lookup warns and continues"
+	else
+		fail "unparseable clean: exit=${unparseable_clean_rc}, output=$(cat "${work_dir}/unparseable-clean.out")"
+	fi
+
 	# a fully double quoted normalised file is already correct and must not be alarmed about
 	dqnorm_site_packages="${work_dir}/double-quoted-normalised-site-packages"
 	dqnorm_target="${dqnorm_site_packages}/deluge/ui/web/pluginmanager.py"
@@ -726,6 +791,21 @@ else
 		pass "a missing plugin base is reported and left unchanged"
 	else
 		fail "missing plugin base: exit=${no_base_rc}, output=$(cat "${work_dir}/no-pluginbase.out")"
+	fi
+
+	# an inline helper registration is accepted and the lookups are patched
+	inline_site_packages="${work_dir}/inline-helper-site-packages"
+	inline_target="${inline_site_packages}/deluge/ui/web/pluginmanager.py"
+	write_fixture "${inline_site_packages}" broken inline-helper
+	run_block "${inline_site_packages}" "${work_dir}/inline.out"
+	inline_rc=$?
+	inline_raw=$(grep -cF "${RAW_LOOKUP}" "${inline_target}" || true)
+	inline_ok=$(grep -cF "${NORMALISED_LOOKUP}" "${inline_target}" || true)
+	if [[ "${inline_rc}" -eq 0 && "${inline_raw}" == "0" && "${inline_ok}" == "3" ]] \
+		&& grep -q '\[info\] Patched' "${work_dir}/inline.out"; then
+		pass "an inline helper registration is accepted and the lookups are patched"
+	else
+		fail "inline helper: exit=${inline_rc}, raw=${inline_raw}, ok=${inline_ok}, output=$(cat "${work_dir}/inline.out")"
 	fi
 
 	# the shipped default is a glob, so exercise the multi match path
