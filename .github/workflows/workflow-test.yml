@@ -54,8 +54,8 @@ jobs:
             exit 1
           fi
           # a marker only block is not a patch, so require a sentinel line from the body
-          if ! grep -qF 'deluge_web_files=' /tmp/block-current.sh \
-            || ! grep -qF 'deluge_web_files=' /tmp/block-other.sh; then
+          if ! grep -qF 'deluge_web_lookup_raw=' /tmp/block-current.sh \
+            || ! grep -qF 'deluge_web_lookup_raw=' /tmp/block-other.sh; then
             echo "::error::deluge plugin webui patch block is missing its body on ${GITHUB_REF_NAME} or ${other_branch}"
             exit 1
           fi
