@@ -43,18 +43,34 @@ jobs:
           fi
           echo "comparing ${GITHUB_REF_NAME} against ${other_branch}"
           git fetch --depth=1 origin "${other_branch}"
-          git show "FETCH_HEAD:build/root/install.sh" > /tmp/other-install.sh
+          if ! git show "FETCH_HEAD:build/root/install.sh" > /tmp/other-install.sh; then
+            echo "::error::build/root/install.sh missing on ${other_branch}"
+            exit 1
+          fi
           awk '/# deluge plugin webui patch - begin/,/# deluge plugin webui patch - end/' build/root/install.sh > /tmp/block-current.sh
           awk '/# deluge plugin webui patch - begin/,/# deluge plugin webui patch - end/' /tmp/other-install.sh > /tmp/block-other.sh
           if [[ ! -s /tmp/block-current.sh || ! -s /tmp/block-other.sh ]]; then
             echo "::error::deluge plugin webui patch block missing on ${GITHUB_REF_NAME} or ${other_branch}"
             exit 1
           fi
+          # a marker only block is not a patch, so require a sentinel line from the body
+          if ! grep -qF 'deluge_web_files=' /tmp/block-current.sh \
+            || ! grep -qF 'deluge_web_files=' /tmp/block-other.sh; then
+            echo "::error::deluge plugin webui patch block is missing its body on ${GITHUB_REF_NAME} or ${other_branch}"
+            exit 1
+          fi
           if ! diff -u /tmp/block-other.sh /tmp/block-current.sh; then
             echo "::error::deluge plugin webui patch block differs between ${GITHUB_REF_NAME} and ${other_branch}"
             exit 1
           fi
-          git show "FETCH_HEAD:tests/test-deluge-webui-plugin-patch.sh" > /tmp/other-test.sh
+          if ! git show "FETCH_HEAD:tests/test-deluge-webui-plugin-patch.sh" > /tmp/other-test.sh; then
+            echo "::error::regression test missing on ${other_branch}"
+            exit 1
+          fi
+          if [[ ! -s /tmp/other-test.sh || ! -s tests/test-deluge-webui-plugin-patch.sh ]]; then
+            echo "::error::regression test is empty on ${GITHUB_REF_NAME} or ${other_branch}"
+            exit 1
+          fi
           if ! diff -u /tmp/other-test.sh tests/test-deluge-webui-plugin-patch.sh; then
             echo "::error::regression test differs between ${GITHUB_REF_NAME} and ${other_branch}"
             exit 1
