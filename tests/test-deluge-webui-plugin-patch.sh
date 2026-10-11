@@ -46,7 +46,11 @@ skip() { echo "SKIP: $1" >&2; skipped=$((skipped + 1)); }
 # Write a replica deluge site-packages tree: three WebPlugin lookups in the web plugin
 # manager (deluge 2.2.0 lines 63, 91 and 140) plus the plugin base that decides whether the
 # installed loader normalises component names. $2 selects the lookup shape, $3 the loader.
-write_fixture() { # $1 = site-packages root, $2 = broken|upstream-fixed|unrecognised|mixed, $3 = importlib|legacy
+write_fixture() { # $1 = site-packages root, $2 = lookup shape, $3 = loader
+	# lookup shapes: broken, upstream-fixed, unrecognised, mixed, partially-raw, double-quoted,
+	#                mixed-quoting, no-lookup
+	# loaders: importlib, legacy, helper-but-legacy, unrecognised-registration,
+	#          normalised-without-helper
 	local root=$1 state=$2 loader=${3:-importlib}
 	local pluginmanager="${root}/deluge/ui/web/pluginmanager.py"
 	local pluginbase="${root}/deluge/plugins/pluginbase.py"
@@ -77,6 +81,12 @@ write_fixture() { # $1 = site-packages root, $2 = broken|upstream-fixed|unrecogn
 		;;
 	double-quoted)
 		lookups=('"WebPlugin." + name' '"WebPlugin." + name' '"WebPlugin." + name')
+		;;
+	mixed-quoting)
+		lookups=("'WebPlugin.' + name" "'WebPlugin.' + name" '"WebPlugin." + name')
+		;;
+	no-lookup)
+		lookups=("component['WebPlugin.'] + name" "component['WebPlugin.'] + name" "component['WebPlugin.'] + name")
 		;;
 	*)
 		echo "unknown fixture state '${state}'" >&2
@@ -143,6 +153,23 @@ def _plugin_rpc_name(plugin_name):
 class WebPluginBase:
     def __init__(self, plugin_name):
         super().__init__('WebPlugin.' + plugin_name)
+EOF
+		;;
+	unrecognised-registration)
+		# no WebPlugin registration line at all
+		cat > "${pluginbase}" <<'EOF'
+class WebPluginBase:
+    def __init__(self, plugin_name):
+        super().__init__(plugin_name)
+EOF
+		;;
+	normalised-without-helper)
+		# a normalised registration but none of the helper the block probes for
+		cat > "${pluginbase}" <<'EOF'
+class WebPluginBase:
+    def __init__(self, plugin_name):
+        name = plugin_name.lower().replace('-', '_').replace(' ', '_')
+        super().__init__('WebPlugin.' + name)
 EOF
 		;;
 	*)
@@ -226,7 +253,7 @@ block="${work_dir}/patch-block.sh"
 # fail closed: awk's range operator prints to EOF when the end marker is missing, which
 # would feed real install steps (chmod, sed, cleanup) into run_block
 awk -v b="${BEGIN_MARKER}" -v e="${END_MARKER}" \
-	'$0 == b { started = 1 } started { print } $0 == e { closed = 1; exit } END { exit !(started && closed) }' \
+	'$0 == b { started = 1 } started { print } started && $0 == e { closed = 1; exit } END { exit !(started && closed) }' \
 	"${install_sh}" > "${block}" || block_rc=$?
 block_rc=${block_rc:-0}
 
@@ -241,10 +268,12 @@ if [[ "${block_rc}" -ne 0 || ! -s "${block}" ]]; then
 else
 	pass "install.sh declares the deluge plugin webui patch block"
 
-	if [[ "$(tail -n 1 "${block}")" == "${END_MARKER}" ]]; then
-		pass "extracted block is terminated by the end marker"
+	begin_markers=$(grep -cF "${BEGIN_MARKER}" "${install_sh}" || true)
+	end_markers=$(grep -cF "${END_MARKER}" "${install_sh}" || true)
+	if [[ "${begin_markers}" == "1" && "${end_markers}" == "1" ]]; then
+		pass "install.sh declares exactly one begin and one end marker"
 	else
-		fail "extracted block does not end with '${END_MARKER}'"
+		fail "expected one of each marker in install.sh, got begin=${begin_markers}, end=${end_markers}"
 	fi
 
 	site_packages="${work_dir}/site-packages"
@@ -357,7 +386,7 @@ else
 	legacy_rc=$?
 	if [[ "${legacy_rc}" -eq 0 ]] \
 		&& diff -q "${work_dir}/legacy.orig" "${legacy_target}" > /dev/null \
-		&& grep -q 'does not normalise plugin component names' "${work_dir}/legacy.out"; then
+		&& grep -q 'registration uses the raw plugin name' "${work_dir}/legacy.out"; then
 		pass "a deluge without the importlib backport is left unchanged (no inverted patch)"
 	else
 		fail "legacy loader: exit=${legacy_rc}, output=$(cat "${work_dir}/legacy.out")"
@@ -393,6 +422,22 @@ else
 		fail "no-op sed shim: exit=${shim_rc}, output=$(cat "${work_dir}/shim.out")"
 	fi
 
+	# deterministic coverage of the sed failure branch, independent of host DAC
+	fail_shim_dir="${work_dir}/fail-shim-bin"
+	mkdir -p "${fail_shim_dir}"
+	printf '#!/bin/bash\nexit 4\n' > "${fail_shim_dir}/sed"
+	chmod +x "${fail_shim_dir}/sed"
+	fail_shim_site_packages="${work_dir}/fail-shim-site-packages"
+	write_fixture "${fail_shim_site_packages}" broken
+	PATH="${fail_shim_dir}:${PATH}" DELUGE_SITE_PACKAGES="${fail_shim_site_packages}" \
+		bash -e "${block}" > "${work_dir}/fail-shim.out" 2>&1
+	fail_shim_rc=$?
+	if [[ "${fail_shim_rc}" -ne 0 ]] && grep -q '\[crit\] Failed to patch' "${work_dir}/fail-shim.out"; then
+		pass "a failing sed aborts the build with a crit message (deterministic)"
+	else
+		fail "failing sed shim: exit=${fail_shim_rc}, output=$(cat "${work_dir}/fail-shim.out")"
+	fi
+
 	# a lookup shape the block cannot recognise at all is reported, not silently accepted
 	double_site_packages="${work_dir}/double-quoted-site-packages"
 	double_target="${double_site_packages}/deluge/ui/web/pluginmanager.py"
@@ -402,10 +447,39 @@ else
 	double_rc=$?
 	if [[ "${double_rc}" -eq 0 ]] \
 		&& diff -q "${work_dir}/double-quoted.orig" "${double_target}" > /dev/null \
-		&& grep -q 'no lookup matching' "${work_dir}/double-quoted-site.out"; then
-		pass "a lookup shape the block cannot match is reported and left untouched"
+		&& grep -q 'only 0/3 normalised' "${work_dir}/double-quoted-site.out"; then
+		pass "a double quoted lookup is counted and reported as unmatched, left untouched"
 	else
 		fail "unmatched lookup shape: exit=${double_rc}, output=$(cat "${work_dir}/double-quoted-site.out")"
+	fi
+
+	# a file with no readable WebPlugin lookup at all is reported, not silently accepted
+	nolookup_site_packages="${work_dir}/no-lookup-site-packages"
+	nolookup_target="${nolookup_site_packages}/deluge/ui/web/pluginmanager.py"
+	write_fixture "${nolookup_site_packages}" no-lookup
+	cp "${nolookup_target}" "${work_dir}/no-lookup.orig"
+	run_block "${nolookup_site_packages}" "${work_dir}/no-lookup.out"
+	nolookup_rc=$?
+	if [[ "${nolookup_rc}" -eq 0 ]] \
+		&& diff -q "${work_dir}/no-lookup.orig" "${nolookup_target}" > /dev/null \
+		&& grep -q 'no lookup matching' "${work_dir}/no-lookup.out"; then
+		pass "a file with no recognised WebPlugin lookup is reported and left untouched"
+	else
+		fail "no lookup: exit=${nolookup_rc}, output=$(cat "${work_dir}/no-lookup.out")"
+	fi
+
+	# mixed quoting must never be reported as fully patched while a raw lookup remains
+	mixedq_site_packages="${work_dir}/mixed-quoting-site-packages"
+	mixedq_target="${mixedq_site_packages}/deluge/ui/web/pluginmanager.py"
+	write_fixture "${mixedq_site_packages}" mixed-quoting
+	run_block "${mixedq_site_packages}" "${work_dir}/mixed-quoting.out"
+	mixedq_rc=$?
+	mixedq_normalised=$(grep -cF "${NORMALISED_LOOKUP}" "${mixedq_target}" || true)
+	if [[ "${mixedq_rc}" -ne 0 && "${mixedq_normalised}" == "2" ]] \
+		&& grep -q 'only 2/3 normalised' "${work_dir}/mixed-quoting.out"; then
+		pass "mixed quoting aborts the build instead of reporting a partial patch as done"
+	else
+		fail "mixed quoting: exit=${mixedq_rc}, normalised=${mixedq_normalised}, output=$(cat "${work_dir}/mixed-quoting.out")"
 	fi
 
 	# a helper definition alone is not enough - the registration must not use the raw name
@@ -417,10 +491,40 @@ else
 	helper_rc=$?
 	if [[ "${helper_rc}" -eq 0 ]] \
 		&& diff -q "${work_dir}/helper-but-legacy.orig" "${helper_target}" > /dev/null \
-		&& grep -q 'does not normalise plugin component names' "${work_dir}/helper.out"; then
+		&& grep -q 'registration uses the raw plugin name' "${work_dir}/helper.out"; then
 		pass "a loader that defines the helper but still registers the raw name is left unchanged"
 	else
 		fail "helper-but-legacy loader: exit=${helper_rc}, output=$(cat "${work_dir}/helper.out")"
+	fi
+
+	# an unrecognised registration shape must be reported as unrecognised, not as legacy
+	unreg_site_packages="${work_dir}/unrecognised-registration-site-packages"
+	unreg_target="${unreg_site_packages}/deluge/ui/web/pluginmanager.py"
+	write_fixture "${unreg_site_packages}" broken unrecognised-registration
+	cp "${unreg_target}" "${work_dir}/unreg.orig"
+	run_block "${unreg_site_packages}" "${work_dir}/unreg.out"
+	unreg_rc=$?
+	if [[ "${unreg_rc}" -eq 0 ]] \
+		&& diff -q "${work_dir}/unreg.orig" "${unreg_target}" > /dev/null \
+		&& grep -q 'plugin registration shape not recognised' "${work_dir}/unreg.out"; then
+		pass "an unrecognised registration shape is reported as unrecognised and left unchanged"
+	else
+		fail "unrecognised registration: exit=${unreg_rc}, output=$(cat "${work_dir}/unreg.out")"
+	fi
+
+	# a normalised registration missing the probe's helper is reported as such
+	nohelper_site_packages="${work_dir}/no-helper-site-packages"
+	nohelper_target="${nohelper_site_packages}/deluge/ui/web/pluginmanager.py"
+	write_fixture "${nohelper_site_packages}" broken normalised-without-helper
+	cp "${nohelper_target}" "${work_dir}/nohelper.orig"
+	run_block "${nohelper_site_packages}" "${work_dir}/nohelper.out"
+	nohelper_rc=$?
+	if [[ "${nohelper_rc}" -eq 0 ]] \
+		&& diff -q "${work_dir}/nohelper.orig" "${nohelper_target}" > /dev/null \
+		&& grep -q 'the _plugin_rpc_name helper is absent' "${work_dir}/nohelper.out"; then
+		pass "a normalised registration without the helper is reported and left unchanged"
+	else
+		fail "normalised without helper: exit=${nohelper_rc}, output=$(cat "${work_dir}/nohelper.out")"
 	fi
 
 	# a missing plugin base must be reported as such, not as a loader property
@@ -508,6 +612,24 @@ else
 
 	checker="${work_dir}/check_lookup.py"
 	write_behaviour_checker "${checker}"
+
+	# the extraction guard must fail closed, otherwise a revert to the permissive awk range
+	# operator would keep the whole suite green
+	for doctored in missing-end reversed; do
+		doctored_install="${work_dir}/${doctored}-install.sh"
+		if [[ "${doctored}" == "missing-end" ]]; then
+			grep -vF "${END_MARKER}" "${install_sh}" > "${doctored_install}"
+		else
+			awk -v b="${BEGIN_MARKER}" -v e="${END_MARKER}" \
+				'$0 == b { print e; print b; next } $0 == e { next } { print }' \
+				"${install_sh}" > "${doctored_install}"
+		fi
+		if bash "${BASH_SOURCE[0]}" "${doctored_install}" > "${work_dir}/${doctored}.out" 2>&1; then
+			fail "suite passed with a ${doctored} marker layout in install.sh"
+		else
+			pass "suite fails closed when install.sh has a ${doctored} marker layout"
+		fi
+	done
 
 	# the checker must accept a double quoted equivalent of the normalised lookup
 	double_quoted="${work_dir}/double-quoted.py"

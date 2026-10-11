@@ -3,9 +3,9 @@ name: workflow-test
 # Repo-local regression tests. Independent of the template-managed docker workflows, so it
 # stays in place across template refreshes.
 #
-# NOTE: branch-parity compares this branch against the sibling release branch, so a change to
-# the patch block or the regression test must be pushed to master and libtorrentv1 together
-# (libtorrentv1 first is safest) or the first push leaves CI red until both are in place.
+# NOTE: branch-parity compares this branch against the sibling release branch, so push both
+# refs in one push (git push origin master libtorrentv1) or the first push leaves CI red
+# until the sibling catches up.
 on:
   push:
     branches:
@@ -51,8 +51,15 @@ jobs:
             echo "::error::build/root/install.sh missing on ${other_branch}"
             exit 1
           fi
-          awk '/# deluge plugin webui patch - begin/,/# deluge plugin webui patch - end/' build/root/install.sh > /tmp/block-current.sh
-          awk '/# deluge plugin webui patch - begin/,/# deluge plugin webui patch - end/' /tmp/other-install.sh > /tmp/block-other.sh
+          extract_block() {
+            # fail closed: the range operator would print to EOF when the end marker is gone
+            awk -v b='# deluge plugin webui patch - begin' -v e='# deluge plugin webui patch - end' \
+              '$0 == b { started = 1 } started { print } started && $0 == e { closed = 1; exit } END { exit !(started && closed) }' "$1"
+          }
+          extract_block build/root/install.sh > /tmp/block-current.sh \
+            || { echo "::error::deluge plugin webui patch block is not marker complete on ${GITHUB_REF_NAME}"; exit 1; }
+          extract_block /tmp/other-install.sh > /tmp/block-other.sh \
+            || { echo "::error::deluge plugin webui patch block is not marker complete on ${other_branch}"; exit 1; }
           if [[ ! -s /tmp/block-current.sh || ! -s /tmp/block-other.sh ]]; then
             echo "::error::deluge plugin webui patch block missing on ${GITHUB_REF_NAME} or ${other_branch}"
             exit 1

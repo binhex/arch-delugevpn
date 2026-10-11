@@ -111,6 +111,7 @@ sed -i -e "s~peer_id = substitute_chr(peer_id, 6, release_chr)~peer_id = \'-DE22
 # double quoted upstream rewrite is warned about and left alone
 # NOTE: the same block ships on the libtorrentv1 branch - keep both copies in sync, the
 # workflow-test job diffs them
+# compgen -G below expands the python glob, a bash assignment would not, keep the glob
 deluge_site_packages="${DELUGE_SITE_PACKAGES:-/usr/lib/python3*/site-packages}"
 deluge_web_pluginmanager="${deluge_site_packages}/deluge/ui/web/pluginmanager.py"
 deluge_web_lookup_raw="component.get('WebPlugin.' + name)"
@@ -127,19 +128,24 @@ else
 			continue
 		fi
 		# the rewrite below is only correct when the installed loader normalises component
-		# names, so require the backport's helper and a registration that does not use the
-		# raw plugin name. this is a heuristic on the known single quoted one line shape, not
-		# a proof: an unrecognised shape is warned about and left unpatched, never guessed
+		# names. this is a heuristic on the known single quoted one line registration shape,
+		# not a proof: an unrecognised shape is reported and left unpatched, never guessed
 		deluge_web_registration=''
 		deluge_web_registration=$(grep -oE "'WebPlugin\.' \+ [A-Za-z_.]+" "${deluge_web_pluginbase}" \
 			2> /dev/null | head -1 || true)
 		deluge_web_normalising=0
-		if [[ -n "${deluge_web_registration}" && "${deluge_web_registration}" != *plugin_name* ]] \
-			&& grep -qF -e '_plugin_rpc_name' "${deluge_web_pluginbase}"; then
-			deluge_web_normalising=1
+		deluge_web_reason='plugin registration shape not recognised'
+		if [[ -n "${deluge_web_registration}" ]]; then
+			if [[ "${deluge_web_registration}" == *plugin_name* ]]; then
+				deluge_web_reason='registration uses the raw plugin name'
+			elif grep -qF -e '_plugin_rpc_name' "${deluge_web_pluginbase}"; then
+				deluge_web_normalising=1
+			else
+				deluge_web_reason='registration is normalised but the _plugin_rpc_name helper is absent'
+			fi
 		fi
 		if [[ "${deluge_web_normalising}" != "1" ]]; then
-			echo "[warn] deluge does not normalise plugin component names, leaving '${deluge_web_file}' unchanged"
+			echo "[warn] deluge plugin loader not patched: ${deluge_web_reason}, leaving '${deluge_web_file}' unchanged"
 			continue
 		fi
 		deluge_web_patched=0
@@ -152,8 +158,13 @@ else
 				exit 1
 			fi
 		fi
+		# counts are per line, which matches deluge's one lookup per line layout, and cover
+		# both quoting styles so an unpatched double quoted lookup cannot be counted as done
 		deluge_web_lookups=$(grep -cE "component\.get\('WebPlugin\." "${deluge_web_file}" || true)
 		deluge_web_lookups=${deluge_web_lookups:-0}
+		deluge_web_lookups_double=$(grep -cE 'component\.get\("WebPlugin\.' "${deluge_web_file}" || true)
+		deluge_web_lookups_double=${deluge_web_lookups_double:-0}
+		deluge_web_lookups=$((deluge_web_lookups + deluge_web_lookups_double))
 		deluge_web_ok=$(grep -cF "${deluge_web_lookup_normalised}" "${deluge_web_file}" || true)
 		deluge_web_ok=${deluge_web_ok:-0}
 		deluge_web_ok_fixed=$(grep -cF "${deluge_web_lookup_fixed}" "${deluge_web_file}" || true)
