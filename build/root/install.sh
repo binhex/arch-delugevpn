@@ -109,20 +109,28 @@ sed -i -e "s~peer_id = substitute_chr(peer_id, 6, release_chr)~peer_id = \'-DE21
 # Arch's deluge package backports the importlib plugin loader (upstream commit dab761f3) but
 # not the matching web ui lookup, so plugins register as 'WebPlugin.<snake case name>' while
 # deluge/ui/web/pluginmanager.py still asks for 'WebPlugin.<original name>' - mixed case
-# plugins (Label, Scheduler, Blocklist, Extractor, AutoAdd, YaRSS2) then log 'contains no
-# WebUI code' and lose their web ui, normalise the three lookups to match the registration
-# DELUGE_SITE_PACKAGES is only overridden by tests/test-deluge-webui-plugin-patch.sh
+# plugins such as Label, Scheduler and YaRSS2 then log 'contains no WebUI code' and lose
+# their web ui, normalise the three lookups to match the registration. mirrors upstream's
+# '_plugin_rpc_name()' helper (lower case, dash and space to underscore), ascii names only
+# NOTE: the same block ships on the libtorrentv1 branch - keep both copies in sync, the
+# workflow-test job diffs them
 deluge_site_packages="${DELUGE_SITE_PACKAGES:-/usr/lib/python3*/site-packages}"
 deluge_web_pluginmanager="${deluge_site_packages}/deluge/ui/web/pluginmanager.py"
 deluge_web_lookup_raw="component.get('WebPlugin.' + name)"
 deluge_web_lookup_normalised="component.get('WebPlugin.' + name.lower().replace('-', '_').replace(' ', '_'))"
 if compgen -G "${deluge_web_pluginmanager}" > /dev/null; then
-	# shellcheck disable=SC2086
-	if grep -qF "${deluge_web_lookup_raw}" ${deluge_web_pluginmanager}; then
-		# shellcheck disable=SC2086
-		sed -i "s~component\.get('WebPlugin\.' + name)~${deluge_web_lookup_normalised}~g" ${deluge_web_pluginmanager}
-		echo "[info] Patched deluge WebUI plugin name lookup for mixed case plugins"
-	fi
+	# shellcheck disable=SC2086  # glob in the variable, expanded by the for loop on purpose
+	for deluge_web_file in ${deluge_web_pluginmanager}; do
+		if grep -qF "${deluge_web_lookup_raw}" "${deluge_web_file}"; then
+			sed -i "s~component\.get('WebPlugin\.' + name)~${deluge_web_lookup_normalised}~g" "${deluge_web_file}" \
+				|| { echo "[crit] Failed to patch '${deluge_web_file}', exiting build process..." ; exit 1 ; }
+			echo "[info] Patched deluge WebUI plugin name lookup for mixed case plugins"
+		elif grep -qF "${deluge_web_lookup_normalised}" "${deluge_web_file}"; then
+			echo "[info] deluge WebUI plugin name lookup already normalised, no patch required"
+		else
+			echo "[warn] deluge WebUI plugin lookup not found in '${deluge_web_file}', patch not applied"
+		fi
+	done
 fi
 # deluge plugin webui patch - end
 

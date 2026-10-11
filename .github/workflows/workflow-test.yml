@@ -1,0 +1,58 @@
+name: workflow-test
+
+# Repo-local regression tests. Independent of the template-managed docker workflows, so it
+# stays in place across template refreshes.
+on:
+  push:
+    branches:
+      - master
+      - libtorrentv1
+  pull_request:
+    branches:
+      - master
+      - libtorrentv1
+  workflow_dispatch:
+
+jobs:
+  regression-test:
+    name: deluge plugin patch regression test
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: run deluge webui plugin patch regression test
+        run: bash tests/test-deluge-webui-plugin-patch.sh build/root/install.sh
+
+  branch-parity:
+    name: plugin patch parity across branches
+    # branch drift only shows up on a push - a PR head may not contain both branches
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: diff the patch block and test against the other branch
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF_NAME}" == "master" ]]; then
+            other_branch=libtorrentv1
+          else
+            other_branch=master
+          fi
+          echo "comparing ${GITHUB_REF_NAME} against ${other_branch}"
+          git fetch --depth=1 origin "${other_branch}"
+          git show "FETCH_HEAD:build/root/install.sh" > /tmp/other-install.sh
+          awk '/# deluge plugin webui patch - begin/,/# deluge plugin webui patch - end/' build/root/install.sh > /tmp/block-current.sh
+          awk '/# deluge plugin webui patch - begin/,/# deluge plugin webui patch - end/' /tmp/other-install.sh > /tmp/block-other.sh
+          if ! diff -u /tmp/block-other.sh /tmp/block-current.sh; then
+            echo "::error::deluge plugin webui patch block differs between ${GITHUB_REF_NAME} and ${other_branch}"
+            exit 1
+          fi
+          git show "FETCH_HEAD:tests/test-deluge-webui-plugin-patch.sh" > /tmp/other-test.sh
+          if ! diff -u /tmp/other-test.sh tests/test-deluge-webui-plugin-patch.sh; then
+            echo "::error::regression test differs between ${GITHUB_REF_NAME} and ${other_branch}"
+            exit 1
+          fi
+          echo "plugin patch block and regression test match on both branches"
