@@ -31,6 +31,8 @@ RAW_LOOKUP="component.get('WebPlugin.' + name)"
 NORMALISED_LOOKUP="component.get('WebPlugin.' + name.lower().replace('-', '_').replace(' ', '_'))"
 
 work_dir=$(mktemp -d)
+# world traversable so the read-only case below can still drop privileges and read the block
+chmod 755 "${work_dir}"
 trap 'rm -rf "${work_dir}"' EXIT
 
 failures=0
@@ -99,20 +101,45 @@ def get_plugin_resources(self, name):
         log.info('Plugin has no web ui')
         return
 EOF
-	if [[ "${loader}" == "importlib" ]]; then
-		# the normalising helper the importlib backport adds
+	case "${loader}" in
+	importlib)
+		# the importlib backport: helper defined and a normalised registration
 		cat > "${pluginbase}" <<'EOF'
 def _plugin_rpc_name(plugin_name):
     return plugin_name.lower().replace('-', '_').replace(' ', '_')
+
+
+class WebPluginBase:
+    def __init__(self, plugin_name):
+        name = _plugin_rpc_name(plugin_name)
+        super().__init__('WebPlugin.' + name)
 EOF
-	else
-		# the pre-backport loader: registration keeps the plugin's own case
+		;;
+	legacy)
+		# the pre-backport loader: no helper, registration keeps the plugin's own case
 		cat > "${pluginbase}" <<'EOF'
 class WebPluginBase:
     def __init__(self, plugin_name):
         super().__init__('WebPlugin.' + plugin_name)
 EOF
-	fi
+		;;
+	helper-but-legacy)
+		# the helper exists but the web plugin base still registers the raw name
+		cat > "${pluginbase}" <<'EOF'
+def _plugin_rpc_name(plugin_name):
+    return plugin_name.lower().replace('-', '_').replace(' ', '_')
+
+
+class WebPluginBase:
+    def __init__(self, plugin_name):
+        super().__init__('WebPlugin.' + plugin_name)
+EOF
+		;;
+	*)
+		echo "unknown fixture loader '${loader}'" >&2
+		exit 2
+		;;
+	esac
 }
 
 # Resolve every web plugin lookup in a pluginmanager.py replica and fail unless it matches
@@ -150,7 +177,7 @@ path = sys.argv[1]
 with open(path, encoding='utf-8') as handle:
     text = handle.read()
 
-expressions = [e.strip() for e in re.findall(r"component\.get\('WebPlugin\.' \+ (.*)\)$", text, re.M)]
+expressions = [e.strip() for e in re.findall(r"component\.get\(['\"]WebPlugin\.['\"]\s*\+\s*(.*)\)$", text, re.M)]
 if len(expressions) != 3:
     print(f'expected 3 web plugin lookups, found {len(expressions)}')
     sys.exit(2)
@@ -164,6 +191,7 @@ if unexpected:
 mismatches = []
 for expression in expressions:
     for plugin_name, expected in SAMPLES:
+        # __builtins__ is stripped: an allowed expression must not need a builtin
         namespace = {'__builtins__': {}, 'name': plugin_name, '_plugin_rpc_name': _plugin_rpc_name}
         resolved = 'WebPlugin.' + str(eval(expression, namespace))
         if resolved != expected:
@@ -314,6 +342,21 @@ else
 		fail "legacy loader: exit=${legacy_rc}, output=$(cat "${work_dir}/legacy.out")"
 	fi
 
+	# a helper definition alone is not enough - the registration must not use the raw name
+	helper_site_packages="${work_dir}/helper-but-legacy-site-packages"
+	helper_target="${helper_site_packages}/deluge/ui/web/pluginmanager.py"
+	write_fixture "${helper_site_packages}" broken helper-but-legacy
+	cp "${helper_target}" "${work_dir}/helper-but-legacy.orig"
+	run_block "${helper_site_packages}" "${work_dir}/helper.out"
+	helper_rc=$?
+	if [[ "${helper_rc}" -eq 0 ]] \
+		&& diff -q "${work_dir}/helper-but-legacy.orig" "${helper_target}" > /dev/null \
+		&& grep -q 'does not normalise plugin component names' "${work_dir}/helper.out"; then
+		pass "a loader that defines the helper but still registers the raw name is left unchanged"
+	else
+		fail "helper-but-legacy loader: exit=${helper_rc}, output=$(cat "${work_dir}/helper.out")"
+	fi
+
 	# the shipped default is a glob, so exercise the multi match path
 	multi_root="${work_dir}/multi"
 	write_fixture "${multi_root}/python3.13" broken
@@ -332,17 +375,42 @@ else
 		fail "glob override: exit=${multi_rc}, patched=${multi_ok}/2, output=$(cat "${work_dir}/multi.out")"
 	fi
 
-	# a sed that cannot write must abort the build rather than report success
+	# paths with spaces must survive the compgen plus mapfile handling
+	space_site_packages="${work_dir}/space dir/site-packages"
+	space_target="${space_site_packages}/deluge/ui/web/pluginmanager.py"
+	write_fixture "${space_site_packages}" broken
+	run_block "${space_site_packages}" "${work_dir}/space.out"
+	space_rc=$?
+	space_raw=$(grep -cF "${RAW_LOOKUP}" "${space_target}" || true)
+	space_normalised=$(grep -cF "${NORMALISED_LOOKUP}" "${space_target}" || true)
+	if [[ "${space_rc}" -eq 0 && "${space_raw}" == "0" && "${space_normalised}" == "3" ]]; then
+		pass "a site-packages path containing a space is patched"
+	else
+		fail "space in path: exit=${space_rc}, raw=${space_raw}, normalised=${space_normalised}, output=$(cat "${work_dir}/space.out")"
+	fi
+
+	# a sed that cannot write must abort the build rather than report success. a world
+	# readable but not writable directory blocks the temp file sed -i needs, and root has
+	# to drop to an unprivileged user for DAC to apply at all
 	readonly_site_packages="${work_dir}/readonly-site-packages"
 	write_fixture "${readonly_site_packages}" broken
 	readonly_dir="${readonly_site_packages}/deluge/ui/web"
+	readonly_rc=skip
+	chmod 555 "${readonly_dir}"
 	if [[ "$(id -u)" -eq 0 ]]; then
-		echo "SKIP: cannot enforce a read-only directory when running as root" >&2
+		if command -v runuser > /dev/null 2>&1; then
+			runuser -u nobody -- env DELUGE_SITE_PACKAGES="${readonly_site_packages}" \
+				bash -e "${block}" > "${work_dir}/readonly.out" 2>&1
+			readonly_rc=$?
+		else
+			echo "SKIP: root without runuser cannot be denied write access" >&2
+		fi
 	else
-		chmod 500 "${readonly_dir}"
 		run_block "${readonly_site_packages}" "${work_dir}/readonly.out"
 		readonly_rc=$?
-		chmod 755 "${readonly_dir}"
+	fi
+	chmod 755 "${readonly_dir}"
+	if [[ "${readonly_rc}" != "skip" ]]; then
 		if [[ "${readonly_rc}" -ne 0 ]] && grep -q '\[crit\] Failed to patch' "${work_dir}/readonly.out"; then
 			pass "an unwritable target aborts the build with a crit message"
 		else
@@ -352,6 +420,24 @@ else
 
 	checker="${work_dir}/check_lookup.py"
 	write_behaviour_checker "${checker}"
+
+	# the checker must accept a double quoted equivalent of the normalised lookup
+	double_quoted="${work_dir}/double-quoted.py"
+	for double_suffix in disable enable resources; do
+		{
+			printf 'def %s_plugin(self, name):\n' "${double_suffix}"
+			printf '    try:\n'
+			printf '        plugin = component.get("WebPlugin." + name.lower().replace("-", "_").replace(" ", "_"))\n'
+			printf '    except KeyError:\n'
+			printf '        return\n\n'
+		} >> "${double_quoted}"
+	done
+	if python3 "${checker}" "${double_quoted}" > "${work_dir}/double-quoted.out" 2>&1; then
+		pass "the behaviour checker accepts a double quoted normalised lookup"
+	else
+		fail "behaviour checker rejected a double quoted lookup: $(cat "${work_dir}/double-quoted.out")"
+	fi
+
 	if python3 "${checker}" "${work_dir}/broken.orig" > /dev/null 2>&1; then
 		fail "behaviour check passed on the unpatched file, so it does not detect the bug"
 	else

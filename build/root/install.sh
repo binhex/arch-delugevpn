@@ -112,7 +112,8 @@ sed -i -e "s~peer_id = substitute_chr(peer_id, 6, release_chr)~peer_id = \'-DE21
 # plugins such as Label, Scheduler and YaRSS2 then log 'contains no WebUI code' and lose
 # their web ui, normalise the three lookups to match the registration. this mirrors the
 # backport's '_plugin_rpc_name()' helper (lower case, dash and space to underscore) and is
-# only applied when that helper is present, ascii names only
+# only applied when the installed loader normalises component names. ascii names only: the
+# backport ascii folds the plugin name before normalising, this does not
 # NOTE: the same block ships on the libtorrentv1 branch - keep both copies in sync, the
 # workflow-test job diffs them
 deluge_site_packages="${DELUGE_SITE_PACKAGES:-/usr/lib/python3*/site-packages}"
@@ -126,9 +127,18 @@ if [[ "${#deluge_web_files[@]}" -eq 0 ]]; then
 else
 	for deluge_web_file in "${deluge_web_files[@]}"; do
 		deluge_web_pluginbase="${deluge_web_file%deluge/ui/web/pluginmanager.py}deluge/plugins/pluginbase.py"
-		# the rewrite below is only correct when the installed deluge normalises plugin
-		# component names, which the importlib backport added via this helper
-		if [[ ! -f "${deluge_web_pluginbase}" ]] || ! grep -qF 'def _plugin_rpc_name' "${deluge_web_pluginbase}"; then
+		# the rewrite below is only correct when the installed loader normalises component
+		# names, so require the backport's helper and a registration that does not use the
+		# raw plugin name. deliberately conservative: an unrecognised loader is left alone
+		deluge_web_registration=''
+		deluge_web_registration=$(grep -oE "'WebPlugin\.' \+ [A-Za-z_.]+" "${deluge_web_pluginbase}" \
+			2> /dev/null | head -1 || true)
+		deluge_web_normalising=0
+		if [[ -n "${deluge_web_registration}" && "${deluge_web_registration}" != *plugin_name* ]] \
+			&& grep -qF -e '_plugin_rpc_name' "${deluge_web_pluginbase}"; then
+			deluge_web_normalising=1
+		fi
+		if [[ "${deluge_web_normalising}" != "1" ]]; then
 			echo "[warn] deluge does not normalise plugin component names, leaving '${deluge_web_file}' unchanged"
 			continue
 		fi
@@ -137,11 +147,17 @@ else
 			deluge_web_patched=1
 			sed -i "s~component\.get('WebPlugin\.' + name)~${deluge_web_lookup_normalised}~g" "${deluge_web_file}" \
 				|| { echo "[crit] Failed to patch '${deluge_web_file}', exiting build process..." ; exit 1 ; }
+			if grep -qF "${deluge_web_lookup_raw}" "${deluge_web_file}"; then
+				echo "[crit] raw lookup still present in '${deluge_web_file}', exiting build process..."
+				exit 1
+			fi
 		fi
-		# verify the substitution actually landed, a matched grep is not proof that sed wrote
 		deluge_web_lookups=$(grep -cE "component\.get\('WebPlugin\." "${deluge_web_file}" || true)
+		deluge_web_lookups=${deluge_web_lookups:-0}
 		deluge_web_ok=$(grep -cF "${deluge_web_lookup_normalised}" "${deluge_web_file}" || true)
+		deluge_web_ok=${deluge_web_ok:-0}
 		deluge_web_ok_fixed=$(grep -cF "${deluge_web_lookup_fixed}" "${deluge_web_file}" || true)
+		deluge_web_ok_fixed=${deluge_web_ok_fixed:-0}
 		deluge_web_ok=$((deluge_web_ok + deluge_web_ok_fixed))
 		if [[ "${deluge_web_lookups}" == "0" ]]; then
 			echo "[warn] no lookup matching '${deluge_web_lookup_raw}' in '${deluge_web_file}', patch not applied"
