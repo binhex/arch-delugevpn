@@ -164,6 +164,17 @@ else
 		fail "an already-fixed upstream file was modified"
 	fi
 
+	empty_site_packages="${work_dir}/empty-site-packages"
+	mkdir -p "${empty_site_packages}"
+	DELUGE_SITE_PACKAGES="${empty_site_packages}" bash "${block}" > "${work_dir}/empty.out" 2>&1
+	empty_rc=$?
+	created=$(find "${empty_site_packages}" -mindepth 1 -print -quit)
+	if [[ "${empty_rc}" -eq 0 && -z "${created}" ]]; then
+		pass "absent deluge tree is a safe no-op (exit 0, nothing created)"
+	else
+		fail "absent deluge tree: exit=${empty_rc}, created='${created}', output=$(cat "${work_dir}/empty.out")"
+	fi
+
 	checker="${work_dir}/check_lookup.py"
 	write_behaviour_checker "${checker}"
 	if python3 "${checker}" "${work_dir}/broken.orig" > /dev/null 2>&1; then
