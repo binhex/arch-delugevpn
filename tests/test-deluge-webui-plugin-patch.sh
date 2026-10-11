@@ -100,6 +100,13 @@ write_fixture() { # $1 = site-packages root, $2 = lookup shape, $3 = loader
 			'"WebPlugin." + name.lower().replace("-", "_").replace(" ", "_")'
 		)
 		;;
+	double-quoted-partial)
+		lookups=(
+			'"WebPlugin." + name.lower().replace("-", "_")'
+			'"WebPlugin." + name.lower().replace("-", "_")'
+			'"WebPlugin." + name.lower().replace("-", "_")'
+		)
+		;;
 	mixed-normalised)
 		lookups=(
 			"'WebPlugin.' + name"
@@ -113,7 +120,14 @@ write_fixture() { # $1 = site-packages root, $2 = lookup shape, $3 = loader
 		;;
 	esac
 	mkdir -p -- "$(dirname -- "${pluginmanager}")" "$(dirname -- "${pluginbase}")"
-	cat > "${pluginmanager}" <<EOF
+	if [[ "${state}" == "no-lookup" ]]; then
+		# a web plugin manager that no longer holds any WebPlugin lookup at all
+		cat > "${pluginmanager}" <<'EOF'
+def enable_plugin(self, name):
+    return None
+EOF
+	else
+		cat > "${pluginmanager}" <<EOF
 """Minimal replica of the three WebPlugin lookups in the deluge web plugin manager."""
 
 
@@ -140,10 +154,11 @@ def get_plugin_resources(self, name):
         log.info('Plugin has no web ui')
         return
 EOF
+	fi
 	if [[ "${state}" == "commented" ]]; then
 		{
 			printf '# commented out lookup: %s\n' "component.get('WebPlugin.' + name)"
-			printf '        # indented commented out lookup: %s\n' "component.get('WebPlugin.' + name)"
+			printf '        # indented comment, one sed cannot rewrite: %s\n' "component.get('WebPlugin.%s' % name)"
 		} >> "${pluginmanager}"
 	fi
 	case "${loader}" in
@@ -186,6 +201,13 @@ EOF
 class WebPluginBase:
     def __init__(self, plugin_name):
         super().__init__(plugin_name)
+EOF
+		;;
+	no-web-class)
+		# the helper exists but there is no WebPluginBase class to inspect
+		cat > "${pluginbase}" <<'EOF'
+def _plugin_rpc_name(plugin_name):
+    return plugin_name.lower().replace('-', '_').replace(' ', '_')
 EOF
 		;;
 	normalised-without-helper)
@@ -570,6 +592,21 @@ else
 		fail "double quoted normalised: exit=${dqnorm_rc}, output=$(cat "${work_dir}/dqnorm.out")"
 	fi
 
+	# a partially normalised double quoted rewrite must not count as already normalised
+	partial_site_packages="${work_dir}/double-quoted-partial-site-packages"
+	partial_target="${partial_site_packages}/deluge/ui/web/pluginmanager.py"
+	write_fixture "${partial_site_packages}" double-quoted-partial
+	cp "${partial_target}" "${work_dir}/partial.orig"
+	run_block "${partial_site_packages}" "${work_dir}/partial.out"
+	partial_rc=$?
+	if [[ "${partial_rc}" -eq 0 ]] \
+		&& diff -q "${work_dir}/partial.orig" "${partial_target}" > /dev/null \
+		&& grep -q 'only 0/3 normalised' "${work_dir}/partial.out"; then
+		pass "a partially normalised double quoted rewrite is reported, not treated as done"
+	else
+		fail "double quoted partial chain: exit=${partial_rc}, output=$(cat "${work_dir}/partial.out")"
+	fi
+
 	# a raw lookup beside double quoted normalised ones is patched, not aborted
 	mixednorm_site_packages="${work_dir}/mixed-normalised-site-packages"
 	mixednorm_target="${mixednorm_site_packages}/deluge/ui/web/pluginmanager.py"
@@ -658,6 +695,21 @@ else
 		pass "a helper call in another plugin class is not taken as proof for the web registration"
 	else
 		fail "helper in other class: exit=${other_class_rc}, output=$(cat "${work_dir}/other-class.out")"
+	fi
+
+	# a plugin base with no WebPluginBase class must be reported, not guessed at
+	no_class_site_packages="${work_dir}/no-web-class-site-packages"
+	no_class_target="${no_class_site_packages}/deluge/ui/web/pluginmanager.py"
+	write_fixture "${no_class_site_packages}" broken no-web-class
+	cp "${no_class_target}" "${work_dir}/no-class.orig"
+	run_block "${no_class_site_packages}" "${work_dir}/no-class.out"
+	no_class_rc=$?
+	if [[ "${no_class_rc}" -eq 0 ]] \
+		&& diff -q "${work_dir}/no-class.orig" "${no_class_target}" > /dev/null \
+		&& grep -q 'plugin registration shape not recognised' "${work_dir}/no-class.out"; then
+		pass "a plugin base with no WebPluginBase class is reported and left unchanged"
+	else
+		fail "no WebPluginBase class: exit=${no_class_rc}, output=$(cat "${work_dir}/no-class.out")"
 	fi
 
 	# a missing plugin base must be reported as such, not as a loader property
