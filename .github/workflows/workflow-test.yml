@@ -2,6 +2,10 @@ name: workflow-test
 
 # Repo-local regression tests. Independent of the template-managed docker workflows, so it
 # stays in place across template refreshes.
+#
+# NOTE: branch-parity compares this branch against the sibling release branch, so a change to
+# the patch block or the regression test must be pushed to master and libtorrentv1 together
+# (libtorrentv1 first is safest) or the first push leaves CI red until both are in place.
 on:
   push:
     branches:

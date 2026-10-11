@@ -72,6 +72,12 @@ write_fixture() { # $1 = site-packages root, $2 = broken|upstream-fixed|unrecogn
 			"'WebPlugin.%s' % name"
 		)
 		;;
+	partially-raw)
+		lookups=("'WebPlugin.' + name" "'WebPlugin.' + name" "'WebPlugin.%s' % name")
+		;;
+	double-quoted)
+		lookups=('"WebPlugin." + name' '"WebPlugin." + name' '"WebPlugin." + name')
+		;;
 	*)
 		echo "unknown fixture state '${state}'" >&2
 		exit 2
@@ -217,7 +223,12 @@ if [[ ! -f "${install_sh}" ]]; then
 fi
 
 block="${work_dir}/patch-block.sh"
-awk -v b="${BEGIN_MARKER}" -v e="${END_MARKER}" '$0 == b, $0 == e' "${install_sh}" > "${block}"
+# fail closed: awk's range operator prints to EOF when the end marker is missing, which
+# would feed real install steps (chmod, sed, cleanup) into run_block
+awk -v b="${BEGIN_MARKER}" -v e="${END_MARKER}" \
+	'$0 == b { started = 1 } started { print } $0 == e { closed = 1; exit } END { exit !(started && closed) }' \
+	"${install_sh}" > "${block}" || block_rc=$?
+block_rc=${block_rc:-0}
 
 # install.sh runs under 'set -e', so run the extracted block the same way and always keep
 # its exit status - a block that starts failing must not silently PASS here.
@@ -225,10 +236,16 @@ run_block() { # $1 = deluge site-packages root (may contain a glob), $2 = output
 	DELUGE_SITE_PACKAGES="$1" bash -e "${block}" > "$2" 2>&1
 }
 
-if [[ ! -s "${block}" ]]; then
-	fail "install.sh has no deluge plugin webui patch block (expected '${BEGIN_MARKER}' ... '${END_MARKER}')"
+if [[ "${block_rc}" -ne 0 || ! -s "${block}" ]]; then
+	fail "install.sh has no complete deluge plugin webui patch block (expected '${BEGIN_MARKER}' ... '${END_MARKER}')"
 else
 	pass "install.sh declares the deluge plugin webui patch block"
+
+	if [[ "$(tail -n 1 "${block}")" == "${END_MARKER}" ]]; then
+		pass "extracted block is terminated by the end marker"
+	else
+		fail "extracted block does not end with '${END_MARKER}'"
+	fi
 
 	site_packages="${work_dir}/site-packages"
 	target="${site_packages}/deluge/ui/web/pluginmanager.py"
@@ -237,8 +254,8 @@ else
 
 	run_block "${site_packages}" "${work_dir}/patch.out"
 	patch_rc=$?
-	if [[ "${patch_rc}" -eq 0 ]]; then
-		pass "patch block runs against a deluge site-packages tree"
+	if [[ "${patch_rc}" -eq 0 ]] && grep -q '\[info\] Patched deluge WebUI plugin name lookup' "${work_dir}/patch.out"; then
+		pass "patch block runs against a deluge site-packages tree and reports the patch"
 	else
 		fail "patch block exited ${patch_rc}: $(cat "${work_dir}/patch.out")"
 	fi
@@ -310,8 +327,8 @@ else
 	unexpected_rc=$?
 	if [[ "${unexpected_rc}" -eq 0 ]] \
 		&& diff -q "${work_dir}/unexpected.orig" "${unexpected_target}" > /dev/null \
-		&& grep -q 'patch not applied' "${work_dir}/unexpected.out"; then
-		pass "unrecognised lookup layout warns and is left untouched"
+		&& grep -q 'only 0/3 normalised' "${work_dir}/unexpected.out"; then
+		pass "unrecognised lookup layout warns stating the count and is left untouched"
 	else
 		fail "unrecognised layout: exit=${unexpected_rc}, output=$(cat "${work_dir}/unexpected.out")"
 	fi
@@ -344,6 +361,51 @@ else
 		pass "a deluge without the importlib backport is left unchanged (no inverted patch)"
 	else
 		fail "legacy loader: exit=${legacy_rc}, output=$(cat "${work_dir}/legacy.out")"
+	fi
+
+	# a raw lookup alongside an unrecognised one: sed runs, so the remaining shortfall is fatal
+	raw_mixed_site_packages="${work_dir}/partially-raw-site-packages"
+	raw_mixed_target="${raw_mixed_site_packages}/deluge/ui/web/pluginmanager.py"
+	write_fixture "${raw_mixed_site_packages}" partially-raw
+	run_block "${raw_mixed_site_packages}" "${work_dir}/partially-raw.out"
+	raw_mixed_rc=$?
+	raw_mixed_normalised=$(grep -cF "${NORMALISED_LOOKUP}" "${raw_mixed_target}" || true)
+	if [[ "${raw_mixed_rc}" -ne 0 && "${raw_mixed_normalised}" == "2" ]] \
+		&& grep -q 'only 2/3 normalised' "${work_dir}/partially-raw.out"; then
+		pass "a partial substitution aborts the build instead of reporting success"
+	else
+		fail "partial substitution: exit=${raw_mixed_rc}, normalised=${raw_mixed_normalised}, output=$(cat "${work_dir}/partially-raw.out")"
+	fi
+
+	# a sed that exits 0 without writing must be caught by the post-sed raw check
+	shim_dir="${work_dir}/shim-bin"
+	mkdir -p "${shim_dir}"
+	printf '#!/bin/bash\nexit 0\n' > "${shim_dir}/sed"
+	chmod +x "${shim_dir}/sed"
+	shim_site_packages="${work_dir}/shim-site-packages"
+	write_fixture "${shim_site_packages}" broken
+	PATH="${shim_dir}:${PATH}" DELUGE_SITE_PACKAGES="${shim_site_packages}" \
+		bash -e "${block}" > "${work_dir}/shim.out" 2>&1
+	shim_rc=$?
+	if [[ "${shim_rc}" -ne 0 ]] && grep -q 'raw lookup still present' "${work_dir}/shim.out"; then
+		pass "a sed that exits 0 without substituting is caught and aborts the build"
+	else
+		fail "no-op sed shim: exit=${shim_rc}, output=$(cat "${work_dir}/shim.out")"
+	fi
+
+	# a lookup shape the block cannot recognise at all is reported, not silently accepted
+	double_site_packages="${work_dir}/double-quoted-site-packages"
+	double_target="${double_site_packages}/deluge/ui/web/pluginmanager.py"
+	write_fixture "${double_site_packages}" double-quoted
+	cp "${double_target}" "${work_dir}/double-quoted.orig"
+	run_block "${double_site_packages}" "${work_dir}/double-quoted-site.out"
+	double_rc=$?
+	if [[ "${double_rc}" -eq 0 ]] \
+		&& diff -q "${work_dir}/double-quoted.orig" "${double_target}" > /dev/null \
+		&& grep -q 'no lookup matching' "${work_dir}/double-quoted-site.out"; then
+		pass "a lookup shape the block cannot match is reported and left untouched"
+	else
+		fail "unmatched lookup shape: exit=${double_rc}, output=$(cat "${work_dir}/double-quoted-site.out")"
 	fi
 
 	# a helper definition alone is not enough - the registration must not use the raw name
@@ -418,17 +480,23 @@ else
 	readonly_rc=skip
 	chmod 555 "${readonly_dir}"
 	if [[ "$(id -u)" -eq 0 ]]; then
-		if command -v runuser > /dev/null 2>&1 && id -u nobody > /dev/null 2>&1; then
+		if command -v runuser > /dev/null 2>&1 \
+			&& id -u nobody > /dev/null 2>&1 \
+			&& runuser -u nobody -- test -r "${block}" 2> /dev/null \
+			&& ! runuser -u nobody -- touch "${readonly_dir}/.probe" 2> /dev/null; then
 			runuser -u nobody -- env DELUGE_SITE_PACKAGES="${readonly_site_packages}" \
 				bash -e "${block}" > "${work_dir}/readonly.out" 2>&1
 			readonly_rc=$?
 		else
-			skip "root without both runuser and a nobody user cannot be denied write access"
+			skip "cannot deny write access to the target directory as root on this host"
 		fi
+	elif touch "${readonly_dir}/.probe" 2> /dev/null; then
+		skip "this environment can write into a 555 directory, write denial is untestable here"
 	else
 		run_block "${readonly_site_packages}" "${work_dir}/readonly.out"
 		readonly_rc=$?
 	fi
+	rm -f "${readonly_dir}/.probe"
 	chmod 755 "${readonly_dir}"
 	if [[ "${readonly_rc}" != "skip" ]]; then
 		if [[ "${readonly_rc}" -ne 0 ]] && grep -q '\[crit\] Failed to patch' "${work_dir}/readonly.out"; then
@@ -458,10 +526,12 @@ else
 		fail "behaviour checker rejected a double quoted lookup: $(cat "${work_dir}/double-quoted.out")"
 	fi
 
-	if python3 "${checker}" "${work_dir}/broken.orig" > /dev/null 2>&1; then
-		fail "behaviour check passed on the unpatched file, so it does not detect the bug"
+	python3 "${checker}" "${work_dir}/broken.orig" > "${work_dir}/control.out" 2>&1
+	control_rc=$?
+	if [[ "${control_rc}" -eq 1 ]] && grep -q 'mismatches:' "${work_dir}/control.out"; then
+		pass "behaviour check reports mismatches on the unpatched file (the assertion is meaningful)"
 	else
-		pass "behaviour check fails on the unpatched file (the assertion is meaningful)"
+		fail "behaviour control: expected exit 1 with mismatches, got exit=${control_rc}: $(cat "${work_dir}/control.out")"
 	fi
 	if python3 "${checker}" "${target}" > "${work_dir}/behaviour.out" 2>&1; then
 		pass "mixed case plugin names resolve to the registered web plugin keys"

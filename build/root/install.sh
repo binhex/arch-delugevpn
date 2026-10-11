@@ -106,7 +106,9 @@ sed -i -e "s~peer_id = substitute_chr(peer_id, 6, release_chr)~peer_id = \'-DE22
 # their web ui, normalise the three lookups to match the registration. this mirrors the
 # backport's '_plugin_rpc_name()' helper (lower case, dash and space to underscore) and is
 # only applied when the installed loader normalises component names. ascii names only: the
-# backport ascii folds the plugin name before normalising, this does not ascii fold
+# backport ascii folds the plugin name before normalising it, this patch does not, so a non
+# ascii plugin name would still mismatch. only the single quoted lookup form is matched, a
+# double quoted upstream rewrite is warned about and left alone
 # NOTE: the same block ships on the libtorrentv1 branch - keep both copies in sync, the
 # workflow-test job diffs them
 deluge_site_packages="${DELUGE_SITE_PACKAGES:-/usr/lib/python3*/site-packages}"
@@ -126,8 +128,8 @@ else
 		fi
 		# the rewrite below is only correct when the installed loader normalises component
 		# names, so require the backport's helper and a registration that does not use the
-		# raw plugin name. only the known single quoted one line registration shape is
-		# recognised, anything else is warned about and left unpatched, never mispatched
+		# raw plugin name. this is a heuristic on the known single quoted one line shape, not
+		# a proof: an unrecognised shape is warned about and left unpatched, never guessed
 		deluge_web_registration=''
 		deluge_web_registration=$(grep -oE "'WebPlugin\.' \+ [A-Za-z_.]+" "${deluge_web_pluginbase}" \
 			2> /dev/null | head -1 || true)
