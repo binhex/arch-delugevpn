@@ -107,8 +107,9 @@ sed -i -e "s~peer_id = substitute_chr(peer_id, 6, release_chr)~peer_id = \'-DE22
 # backport's '_plugin_rpc_name()' helper (lower case, dash and space to underscore) and is
 # only applied when the installed loader normalises component names. ascii names only: the
 # backport ascii folds the plugin name before normalising it, this patch does not, so a non
-# ascii plugin name would still mismatch. only the single quoted lookup form is matched, a
-# double quoted upstream rewrite is warned about and left alone
+# ascii plugin name would still mismatch. only the single quoted lookup form is patched, a
+# double quoted rewrite is counted but never patched - alone it is warned about, beside an
+# unpatched single quoted lookup it aborts the build
 # NOTE: the same block ships on the libtorrentv1 branch - keep both copies in sync, the
 # workflow-test job diffs them
 # compgen -G below expands the python glob, a bash assignment would not, keep the glob
@@ -130,18 +131,21 @@ else
 		# the rewrite below is only correct when the installed loader normalises component
 		# names. this is a heuristic on the known single quoted one line registration shape,
 		# not a proof: an unrecognised shape is reported and left unpatched, never guessed
-		deluge_web_registration=''
-		deluge_web_registration=$(grep -oE "'WebPlugin\.' \+ [A-Za-z_.]+" "${deluge_web_pluginbase}" \
-			2> /dev/null | head -1 || true)
+		deluge_web_registrations=''
+		deluge_web_registrations=$(grep -oE "'WebPlugin\.' \+ [A-Za-z_.]+" "${deluge_web_pluginbase}" \
+			2> /dev/null || true)
 		deluge_web_normalising=0
 		deluge_web_reason='plugin registration shape not recognised'
-		if [[ -n "${deluge_web_registration}" ]]; then
-			if [[ "${deluge_web_registration}" == *plugin_name* ]]; then
+		if [[ -n "${deluge_web_registrations}" ]]; then
+			if grep -qF 'plugin_name' <<< "${deluge_web_registrations}"; then
 				deluge_web_reason='registration uses the raw plugin name'
-			elif grep -qF -e '_plugin_rpc_name' "${deluge_web_pluginbase}"; then
+			elif grep -qE "= *_plugin_rpc_name\(|'WebPlugin\.' \+ _plugin_rpc_name\(" \
+				"${deluge_web_pluginbase}" 2> /dev/null; then
 				deluge_web_normalising=1
+			elif grep -qF '_plugin_rpc_name' "${deluge_web_pluginbase}" 2> /dev/null; then
+				deluge_web_reason='the _plugin_rpc_name helper is defined but not used for the registration'
 			else
-				deluge_web_reason='registration is normalised but the _plugin_rpc_name helper is absent'
+				deluge_web_reason='the _plugin_rpc_name helper is absent'
 			fi
 		fi
 		if [[ "${deluge_web_normalising}" != "1" ]]; then
@@ -158,18 +162,22 @@ else
 				exit 1
 			fi
 		fi
-		# counts are per line, which matches deluge's one lookup per line layout, and cover
-		# both quoting styles so an unpatched double quoted lookup cannot be counted as done
-		deluge_web_lookups=$(grep -cE "component\.get\('WebPlugin\." "${deluge_web_file}" || true)
+		# counts are per line and ignore commented out lines, which matches deluge's one lookup
+		# per line layout, and cover both quoting styles so an unpatched double quoted lookup
+		# can never be counted as done
+		deluge_web_lookups=$(grep -cE "^[[:space:]]*[^#].*component\.get\('WebPlugin\." "${deluge_web_file}" || true)
 		deluge_web_lookups=${deluge_web_lookups:-0}
-		deluge_web_lookups_double=$(grep -cE 'component\.get\("WebPlugin\.' "${deluge_web_file}" || true)
+		deluge_web_lookups_double=$(grep -cE '^[[:space:]]*[^#].*component\.get\("WebPlugin\.' "${deluge_web_file}" || true)
 		deluge_web_lookups_double=${deluge_web_lookups_double:-0}
 		deluge_web_lookups=$((deluge_web_lookups + deluge_web_lookups_double))
 		deluge_web_ok=$(grep -cF "${deluge_web_lookup_normalised}" "${deluge_web_file}" || true)
 		deluge_web_ok=${deluge_web_ok:-0}
 		deluge_web_ok_fixed=$(grep -cF "${deluge_web_lookup_fixed}" "${deluge_web_file}" || true)
 		deluge_web_ok_fixed=${deluge_web_ok_fixed:-0}
-		deluge_web_ok=$((deluge_web_ok + deluge_web_ok_fixed))
+		deluge_web_ok_double=$(grep -cE '^[[:space:]]*[^#].*WebPlugin\." \+ (name\.lower\(|_plugin_rpc_name\()' \
+			"${deluge_web_file}" 2> /dev/null || true)
+		deluge_web_ok_double=${deluge_web_ok_double:-0}
+		deluge_web_ok=$((deluge_web_ok + deluge_web_ok_fixed + deluge_web_ok_double))
 		if [[ "${deluge_web_lookups}" == "0" ]]; then
 			echo "[warn] no lookup matching '${deluge_web_lookup_raw}' in '${deluge_web_file}', patch not applied"
 		elif [[ "${deluge_web_ok}" != "${deluge_web_lookups}" && "${deluge_web_patched}" == "1" ]]; then
