@@ -136,19 +136,21 @@ else
 			continue
 		fi
 		# the rewrite below is only correct when the installed loader normalises component
-		# names. this is a heuristic on the known single quoted one line registration shape,
-		# not a proof: an unrecognised shape is reported and left unpatched, never guessed
-		deluge_web_registrations=''
-		deluge_web_registrations=$(grep -oE "'WebPlugin\.' \+ [A-Za-z_.]+" "${deluge_web_pluginbase}" \
-			2> /dev/null || true)
+		# names. this is a heuristic on the class that does the registering, scoped to the
+		# WebPluginBase body, not a proof: an unrecognised shape is reported and left
+		# unpatched, never guessed
+		deluge_web_class=$(awk '/^class WebPluginBase/{f=1} f&&/^class /&&!/WebPluginBase/{exit} f' \
+			"${deluge_web_pluginbase}" 2> /dev/null || true)
 		deluge_web_normalising=0
 		deluge_web_reason='plugin registration shape not recognised'
-		if [[ -n "${deluge_web_registrations}" ]]; then
-			if grep -qF 'plugin_name' <<< "${deluge_web_registrations}"; then
-				deluge_web_reason='registration uses the raw plugin name'
-			elif grep -qE "= *_plugin_rpc_name\(|'WebPlugin\.' \+ _plugin_rpc_name\(" \
-				"${deluge_web_pluginbase}" 2> /dev/null; then
+		if [[ -n "${deluge_web_class}" ]]; then
+			deluge_web_registrations=$(grep -oE "'WebPlugin\.' \+ [A-Za-z_.]+" <<< "${deluge_web_class}" || true)
+			if [[ -z "${deluge_web_registrations}" ]]; then
+				deluge_web_reason='plugin registration shape not recognised'
+			elif grep -qE "= *_plugin_rpc_name\(|'WebPlugin\.' \+ _plugin_rpc_name\(" <<< "${deluge_web_class}"; then
 				deluge_web_normalising=1
+			elif grep -qE "'WebPlugin\.' \+ plugin_name$" <<< "${deluge_web_registrations}"; then
+				deluge_web_reason='registration uses the raw plugin name'
 			elif grep -qF '_plugin_rpc_name' "${deluge_web_pluginbase}" 2> /dev/null; then
 				deluge_web_reason='the _plugin_rpc_name helper is defined but not used for the registration'
 			else
@@ -169,22 +171,26 @@ else
 				exit 1
 			fi
 		fi
-		# counts are per line and ignore commented out lines, which matches deluge's one lookup
-		# per line layout, and cover both quoting styles so an unpatched double quoted lookup
-		# can never be counted as done
-		deluge_web_lookups=$(grep -cE "^[[:space:]]*[^#].*component\.get\('WebPlugin\." "${deluge_web_file}" || true)
+		# one comment stripped view for all four counts, so the numerator and the denominator
+		# can never disagree about a commented out lookup. both quoting styles are counted so
+		# an unpatched double quoted lookup is never counted as done. counts are per line,
+		# matching deluge's one lookup per line layout
+		deluge_web_code=$(mktemp)
+		grep -vE '^[[:space:]]*#' "${deluge_web_file}" > "${deluge_web_code}" 2> /dev/null || true
+		deluge_web_lookups=$(grep -cE "component\.get\('WebPlugin\." "${deluge_web_code}" || true)
 		deluge_web_lookups=${deluge_web_lookups:-0}
-		deluge_web_lookups_double=$(grep -cE '^[[:space:]]*[^#].*component\.get\("WebPlugin\.' "${deluge_web_file}" || true)
+		deluge_web_lookups_double=$(grep -cE 'component\.get\("WebPlugin\.' "${deluge_web_code}" || true)
 		deluge_web_lookups_double=${deluge_web_lookups_double:-0}
 		deluge_web_lookups=$((deluge_web_lookups + deluge_web_lookups_double))
-		deluge_web_ok=$(grep -cF "${deluge_web_lookup_normalised}" "${deluge_web_file}" || true)
+		deluge_web_ok=$(grep -cF "${deluge_web_lookup_normalised}" "${deluge_web_code}" || true)
 		deluge_web_ok=${deluge_web_ok:-0}
-		deluge_web_ok_fixed=$(grep -cF "${deluge_web_lookup_fixed}" "${deluge_web_file}" || true)
+		deluge_web_ok_fixed=$(grep -cF "${deluge_web_lookup_fixed}" "${deluge_web_code}" || true)
 		deluge_web_ok_fixed=${deluge_web_ok_fixed:-0}
-		deluge_web_ok_double=$(grep -cE '^[[:space:]]*[^#].*WebPlugin\." \+ (name\.lower\(|_plugin_rpc_name\()' \
-			"${deluge_web_file}" 2> /dev/null || true)
+		deluge_web_ok_double=$(grep -cE 'WebPlugin\." \+ name\.lower\(\)\.replace\(|WebPlugin\." \+ _plugin_rpc_name\(' \
+			"${deluge_web_code}" || true)
 		deluge_web_ok_double=${deluge_web_ok_double:-0}
 		deluge_web_ok=$((deluge_web_ok + deluge_web_ok_fixed + deluge_web_ok_double))
+		rm -f "${deluge_web_code}"
 		if [[ "${deluge_web_lookups}" == "0" ]]; then
 			echo "[warn] no lookup matching '${deluge_web_lookup_raw}' in '${deluge_web_file}', patch not applied"
 		elif [[ "${deluge_web_ok}" != "${deluge_web_lookups}" && "${deluge_web_patched}" == "1" ]]; then

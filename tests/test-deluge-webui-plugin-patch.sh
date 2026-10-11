@@ -61,6 +61,9 @@ write_fixture() { # $1 = site-packages root, $2 = lookup shape, $3 = loader
 	broken)
 		lookups=("'WebPlugin.' + name" "'WebPlugin.' + name" "'WebPlugin.' + name")
 		;;
+	commented)
+		lookups=("'WebPlugin.' + name" "'WebPlugin.' + name" "'WebPlugin.' + name")
+		;;
 	upstream-fixed)
 		lookups=(
 			"'WebPlugin.' + _plugin_rpc_name(name)"
@@ -137,6 +140,12 @@ def get_plugin_resources(self, name):
         log.info('Plugin has no web ui')
         return
 EOF
+	if [[ "${state}" == "commented" ]]; then
+		{
+			printf '# commented out lookup: %s\n' "component.get('WebPlugin.' + name)"
+			printf '        # indented commented out lookup: %s\n' "component.get('WebPlugin.' + name)"
+		} >> "${pluginmanager}"
+	fi
 	case "${loader}" in
 	importlib)
 		# the importlib backport: helper defined and a normalised registration
@@ -199,6 +208,25 @@ def _plugin_rpc_name(plugin_name):
 class WebPluginBase:
     def __init__(self, plugin_name):
         name = plugin_name.lower()
+        super().__init__('WebPlugin.' + name)
+EOF
+		;;
+	helper-other-registration)
+		# the helper is called by a different plugin class, the web registration is not normalised
+		cat > "${pluginbase}" <<'EOF'
+def _plugin_rpc_name(plugin_name):
+    return plugin_name.lower().replace('-', '_').replace(' ', '_')
+
+
+class CorePluginBase:
+    def __init__(self, plugin_name):
+        name = _plugin_rpc_name(plugin_name)
+        super().__init__('CorePlugin.' + name)
+
+
+class WebPluginBase:
+    def __init__(self, plugin_name):
+        name = plugin_name
         super().__init__('WebPlugin.' + name)
 EOF
 		;;
@@ -512,6 +540,21 @@ else
 		fail "mixed quoting: exit=${mixedq_rc}, normalised=${mixedq_normalised}, output=$(cat "${work_dir}/mixed-quoting.out")"
 	fi
 
+	# commented out lookups must not distort the verification counts
+	commented_site_packages="${work_dir}/commented-site-packages"
+	commented_target="${commented_site_packages}/deluge/ui/web/pluginmanager.py"
+	write_fixture "${commented_site_packages}" commented
+	run_block "${commented_site_packages}" "${work_dir}/commented.out"
+	commented_rc=$?
+	commented_ok=$(grep -vE '^[[:space:]]*#' "${commented_target}" | grep -cF "${NORMALISED_LOOKUP}" || true)
+	if [[ "${commented_rc}" -eq 0 && "${commented_ok}" == "3" ]] \
+		&& grep -q '\[info\] Patched' "${work_dir}/commented.out" \
+		&& ! grep -q 'only ' "${work_dir}/commented.out"; then
+		pass "commented out lookups do not distort the verification counts"
+	else
+		fail "commented lookups: exit=${commented_rc}, normalised=${commented_ok}, output=$(cat "${work_dir}/commented.out")"
+	fi
+
 	# a fully double quoted normalised file is already correct and must not be alarmed about
 	dqnorm_site_packages="${work_dir}/double-quoted-normalised-site-packages"
 	dqnorm_target="${dqnorm_site_packages}/deluge/ui/web/pluginmanager.py"
@@ -600,6 +643,21 @@ else
 		pass "a helper that is defined but unused is reported and left unchanged"
 	else
 		fail "helper unused: exit=${unused_rc}, output=$(cat "${work_dir}/unused.out")"
+	fi
+
+	# a helper call in another plugin class must not be taken as proof for the web registration
+	other_class_site_packages="${work_dir}/helper-other-class-site-packages"
+	other_class_target="${other_class_site_packages}/deluge/ui/web/pluginmanager.py"
+	write_fixture "${other_class_site_packages}" broken helper-other-registration
+	cp "${other_class_target}" "${work_dir}/other-class.orig"
+	run_block "${other_class_site_packages}" "${work_dir}/other-class.out"
+	other_class_rc=$?
+	if [[ "${other_class_rc}" -eq 0 ]] \
+		&& diff -q "${work_dir}/other-class.orig" "${other_class_target}" > /dev/null \
+		&& grep -q 'defined but not used for the registration' "${work_dir}/other-class.out"; then
+		pass "a helper call in another plugin class is not taken as proof for the web registration"
+	else
+		fail "helper in other class: exit=${other_class_rc}, output=$(cat "${work_dir}/other-class.out")"
 	fi
 
 	# a missing plugin base must be reported as such, not as a loader property
@@ -712,6 +770,8 @@ else
 				fail "negative control child failed for an unrelated reason (${doctored}): $(head -3 "${work_dir}/${doctored}.out")"
 			fi
 		done
+	else
+		skip "extraction guard controls disabled by DELUGE_PATCH_SUITE_CONTROLS=0"
 	fi
 
 	# the checker must accept a double quoted equivalent of the normalised lookup
