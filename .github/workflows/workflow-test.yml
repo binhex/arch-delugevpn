@@ -26,8 +26,8 @@ jobs:
 
   branch-parity:
     name: plugin patch parity across branches
-    # branch drift only shows up on a push - a PR head may not contain both branches
-    if: github.event_name != 'pull_request'
+    # parity is only meaningful on the two release branches, for a push or a manual run
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/libtorrentv1'
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -46,6 +46,10 @@ jobs:
           git show "FETCH_HEAD:build/root/install.sh" > /tmp/other-install.sh
           awk '/# deluge plugin webui patch - begin/,/# deluge plugin webui patch - end/' build/root/install.sh > /tmp/block-current.sh
           awk '/# deluge plugin webui patch - begin/,/# deluge plugin webui patch - end/' /tmp/other-install.sh > /tmp/block-other.sh
+          if [[ ! -s /tmp/block-current.sh || ! -s /tmp/block-other.sh ]]; then
+            echo "::error::deluge plugin webui patch block missing on ${GITHUB_REF_NAME} or ${other_branch}"
+            exit 1
+          fi
           if ! diff -u /tmp/block-other.sh /tmp/block-current.sh; then
             echo "::error::deluge plugin webui patch block differs between ${GITHUB_REF_NAME} and ${other_branch}"
             exit 1

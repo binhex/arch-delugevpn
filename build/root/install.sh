@@ -103,25 +103,50 @@ sed -i -e "s~peer_id = substitute_chr(peer_id, 6, release_chr)~peer_id = \'-DE22
 # not the matching web ui lookup, so plugins register as 'WebPlugin.<snake case name>' while
 # deluge/ui/web/pluginmanager.py still asks for 'WebPlugin.<original name>' - mixed case
 # plugins such as Label, Scheduler and YaRSS2 then log 'contains no WebUI code' and lose
-# their web ui, normalise the three lookups to match the registration. mirrors upstream's
-# '_plugin_rpc_name()' helper (lower case, dash and space to underscore), ascii names only
+# their web ui, normalise the three lookups to match the registration. this mirrors the
+# backport's '_plugin_rpc_name()' helper (lower case, dash and space to underscore) and is
+# only applied when that helper is present, ascii names only
 # NOTE: the same block ships on the libtorrentv1 branch - keep both copies in sync, the
 # workflow-test job diffs them
 deluge_site_packages="${DELUGE_SITE_PACKAGES:-/usr/lib/python3*/site-packages}"
 deluge_web_pluginmanager="${deluge_site_packages}/deluge/ui/web/pluginmanager.py"
 deluge_web_lookup_raw="component.get('WebPlugin.' + name)"
 deluge_web_lookup_normalised="component.get('WebPlugin.' + name.lower().replace('-', '_').replace(' ', '_'))"
-if compgen -G "${deluge_web_pluginmanager}" > /dev/null; then
-	# shellcheck disable=SC2086  # glob in the variable, expanded by the for loop on purpose
-	for deluge_web_file in ${deluge_web_pluginmanager}; do
+deluge_web_lookup_fixed="component.get('WebPlugin.' + _plugin_rpc_name(name))"
+mapfile -t deluge_web_files < <(compgen -G "${deluge_web_pluginmanager}" || true)
+if [[ "${#deluge_web_files[@]}" -eq 0 ]]; then
+	echo "[warn] deluge WebUI plugin manager not found at '${deluge_web_pluginmanager}', patch not applied"
+else
+	for deluge_web_file in "${deluge_web_files[@]}"; do
+		deluge_web_pluginbase="${deluge_web_file%deluge/ui/web/pluginmanager.py}deluge/plugins/pluginbase.py"
+		# the rewrite below is only correct when the installed deluge normalises plugin
+		# component names, which the importlib backport added via this helper
+		if [[ ! -f "${deluge_web_pluginbase}" ]] || ! grep -qF 'def _plugin_rpc_name' "${deluge_web_pluginbase}"; then
+			echo "[warn] deluge does not normalise plugin component names, leaving '${deluge_web_file}' unchanged"
+			continue
+		fi
+		deluge_web_patched=0
 		if grep -qF "${deluge_web_lookup_raw}" "${deluge_web_file}"; then
+			deluge_web_patched=1
 			sed -i "s~component\.get('WebPlugin\.' + name)~${deluge_web_lookup_normalised}~g" "${deluge_web_file}" \
 				|| { echo "[crit] Failed to patch '${deluge_web_file}', exiting build process..." ; exit 1 ; }
+		fi
+		# verify the substitution actually landed, a matched grep is not proof that sed wrote
+		deluge_web_lookups=$(grep -cE "component\.get\('WebPlugin\." "${deluge_web_file}" || true)
+		deluge_web_ok=$(grep -cF "${deluge_web_lookup_normalised}" "${deluge_web_file}" || true)
+		deluge_web_ok_fixed=$(grep -cF "${deluge_web_lookup_fixed}" "${deluge_web_file}" || true)
+		deluge_web_ok=$((deluge_web_ok + deluge_web_ok_fixed))
+		if [[ "${deluge_web_lookups}" == "0" ]]; then
+			echo "[warn] no lookup matching '${deluge_web_lookup_raw}' in '${deluge_web_file}', patch not applied"
+		elif [[ "${deluge_web_ok}" != "${deluge_web_lookups}" && "${deluge_web_patched}" == "1" ]]; then
+			echo "[crit] only ${deluge_web_ok}/${deluge_web_lookups} normalised in '${deluge_web_file}', exiting build process..."
+			exit 1
+		elif [[ "${deluge_web_ok}" != "${deluge_web_lookups}" ]]; then
+			echo "[warn] only ${deluge_web_ok}/${deluge_web_lookups} normalised in '${deluge_web_file}', patch not applied"
+		elif [[ "${deluge_web_patched}" == "1" ]]; then
 			echo "[info] Patched deluge WebUI plugin name lookup for mixed case plugins"
-		elif grep -qF "${deluge_web_lookup_normalised}" "${deluge_web_file}"; then
-			echo "[info] deluge WebUI plugin name lookup already normalised, no patch required"
 		else
-			echo "[warn] deluge WebUI plugin lookup not found in '${deluge_web_file}', patch not applied"
+			echo "[info] deluge WebUI plugin name lookup already normalised, no patch required"
 		fi
 	done
 fi
