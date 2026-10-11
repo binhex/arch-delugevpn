@@ -182,7 +182,7 @@ NORMALISED = "name.lower().replace('-', '_').replace(' ', '_')"
 HELPER_CALL = '_plugin_rpc_name(name)'
 
 
-def lookup_segments(source, tree):
+def lookup_segments(tree):
     for node in ast.walk(tree):
         handler = getattr(node, 'func', None)
         if not isinstance(handler, ast.Attribute) or handler.attr != 'get':
@@ -191,22 +191,22 @@ def lookup_segments(source, tree):
         if not isinstance(owner, ast.Name) or owner.id != 'component':
             continue
         for argument in node.args:
-            segment = ast.get_source_segment(source, argument) or ''
+            # unparse drops comments, so only code decides, and every matching
+            # argument counts even when one call carries more than one
+            segment = ast.unparse(argument)
             if 'WebPlugin.' in segment:
                 yield segment
-                break
 
 
 def counts(path):
     try:
         with open(path, encoding='utf-8') as handle:
-            source = handle.read()
-        tree = ast.parse(source)
-    except (OSError, SyntaxError):
-        return 0, 0
+            tree = ast.parse(handle.read())
+    except (OSError, SyntaxError, ValueError):
+        return -1, -1
     total = 0
     normalised = 0
-    for segment in lookup_segments(source, tree):
+    for segment in lookup_segments(tree):
         total += 1
         text = segment.replace('"', "'")
         if NORMALISED in text or HELPER_CALL in text:
@@ -222,7 +222,15 @@ PY
 		deluge_web_ok=${deluge_web_counts##* }
 		deluge_web_lookups=${deluge_web_lookups:-0}
 		deluge_web_ok=${deluge_web_ok:-0}
-		if [[ "${deluge_web_lookups}" == "0" ]]; then
+		if [[ "${deluge_web_lookups}" == "-1" && "${deluge_web_patched}" == "1" ]]; then
+			echo "[crit] could not parse '${deluge_web_file}' to verify the patch, exiting build process..."
+			exit 1
+		elif [[ "${deluge_web_patched}" == "1" && "${deluge_web_lookups}" == "0" ]]; then
+			echo "[crit] no lookup found in '${deluge_web_file}' after patching, exiting build process..."
+			exit 1
+		elif [[ "${deluge_web_lookups}" == "-1" ]]; then
+			echo "[warn] could not parse '${deluge_web_file}', patch not applied"
+		elif [[ "${deluge_web_lookups}" == "0" ]]; then
 			echo "[warn] no lookup matching '${deluge_web_lookup_raw}' in '${deluge_web_file}', patch not applied"
 		elif [[ "${deluge_web_ok}" != "${deluge_web_lookups}" && "${deluge_web_patched}" == "1" ]]; then
 			echo "[crit] only ${deluge_web_ok}/${deluge_web_lookups} normalised in '${deluge_web_file}', exiting build process..."
