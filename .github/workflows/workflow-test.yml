@@ -86,4 +86,12 @@ jobs:
             echo "::error::regression test differs between ${GITHUB_REF_NAME} and ${other_branch}"
             exit 1
           fi
+          if ! git show "FETCH_HEAD:.github/workflows/workflow-test.yml" > /tmp/other-workflow.yml; then
+            echo "::error::workflow-test.yml missing on ${other_branch}"
+            exit 1
+          fi
+          if ! diff -u /tmp/other-workflow.yml .github/workflows/workflow-test.yml; then
+            echo "::error::workflow-test.yml differs between ${GITHUB_REF_NAME} and ${other_branch}"
+            exit 1
+          fi
           echo "plugin patch block and regression test match on both branches"
