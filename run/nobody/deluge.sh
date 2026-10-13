@@ -17,6 +17,17 @@ export PYTHON_EGG_CACHE="${python_egg_cache}"
 
 if [[ "${deluge_running}" == "false" ]]; then
 
+	# if deluge-web is still running, stop it so it gets restarted with a
+	# fresh RPC connection to the new daemon instance. Without this,
+	# deluge-web holds a stale connection and enters an endless
+	# connect/disconnect loop, leaving the Web UI stuck on the
+	# Connection Manager screen.
+	if [[ "${deluge_web_running}" == "true" ]]; then
+		echo "[info] Stopping Deluge Web UI before daemon restart to avoid stale RPC connection..."
+		pkill -SIGTERM -x "deluge-web"
+		deluge_web_running="false"
+	fi
+
 	echo "[info] Attempting to start Deluge..."
 
 	echo "[info] Removing deluge pid file (if it exists)..."
